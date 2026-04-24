@@ -8,7 +8,7 @@ import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { db } from "../lib/db/client";
 import { entries, memberships } from "../lib/db/schema";
-import { FREEDOMS } from "../lib/freedoms/types";
+import { FREEDOMS } from "../lib/freedoms/constants";
 import { freedomModules } from "../lib/freedoms";
 
 async function main() {

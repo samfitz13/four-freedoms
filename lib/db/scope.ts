@@ -14,23 +14,12 @@
 import "server-only";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
+import { NotAMemberError } from "@/lib/db/errors";
 import { memberships } from "@/lib/db/schema";
+import type { HouseholdScope } from "@/lib/db/types";
 
-export class NotAMemberError extends Error {
-  constructor(public readonly householdId: string) {
-    super(`Not a member of household ${householdId}`);
-    this.name = "NotAMemberError";
-  }
-}
-
-export type HouseholdScope = {
-  userId: string;
-  householdIds: string[];
-  /** The primary household — v1 UI assumes one per user. */
-  primaryHouseholdId: string;
-  /** Throws if `householdId` isn't one this user belongs to. */
-  assertMember: (householdId: string) => void;
-};
+export { NotAMemberError } from "@/lib/db/errors";
+export type { HouseholdScope } from "@/lib/db/types";
 
 const cache = new Map<string, { scope: HouseholdScope; at: number }>();
 const TTL_MS = 30_000; // small per-request-ish cache for RSC fan-out

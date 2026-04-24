@@ -1,13 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import { submitReview, type ReviewResult } from "./actions";
-
-export interface Reflections {
-  wins?: string;
-  struggles?: string;
-  nextWeek?: string;
-}
+import { submitReview } from "./actions";
+import type { Reflections, ReviewResult } from "./types";
 
 export function ReviewForm({
   weekStart,

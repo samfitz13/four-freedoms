@@ -2,7 +2,7 @@
  * Minimal, editorial sparkline. SVG, no libs. `null` gaps are rendered as
  * subtle dots; the line skips them.
  */
-import type { DailyPoint } from "@/lib/freedoms/summary";
+import type { DailyPoint } from "@/lib/freedoms/types";
 
 export function Sparkline({
   series,

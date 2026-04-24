@@ -1,14 +1,26 @@
 "use client";
 
 import { useActionState } from "react";
-import { FREEDOMS } from "@/lib/freedoms/types";
+import { FREEDOMS } from "@/lib/freedoms/constants";
 import { freedomModules } from "@/lib/freedoms";
 import type { FreedomField } from "@/lib/freedoms/types";
-import { submitCheckIn, type CheckInResult } from "./actions";
+import { submitCheckIn } from "./actions";
+import type { CheckInResult } from "./types";
 
 type Prefill = Partial<Record<(typeof FREEDOMS)[number]["key"], Record<string, unknown>>>;
 
-export function CheckInForm({ defaultDate, prefill }: { defaultDate: string; prefill: Prefill }) {
+/** Fields beyond this index (per freedom) render collapsed by default. */
+const FINANCIAL_QUICK_FIELDS = new Set(["netWorth", "savingsRate", "runwayMonths", "note"]);
+
+export function CheckInForm({
+  defaultDate,
+  prefill,
+  baseCurrency,
+}: {
+  defaultDate: string;
+  prefill: Prefill;
+  baseCurrency: string;
+}) {
   const [state, formAction, pending] = useActionState<CheckInResult | null, FormData>(
     submitCheckIn,
     null,
@@ -36,6 +48,15 @@ export function CheckInForm({ defaultDate, prefill }: { defaultDate: string; pre
       {FREEDOMS.map((meta) => {
         const mod = freedomModules[meta.key];
         const values = prefill[meta.key] ?? {};
+        const isFinancial = meta.key === "financial";
+        const quick = isFinancial
+          ? mod.fields.filter((f) => FINANCIAL_QUICK_FIELDS.has(f.name))
+          : mod.fields;
+        const detail = isFinancial
+          ? mod.fields.filter((f) => !FINANCIAL_QUICK_FIELDS.has(f.name))
+          : [];
+        const hasDetailValues = detail.some((f) => values[f.name] !== undefined);
+
         return (
           <fieldset
             key={meta.key}
@@ -52,15 +73,37 @@ export function CheckInForm({ defaultDate, prefill }: { defaultDate: string; pre
             </div>
             <p className="text-sm text-[color:var(--color-ink-soft)]">{meta.question}</p>
             <div className="grid gap-5 sm:grid-cols-2">
-              {mod.fields.map((field) => (
+              {quick.map((field) => (
                 <FieldInput
                   key={field.name}
                   freedom={meta.key}
                   field={field}
                   defaultValue={values[field.name]}
+                  baseCurrency={baseCurrency}
                 />
               ))}
             </div>
+            {isFinancial && detail.length > 0 ? (
+              <details
+                open={hasDetailValues}
+                className="group mt-2 border-t border-dashed border-[color:var(--color-border)] pt-4"
+              >
+                <summary className="cursor-pointer font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase select-none hover:text-[color:var(--color-foreground)]">
+                  More detail (optional)
+                </summary>
+                <div className="mt-4 grid gap-5 sm:grid-cols-2">
+                  {detail.map((field) => (
+                    <FieldInput
+                      key={field.name}
+                      freedom={meta.key}
+                      field={field}
+                      defaultValue={values[field.name]}
+                      baseCurrency={baseCurrency}
+                    />
+                  ))}
+                </div>
+              </details>
+            ) : null}
           </fieldset>
         );
       })}
@@ -94,10 +137,12 @@ function FieldInput({
   freedom,
   field,
   defaultValue,
+  baseCurrency,
 }: {
   freedom: string;
   field: FreedomField;
   defaultValue?: unknown;
+  baseCurrency: string;
 }) {
   const id = `${freedom}.${field.name}`;
   const label = (
@@ -136,6 +181,29 @@ function FieldInput({
                 {field.suffix}
               </span>
             ) : null}
+          </div>
+          {hint}
+        </div>
+      );
+    }
+    case "currency": {
+      return (
+        <div className="flex flex-col gap-1">
+          {label}
+          <div className="flex items-center gap-2">
+            <input
+              id={id}
+              name={id}
+              type="number"
+              min={field.min}
+              max={field.max}
+              step={field.step}
+              defaultValue={typeof defaultValue === "number" ? defaultValue : ""}
+              className={base}
+            />
+            <span className="font-mono text-xs text-[color:var(--color-ink-soft)]">
+              {baseCurrency}
+            </span>
           </div>
           {hint}
         </div>

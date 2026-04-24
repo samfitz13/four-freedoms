@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { freedomMetas, type FreedomModule } from "./types";
+import { freedomMetas } from "./constants";
+import { defineFreedomModule } from "./module";
 
 export const timePayloadSchema = z.object({
   /** Deep-work hours logged today. */
@@ -8,9 +9,9 @@ export const timePayloadSchema = z.object({
   prioritySplit: z.number().min(0).max(1).optional(),
   note: z.string().max(500).optional(),
 });
-export type TimePayload = z.infer<typeof timePayloadSchema>;
+type TimePayload = z.infer<typeof timePayloadSchema>;
 
-export const timeModule: FreedomModule<TimePayload> = {
+export const timeModule = defineFreedomModule<TimePayload>({
   meta: freedomMetas.time,
   payloadSchema: timePayloadSchema,
   formatEntry(p) {
@@ -48,7 +49,7 @@ export const timeModule: FreedomModule<TimePayload> = {
     },
     { kind: "text", name: "note", label: "Note", maxLength: 500 },
   ],
-};
+});
 
 function clamp(n: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, n));

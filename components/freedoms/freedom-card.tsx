@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { FreedomMeta, FreedomSummary } from "@/lib/freedoms/types";
-import type { DailyPoint } from "@/lib/freedoms/summary";
+import type { DailyPoint } from "@/lib/freedoms/types";
 import { Sparkline } from "./sparkline";
 import { ScoreRing } from "./score-ring";
 

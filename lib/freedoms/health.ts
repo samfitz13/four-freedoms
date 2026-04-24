@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { freedomMetas, type FreedomModule } from "./types";
+import { freedomMetas } from "./constants";
+import { defineFreedomModule } from "./module";
 
 export const healthPayloadSchema = z.object({
   /** Hours of sleep last night. */
@@ -10,9 +11,9 @@ export const healthPayloadSchema = z.object({
   energy: z.number().int().min(1).max(10).optional(),
   note: z.string().max(500).optional(),
 });
-export type HealthPayload = z.infer<typeof healthPayloadSchema>;
+type HealthPayload = z.infer<typeof healthPayloadSchema>;
 
-export const healthModule: FreedomModule<HealthPayload> = {
+export const healthModule = defineFreedomModule<HealthPayload>({
   meta: freedomMetas.health,
   payloadSchema: healthPayloadSchema,
   formatEntry(p) {
@@ -57,7 +58,7 @@ export const healthModule: FreedomModule<HealthPayload> = {
     },
     { kind: "text", name: "note", label: "Note", maxLength: 500 },
   ],
-};
+});
 
 function clamp(n: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, n));

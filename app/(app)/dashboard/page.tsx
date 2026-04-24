@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth-server";
 import { listEntriesForDashboard, listRecentEntries, countEntries } from "@/lib/db/queries";
-import { FREEDOMS, freedomMetas, type FreedomKey } from "@/lib/freedoms/types";
+import { FREEDOMS, freedomMetas } from "@/lib/freedoms/constants";
+import type { FreedomKey } from "@/lib/freedoms/types";
 import { freedomModules } from "@/lib/freedoms";
 import { computeSummary } from "@/lib/freedoms/summary";
 import { FreedomCard } from "@/components/freedoms/freedom-card";

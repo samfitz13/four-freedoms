@@ -8,7 +8,7 @@ import { weeklyReviews } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth-server";
 import { getPrimaryHouseholdId } from "@/lib/db/scope";
 
-export type ReviewResult = { ok: true; weekStart: string } | { ok: false; error: string };
+import type { ReviewResult } from "./types";
 
 const reflectionsSchema = z.object({
   weekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),

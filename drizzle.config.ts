@@ -8,6 +8,12 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: { url },
+  migrations: {
+    // PlanetScale Postgres restricts CREATE SCHEMA on the default database,
+    // so keep the migration ledger inside `public`.
+    schema: "public",
+    table: "__drizzle_migrations",
+  },
   strict: true,
   verbose: true,
 });

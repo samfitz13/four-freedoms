@@ -34,4 +34,3 @@ if (env.NODE_ENV !== "production") globalForDb.__ff_sql = sql;
 
 export const db = drizzle(sql, { schema });
 export { schema };
-export type DB = typeof db;

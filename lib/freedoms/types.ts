@@ -1,11 +1,14 @@
 /**
- * Types + static metadata for all four freedoms. Kept separate from the
- * module registry (./index.ts) to avoid circular imports — the per-freedom
- * modules import from here, and index.ts re-exports.
+ * Types for the freedom registry. Kept separate from the module registry
+ * (./index.ts) and the metadata table (./constants.ts) to avoid circular
+ * imports — per-freedom modules import from here, constants.ts references
+ * these types, and index.ts re-exports.
  */
 import type { z } from "zod";
 
-export type FreedomKey = "financial" | "location" | "time" | "health";
+import type { FREEDOM_KEYS } from "./constants";
+
+export type FreedomKey = (typeof FREEDOM_KEYS)[number];
 
 export interface FreedomMeta {
   key: FreedomKey;
@@ -67,6 +70,15 @@ export type FreedomField =
       name: string;
       label: string;
       hint?: string;
+    }
+  | {
+      kind: "currency"; // rendered as number with currency suffix (household base)
+      name: string;
+      label: string;
+      hint?: string;
+      min?: number;
+      max?: number;
+      step?: number;
     };
 
 /**
@@ -84,36 +96,69 @@ export interface FreedomModule<Payload extends Record<string, unknown>> {
   fields: readonly FreedomField[];
 }
 
-export const freedomMetas: Record<FreedomKey, FreedomMeta> = {
-  financial: {
-    key: "financial",
-    label: "Financial",
-    question: "Am I building wealth?",
-    colorVar: "var(--color-freedom-financial)",
-  },
-  location: {
-    key: "location",
-    label: "Location",
-    question: "Do I live where I want?",
-    colorVar: "var(--color-freedom-location)",
-  },
-  time: {
-    key: "time",
-    label: "Time",
-    question: "Am I spending time on what matters?",
-    colorVar: "var(--color-freedom-time)",
-  },
-  health: {
-    key: "health",
-    label: "Health",
-    question: "Is my body trending up?",
-    colorVar: "var(--color-freedom-health)",
-  },
+/**
+ * Financial check-in payload. Kept here (rather than colocated with
+ * `lib/freedoms/financial.ts`) because our `types-file-organization` lint
+ * rule requires exported types to live in a `types.ts`.
+ */
+export type FinancialPayload = {
+  /** Total net worth in the household's base currency. */
+  netWorth?: number;
+  /** 0..1 of post-tax income saved this period. */
+  savingsRate?: number;
+  /** Months of expenses covered by liquid savings. */
+  runwayMonths?: number;
+  /** Raw monthly income (used to derive savings rate if absent). */
+  monthlyIncome?: number;
+  /** Raw monthly expenses. */
+  monthlyExpenses?: number;
+  /** 0..1 debt-to-assets ratio (capped at 5). */
+  debtToAssets?: number;
+  /** 0..1 share of net worth that is invested (vs. cash/idle). */
+  investedPct?: number;
+  /** 0..1 progress toward the household's FI number. */
+  fiProgress?: number;
+  note?: string;
 };
 
-export const FREEDOMS: readonly FreedomMeta[] = [
-  freedomMetas.financial,
-  freedomMetas.location,
-  freedomMetas.time,
-  freedomMetas.health,
-] as const;
+/** FI (financial-independence) projection input. */
+export interface FiProjectionInput {
+  currentInvested: number;
+  monthlyContribution: number;
+  /** 0..1 annual real return (net of inflation). Default 5%. */
+  realReturn?: number;
+  /** Safe-withdrawal rate used to derive the FI number. Default 4%. */
+  withdrawalRate?: number;
+  targetAnnualSpend: number;
+  /** Project horizon in years. Stops early once balance ≥ FI number. */
+  horizonYears?: number;
+}
+
+/** One year on an FI projection curve. */
+export interface FiYear {
+  year: number;
+  balance: number;
+  fiNumber: number;
+  /** 0..1, capped for display. Raw ratio still available as `rawProgress`. */
+  progress: number;
+  rawProgress: number;
+}
+
+/** One day in a sparkline score series. */
+export interface DailyPoint {
+  /** ISO date `YYYY-MM-DD` */
+  date: string;
+  /** 0..100 score, or null when no entry that day. */
+  score: number | null;
+}
+
+/** Full FI projection result. */
+export interface FiProjection {
+  fiNumber: number;
+  realReturn: number;
+  withdrawalRate: number;
+  /** Years 0..N (inclusive of year 0 = today). */
+  years: FiYear[];
+  /** null if the horizon runs out before we hit FI. */
+  yearsToFi: number | null;
+}

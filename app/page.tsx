@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FREEDOMS } from "@/lib/freedoms/types";
+import { FREEDOMS } from "@/lib/freedoms/constants";
 
 const steps = [
   {

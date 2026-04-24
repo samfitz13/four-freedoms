@@ -1,10 +1,12 @@
 import { requireUser } from "@/lib/auth-server";
 import { getWeeklyReview, listEntriesInRange } from "@/lib/db/queries";
-import { FREEDOMS, type FreedomKey } from "@/lib/freedoms/types";
+import { FREEDOMS } from "@/lib/freedoms/constants";
+import type { FreedomKey } from "@/lib/freedoms/types";
 import { freedomModules } from "@/lib/freedoms";
 import { currentWeek } from "@/lib/week";
 import { ScoreRing } from "@/components/freedoms/score-ring";
-import { ReviewForm, type Reflections } from "./review-form";
+import { ReviewForm } from "./review-form";
+import type { Reflections } from "./types";
 
 export const metadata = { title: "Weekly review" };
 export const dynamic = "force-dynamic";

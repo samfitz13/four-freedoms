@@ -7,10 +7,10 @@ import { db } from "@/lib/db/client";
 import { entries } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth-server";
 import { getPrimaryHouseholdId } from "@/lib/db/scope";
-import { FREEDOMS, type FreedomKey } from "@/lib/freedoms/types";
+import { FREEDOMS } from "@/lib/freedoms/constants";
+import type { FreedomKey } from "@/lib/freedoms/types";
 import { freedomModules } from "@/lib/freedoms";
-
-export type CheckInResult = { ok: true; written: FreedomKey[] } | { ok: false; error: string };
+import type { CheckInResult } from "./types";
 
 /**
  * Accept a FormData from the check-in page and upsert one entry per freedom
@@ -46,7 +46,8 @@ export async function submitCheckIn(
       if (s === "" && field.kind !== "boolean") continue;
 
       switch (field.kind) {
-        case "number": {
+        case "number":
+        case "currency": {
           const n = Number(s);
           if (Number.isFinite(n)) raw[field.name] = n;
           break;

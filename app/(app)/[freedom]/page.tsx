@@ -2,11 +2,23 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth-server";
 import { listRecentEntries } from "@/lib/db/queries";
-import { FREEDOMS, freedomMetas, type FreedomKey } from "@/lib/freedoms/types";
+import { getPrimaryHouseholdId } from "@/lib/db/scope";
+import { FREEDOMS, freedomMetas } from "@/lib/freedoms/constants";
+import type { FreedomKey } from "@/lib/freedoms/types";
 import { freedomModules } from "@/lib/freedoms";
 import { computeSummary } from "@/lib/freedoms/summary";
+import { getBaseCurrency } from "@/lib/freedoms/financial-settings";
+import type { FinancialPayload } from "@/lib/freedoms/types";
 import { Sparkline } from "@/components/freedoms/sparkline";
 import { ScoreRing } from "@/components/freedoms/score-ring";
+import { FinancialOverview } from "./_financial/overview";
+import { FinancialAccountsTab } from "./_financial/accounts";
+import { FinancialWealthTab } from "./_financial/wealth";
+import { FinancialCashflowTab } from "./_financial/cashflow";
+import { FinancialGoalsTab } from "./_financial/goals";
+import { FINANCIAL_TABS } from "./_financial/constants";
+import { FinancialTabNav, isFinancialTab } from "./_financial/nav";
+import type { FinancialTab } from "./_financial/types";
 
 export const dynamic = "force-dynamic";
 
@@ -27,8 +39,10 @@ export async function generateMetadata({ params }: { params: Promise<{ freedom: 
 
 export default async function FreedomDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ freedom: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const { freedom } = await params;
   if (!isFreedomKey(freedom)) notFound();
@@ -43,14 +57,63 @@ export default async function FreedomDetailPage({
     rows.map((r) => ({ occurredOn: r.occurredOn, payload: r.payload ?? {} })),
   );
 
+  if (freedom === "financial") {
+    const { tab } = await searchParams;
+    const active: FinancialTab = tab && isFinancialTab(tab) ? tab : "overview";
+    const householdId = await getPrimaryHouseholdId(user.id);
+    const baseCurrency = await getBaseCurrency(householdId);
+
+    return (
+      <section className="flex flex-col gap-8">
+        <BackLink />
+        <FinancialTabNav active={active} />
+
+        {active === "overview" ? (
+          <FinancialOverview
+            meta={meta}
+            summary={summary}
+            series={series}
+            entries={rows.map((r) => ({
+              id: r.id,
+              occurredOn: r.occurredOn,
+              source: r.source,
+              payload: (r.payload ?? {}) as FinancialPayload,
+            }))}
+            baseCurrency={baseCurrency}
+          />
+        ) : active === "wealth" ? (
+          <FinancialWealthTab householdId={householdId} baseCurrency={baseCurrency} />
+        ) : active === "cashflow" ? (
+          <FinancialCashflowTab householdId={householdId} baseCurrency={baseCurrency} />
+        ) : active === "goals" ? (
+          <FinancialGoalsTab householdId={householdId} baseCurrency={baseCurrency} />
+        ) : (
+          <FinancialAccountsTab householdId={householdId} baseCurrency={baseCurrency} />
+        )}
+
+        {/* For discoverability during rollout. */}
+        <nav
+          aria-label="Financial sections"
+          className="flex flex-wrap gap-3 border-t border-[color:var(--color-border)] pt-6 font-mono text-[11px] tracking-[0.14em] text-[color:var(--color-ink-soft)] uppercase"
+        >
+          {FINANCIAL_TABS.map((t) => (
+            <Link
+              key={t.key}
+              href={`/financial?tab=${t.key}`}
+              className="hover:text-[color:var(--color-foreground)]"
+            >
+              {t.label}
+            </Link>
+          ))}
+        </nav>
+      </section>
+    );
+  }
+
+  // Non-financial freedoms keep the original single-view layout.
   return (
     <section className="flex flex-col gap-10">
-      <Link
-        href="/dashboard"
-        className="font-mono text-xs tracking-tight text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-foreground)]"
-      >
-        ← dashboard
-      </Link>
+      <BackLink />
 
       <header className="flex items-start justify-between gap-6 border-b border-[color:var(--color-border)] pb-10">
         <div className="flex flex-col gap-3">
@@ -124,5 +187,16 @@ export default async function FreedomDetailPage({
         )}
       </div>
     </section>
+  );
+}
+
+function BackLink() {
+  return (
+    <Link
+      href="/dashboard"
+      className="font-mono text-xs tracking-tight text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-foreground)]"
+    >
+      ← dashboard
+    </Link>
   );
 }

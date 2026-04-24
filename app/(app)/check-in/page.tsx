@@ -1,6 +1,9 @@
 import { requireUser } from "@/lib/auth-server";
 import { listRecentEntries } from "@/lib/db/queries";
-import { FREEDOMS, type FreedomKey } from "@/lib/freedoms/types";
+import { getPrimaryHouseholdId } from "@/lib/db/scope";
+import { FREEDOMS } from "@/lib/freedoms/constants";
+import type { FreedomKey } from "@/lib/freedoms/types";
+import { getBaseCurrency } from "@/lib/freedoms/financial-settings";
 import { CheckInForm } from "./check-in-form";
 
 export const metadata = { title: "Check-in" };
@@ -10,6 +13,9 @@ export default async function CheckInPage() {
   const user = await requireUser();
   // Today in the server's timezone — good enough for v1.
   const today = new Date().toISOString().slice(0, 10);
+
+  const householdId = await getPrimaryHouseholdId(user.id);
+  const baseCurrency = await getBaseCurrency(householdId);
 
   // Pre-fill with today's existing entries, if any.
   const todays = await listRecentEntries(user.id, { days: 1 });
@@ -33,7 +39,7 @@ export default async function CheckInPage() {
         </p>
       </div>
 
-      <CheckInForm defaultDate={today} prefill={prefill} />
+      <CheckInForm defaultDate={today} prefill={prefill} baseCurrency={baseCurrency} />
     </section>
   );
 }

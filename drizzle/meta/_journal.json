@@ -15,6 +15,13 @@
       "when": 1776790880150,
       "tag": "0001_opposite_mongoose",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776952360631,
+      "tag": "0002_melted_the_phantom",
+      "breakpoints": true
     }
   ]
 }

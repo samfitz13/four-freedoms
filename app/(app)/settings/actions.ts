@@ -7,6 +7,7 @@ import { db } from "@/lib/db/client";
 import { entries } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth-server";
 import { getPrimaryHouseholdId } from "@/lib/db/scope";
+import { isSupportedCurrency, setBaseCurrency } from "@/lib/freedoms/financial-settings";
 
 /**
  * Insert 7 days of realistic entries across the four freedoms for the
@@ -87,6 +88,24 @@ export async function seedDevData() {
 
   revalidatePath("/dashboard");
   revalidatePath("/settings");
+}
+
+/**
+ * Update the household's financial base currency. Called from the Settings
+ * page Financial section; validates against the supported set.
+ */
+export async function updateBaseCurrency(formData: FormData) {
+  const user = await requireUser();
+  const householdId = await getPrimaryHouseholdId(user.id);
+  const raw = formData.get("baseCurrency");
+  const currency = typeof raw === "string" ? raw.trim().toUpperCase() : "";
+  if (!isSupportedCurrency(currency)) {
+    throw new Error("Unsupported currency.");
+  }
+  await setBaseCurrency(householdId, currency);
+  revalidatePath("/settings");
+  revalidatePath("/financial");
+  revalidatePath("/dashboard");
 }
 
 /** Remove every entry in the current household (useful when iterating). */

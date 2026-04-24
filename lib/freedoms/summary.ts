@@ -2,15 +2,8 @@
  * Pure functions for turning entries into FreedomSummary + sparkline data.
  * No DB / no `server-only` — safe to unit-test.
  */
-import type { FreedomKey, FreedomSummary } from "./types";
+import type { DailyPoint, FreedomKey, FreedomSummary } from "./types";
 import { freedomModules } from "./index";
-
-export interface DailyPoint {
-  /** ISO date `YYYY-MM-DD` */
-  date: string;
-  /** 0..100 score, or null when no entry that day. */
-  score: number | null;
-}
 
 /**
  * Build a 14-day sparkline series + a FreedomSummary from a chronological

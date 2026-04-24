@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { freedomMetas, type FreedomModule } from "./types";
+import { freedomMetas } from "./constants";
+import { defineFreedomModule } from "./module";
 
 export const locationPayloadSchema = z.object({
   /** Free-form "where am I" (city, country, or label). */
@@ -10,9 +11,9 @@ export const locationPayloadSchema = z.object({
   preferred: z.boolean().optional(),
   note: z.string().max(500).optional(),
 });
-export type LocationPayload = z.infer<typeof locationPayloadSchema>;
+type LocationPayload = z.infer<typeof locationPayloadSchema>;
 
-export const locationModule: FreedomModule<LocationPayload> = {
+export const locationModule = defineFreedomModule<LocationPayload>({
   meta: freedomMetas.location,
   payloadSchema: locationPayloadSchema,
   formatEntry(p) {
@@ -56,4 +57,4 @@ export const locationModule: FreedomModule<LocationPayload> = {
     },
     { kind: "text", name: "note", label: "Note", maxLength: 500 },
   ],
-};
+});

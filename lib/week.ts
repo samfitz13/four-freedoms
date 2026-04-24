@@ -3,16 +3,9 @@
  * We store `week_start` as a date (YYYY-MM-DD) so equality / ordering is
  * trivial and timezone-stable.
  */
-export interface Week {
-  /** Monday, ISO `YYYY-MM-DD`. */
-  start: string;
-  /** Sunday, ISO `YYYY-MM-DD`. */
-  end: string;
-  /** Seven days of `YYYY-MM-DD`, Monday-first. */
-  days: string[];
-  /** `2026-W17` style. */
-  label: string;
-}
+import type { Week } from "./types";
+
+export type { Week };
 
 /** Week containing `date` (defaults to today). */
 export function currentWeek(date: Date = new Date()): Week {
