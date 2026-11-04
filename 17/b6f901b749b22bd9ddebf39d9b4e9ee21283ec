@@ -1,0 +1,77 @@
+.gitignore
+  s_41737182c51141::t_5902de7208446e 36-39
+.prettierignore
+  s_41737182c51141::t_364f4a1efda527 10-11
+scripts/daybreak-qa/README.md
+  s_41737182c51141::t_cc8003f8100d7d 1-173
+scripts/daybreak-qa/archive-check.mjs
+  s_41737182c51141::t_fe93552be6c8cb 1-440
+scripts/daybreak-qa/build.mjs
+  s_41737182c51141::t_e630529b8764bf 1-280
+scripts/daybreak-qa/chart-lab.jsx
+  s_41737182c51141::t_f3ebc30bcf01e5 1-74
+scripts/daybreak-qa/charts.py
+  s_41737182c51141::t_54c260fbdf27de 1-132
+scripts/daybreak-qa/check.py
+  s_41737182c51141::t_3cab856534a596 1-195
+scripts/daybreak-qa/contrast.py
+  s_41737182c51141::t_a641e1a3ba97e9 1-80
+scripts/daybreak-qa/fi-adapter-check.mjs
+  s_41737182c51141::t_ff880ab6b49779 1-202
+scripts/daybreak-qa/fi-retirement.py
+  s_41737182c51141::t_8eff73de2f86de 1-113
+scripts/daybreak-qa/financial-overview.py
+  s_41737182c51141::t_bbbefc95307f37 1-47
+scripts/daybreak-qa/fixtures.mjs
+  s_41737182c51141::t_f3a35250ecb156 1-560
+scripts/daybreak-qa/goal-fixtures.mjs
+  s_41737182c51141::t_22fdddb2d377e5 1-229
+scripts/daybreak-qa/goal-lab.jsx
+  s_41737182c51141::t_911c114cadf8b1 1-49
+scripts/daybreak-qa/goals.py
+  s_41737182c51141::t_408acf70f4bf09 1-207
+scripts/daybreak-qa/habit-fixtures.mjs
+  s_41737182c51141::t_52d2407ac5ae17 1-74
+scripts/daybreak-qa/habit-lab.jsx
+  s_41737182c51141::t_26b4e3aa7335ee 1-39
+scripts/daybreak-qa/habits.py
+  s_41737182c51141::t_54a9ca5560deaa 1-136
+scripts/daybreak-qa/lab.jsx
+  s_41737182c51141::t_3ab935fce97887 1-178
+scripts/daybreak-qa/scenario-lab.jsx
+  s_41737182c51141::t_69743810cc7b24 1-66
+scripts/daybreak-qa/scenarios.py
+  s_41737182c51141::t_cc699c6f3d20d7 1-132
+scripts/daybreak-qa/server-entry.jsx
+  s_41737182c51141::t_f93dd1ca9785a4 1-68
+scripts/daybreak-qa/settings-lab.jsx
+  s_41737182c51141::t_038e96799c6d11 1-17
+scripts/daybreak-qa/settings.py
+  s_41737182c51141::t_d248b2eb4e122a 1-72
+scripts/daybreak-qa/travel-fixtures.mjs
+  s_41737182c51141::t_286fab845c74f0 1-83
+scripts/daybreak-qa/travel-lab.jsx
+  s_41737182c51141::t_84177dfe29b12e 1-44
+scripts/daybreak-qa/travel.py
+  s_41737182c51141::t_21e08ec0b0e2ff 1-114
+scripts/daybreak-qa/ui-primitives.py
+  s_41737182c51141::t_b92b79acba258d 1-126
+scripts/daybreak-qa/wealth.py
+  s_41737182c51141::t_032542db41fd47 1-52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "17b6f901b749b22bd9ddebf39d9b4e9ee21283ec",
+  "prompts": {},
+  "sessions": {
+    "s_41737182c51141": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "f00fd9d4-a4bb-491d-8872-2c3a7e1cf1df",
+        "model": "unknown"
+      },
+      "human_author": "Sam Fitzgerald <sam@factory.ai>"
+    }
+  }
+}
