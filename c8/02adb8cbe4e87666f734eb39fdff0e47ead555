@@ -1,0 +1,21 @@
+.github/workflows/droid-review.yml
+  s_41737182c51141::t_c4669df003cf74 26-39
+.github/workflows/droid.yml
+  s_41737182c51141::t_bfe93765621424 35-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c802adb8cbe4e87666f734eb39fdff0e47ead555",
+  "prompts": {},
+  "sessions": {
+    "s_41737182c51141": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "f00fd9d4-a4bb-491d-8872-2c3a7e1cf1df",
+        "model": "unknown"
+      },
+      "human_author": "Sam Fitzgerald <sam@factory.ai>"
+    }
+  }
+}
