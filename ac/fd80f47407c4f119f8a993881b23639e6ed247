@@ -1,0 +1,79 @@
+app/(app)/[freedom]/_location/actions.ts
+  s_41737182c51141::t_a1023acb2e3a47 1-180
+app/(app)/[freedom]/_location/community-actions.ts
+  s_41737182c51141::t_57ae500f56c79d 1-155
+app/(app)/[freedom]/_location/community.tsx
+  s_41737182c51141::t_b45682c6890bff 1-117
+app/(app)/[freedom]/_location/connection-form.tsx
+  s_41737182c51141::t_84e690d83d91ec 1-79
+app/(app)/[freedom]/_location/constants.ts
+  s_41737182c51141::t_2c429a720347cc 1-9
+app/(app)/[freedom]/_location/home.tsx
+  s_41737182c51141::t_6e235845208de6 1-95
+app/(app)/[freedom]/_location/log.tsx
+  s_41737182c51141::t_c067ee7dc18a8c 1-130
+app/(app)/[freedom]/_location/nav.tsx
+  s_41737182c51141::t_5e9292b8fcba5a 1-23
+app/(app)/[freedom]/_location/overview.tsx
+  s_41737182c51141::t_542422d1fe9a46 1-348
+app/(app)/[freedom]/_location/places.tsx
+  s_41737182c51141::t_c98b9cb0c17124 1-170
+app/(app)/[freedom]/_location/properties-actions.ts
+  s_41737182c51141::t_ce4bfe77ff3f0a 1-124
+app/(app)/[freedom]/_location/properties.tsx
+  s_41737182c51141::t_2e12b2b62f9f47 1-104
+app/(app)/[freedom]/_location/property-form.tsx
+  s_41737182c51141::t_2fce8209b20a4c 1-99
+app/(app)/[freedom]/_location/residence-actions.ts
+  s_41737182c51141::t_46ee2859c56d89 1-204
+app/(app)/[freedom]/_location/residence-form.tsx
+  s_41737182c51141::t_bab587128954c6 1-270
+app/(app)/[freedom]/_location/stay-form.tsx
+  s_41737182c51141::t_9858bdd031ef1a 1-126
+app/(app)/[freedom]/_location/tab-shortcuts.tsx
+  s_41737182c51141::t_336fa89a67f652 1-33
+app/(app)/[freedom]/_location/travel-actions.ts
+  s_41737182c51141::t_9f06c1aa771ad0 1-177
+app/(app)/[freedom]/_location/travel-view.test.ts
+  s_41737182c51141::t_a15574b8e283f9 1-114
+app/(app)/[freedom]/_location/travel-view.ts
+  s_41737182c51141::t_712b0f0a885e78 1-71
+app/(app)/[freedom]/_location/travel-workspace.tsx
+  s_41737182c51141::t_0dac9bf7c82825 1-435
+app/(app)/[freedom]/_location/travel.tsx
+  s_41737182c51141::t_fd1518e2430b6c 1-19
+app/(app)/[freedom]/_location/trip-form.tsx
+  s_41737182c51141::t_884836c770f4bb 1-154
+app/(app)/[freedom]/_location/types.ts
+  s_41737182c51141::t_cf7b4b445392bf 1-10
+lib/db/queries/location.ts
+  s_41737182c51141::t_dc2a1e91385ef5 1-269
+lib/freedoms/location-community.ts
+  s_41737182c51141::t_e4f117d2a7ac56 1-44
+lib/freedoms/location-properties.ts
+  s_41737182c51141::t_1a4d11e99d3c30 1-12
+lib/freedoms/location-residence.ts
+  s_41737182c51141::t_9e20245bb15b0f 1-38
+lib/freedoms/location-summary.ts
+  s_41737182c51141::t_87b76df3787af5 1-326
+lib/freedoms/location-travel.ts
+  s_41737182c51141::t_bf5c630e78da01 1-48
+lib/freedoms/location.ts
+  s_41737182c51141::t_d559ce420ebdb6 4,6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "acfd80f47407c4f119f8a993881b23639e6ed247",
+  "prompts": {},
+  "sessions": {
+    "s_41737182c51141": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "f00fd9d4-a4bb-491d-8872-2c3a7e1cf1df",
+        "model": "unknown"
+      },
+      "human_author": "Sam Fitzgerald <sam@factory.ai>"
+    }
+  }
+}
