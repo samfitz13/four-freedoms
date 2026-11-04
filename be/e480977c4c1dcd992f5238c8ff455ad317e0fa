@@ -1,0 +1,85 @@
+AGENTS.md
+  s_79f8c731965629::t_463d5926f9a016 13-16,26,78,135-145
+  s_79f8c731965629::t_8ecaf0f979e6c2 146-148
+  s_79f8c731965629::t_8ac8b4224c9d6b 149-150,180-181,233-236
+.impeccable.md
+  s_79f8c731965629::t_9598eba27973b0 1-81
+README.md
+  s_79f8c731965629::t_98d61915eff965 13,87,105-109,173-179
+design-concepts/README.md
+  s_79f8c731965629::t_77a571ff3d4a84 1-26
+design-concepts/a-fieldnotes.html
+  s_79f8c731965629::t_a627a05ee9a118 1-2454
+design-concepts/b-control-room.html
+  s_79f8c731965629::t_d5ff589914dfb6 1-2557
+design-concepts/build.py
+  s_79f8c731965629::t_cae8fea88fb1b2 1-150
+design-concepts/c-compass.html
+  s_79f8c731965629::t_53803af99d3ca8 1-2572
+design-concepts/common.css
+  s_79f8c731965629::t_e6b0a979db2bd8 1-850
+design-concepts/compass.css
+  s_79f8c731965629::t_7eee7e3664603b 1-277
+design-concepts/control-room.css
+  s_79f8c731965629::t_d574fdfb8cc871 1-262
+design-concepts/daybreak/app.js
+  s_79f8c731965629::t_4b139555497bd1 1-219
+design-concepts/daybreak/build.py
+  s_79f8c731965629::t_03d6baf9451676 1-24
+design-concepts/daybreak/contrast.py
+  s_79f8c731965629::t_6bb34190626875 1-63
+design-concepts/daybreak/index.html
+  s_79f8c731965629::t_5e2559bbf187df 1-2686
+design-concepts/daybreak/qa.py
+  s_79f8c731965629::t_2269402d58ccc6 1-122
+design-concepts/daybreak/responsive.css
+  s_79f8c731965629::t_90e5c53049a7c9 1-684
+design-concepts/daybreak/styles.css
+  s_79f8c731965629::t_65ddf2ba905241 1-1609
+design-concepts/daybreak/template.html
+  s_79f8c731965629::t_b211dcf3211f81 1-120
+design-concepts/fieldnotes.css
+  s_79f8c731965629::t_cb231279261c2d 1-159
+design-concepts/index.html
+  s_79f8c731965629::t_71cbb44400b395 1-629
+design-concepts/index.template.html
+  s_79f8c731965629::t_2285dfa0a7ede2 1-529
+design-concepts/qa.py
+  s_79f8c731965629::t_2d812dc8bfb808 1-89
+design-concepts/responsive.css
+  s_79f8c731965629::t_978ef3258c03ed 1-448
+design-concepts/swiss/app.js
+  s_79f8c731965629::t_b76a2e154dc765 1-87
+design-concepts/swiss/build.py
+  s_79f8c731965629::t_3eb5bedd93f540 1-25
+design-concepts/swiss/index.html
+  s_79f8c731965629::t_f4e1ebe06c346c 1-2735
+design-concepts/swiss/qa.py
+  s_79f8c731965629::t_3238c47a04bf07 1-102
+design-concepts/swiss/responsive.css
+  s_79f8c731965629::t_f76aabdcef07e5 1-626
+design-concepts/swiss/styles.css
+  s_79f8c731965629::t_96dd2346f03a0f 1-654
+design-concepts/swiss/template.html
+  s_79f8c731965629::t_d95d228a256487 1-671
+design-concepts/swiss/workspaces.css
+  s_79f8c731965629::t_e46e0aeb491a03 1-598
+design.md
+  s_79f8c731965629::t_15a06b56fa29fa 1-145
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "bee480977c4c1dcd992f5238c8ff455ad317e0fa",
+  "prompts": {},
+  "sessions": {
+    "s_79f8c731965629": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "51bdd1d1-d08e-4e89-982c-83ae72aa7a77",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Sam Fitzgerald <sam@factory.ai>"
+    }
+  }
+}
