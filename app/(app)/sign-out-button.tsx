@@ -19,7 +19,7 @@ export function SignOutButton() {
         })
       }
       disabled={pending}
-      className="font-mono text-xs tracking-tight hover:text-[color:var(--color-foreground)] disabled:opacity-50"
+      className="daybreak-button app-nav-link disabled:opacity-50"
     >
       {pending ? "Signing out…" : "Sign out"}
     </button>

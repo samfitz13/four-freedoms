@@ -37,6 +37,8 @@ export function ScoreRing({
         strokeDasharray={`${dash} ${c}`}
         strokeLinecap="round"
         transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        className="score-ring-arc"
+        style={{ ["--ring-dash" as string]: dash }}
       />
     </svg>
   );

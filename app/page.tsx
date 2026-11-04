@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AppearanceControls } from "@/components/ui/appearance-controls";
 import { FREEDOMS } from "@/lib/freedoms/constants";
 
 const steps = [
@@ -21,12 +22,11 @@ const steps = [
 
 export default function Home() {
   return (
-    <main className="mx-auto flex min-h-svh max-w-3xl flex-col justify-between px-6 py-10 sm:py-16">
-      <header className="flex items-center justify-between text-sm">
-        <span className="font-mono tracking-tight text-[color:var(--color-ink-soft)]">
-          freedom-four
-        </span>
-        <nav className="flex gap-6 text-[color:var(--color-ink-soft)]">
+    <main className="daybreak-public flex min-h-svh flex-col justify-between">
+      <AppearanceControls />
+      <header className="flex items-center justify-between">
+        <span className="brand-mark">freedom-four</span>
+        <nav className="app-nav-text flex gap-6">
           <Link href="/login" className="hover:text-[color:var(--color-foreground)]">
             Sign in
           </Link>
@@ -34,11 +34,9 @@ export default function Home() {
       </header>
 
       <section className="flex flex-col gap-10 py-16 sm:py-24">
-        <p className="font-mono text-xs tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
-          A personal instrument
-        </p>
+        <p className="eyebrow">A personal instrument</p>
 
-        <h1 className="font-serif text-5xl leading-[1.02] tracking-tight sm:text-7xl">
+        <h1 className="font-display text-5xl leading-[1.02] tracking-tight sm:text-7xl">
           Four freedoms.
           <br />
           <span className="text-[color:var(--color-ink-soft)] italic">One instrument.</span>
@@ -52,7 +50,7 @@ export default function Home() {
         <div className="flex items-center gap-6">
           <Link
             href="/login"
-            className="inline-flex h-11 items-center rounded-[var(--radius-sm)] bg-[color:var(--color-foreground)] px-5 text-sm font-medium text-[color:var(--color-background)] transition-opacity hover:opacity-90"
+            className="daybreak-button inline-flex h-11 items-center bg-[color:var(--glass-primary)] px-5 text-sm font-medium text-[color:var(--glass-primary-ink)] transition-opacity hover:opacity-90"
           >
             Begin
           </Link>
@@ -65,10 +63,8 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="freedoms" className="border-t border-[color:var(--color-border)] pt-10">
-        <p className="font-mono text-xs tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
-          The four
-        </p>
+      <section id="freedoms" className="daybreak-panel p-6">
+        <p className="eyebrow">The four</p>
         <ul className="mt-4 grid gap-0 sm:grid-cols-2">
           {FREEDOMS.map((f, i) => (
             <li
@@ -86,17 +82,15 @@ export default function Home() {
                 className="h-[2px] w-8 rounded-full"
                 style={{ background: f.colorVar }}
               />
-              <h3 className="font-serif text-2xl tracking-tight">{f.label}</h3>
+              <h3 className="font-display text-2xl tracking-tight">{f.label}</h3>
               <p className="text-sm text-[color:var(--color-ink-soft)]">{f.question}</p>
             </li>
           ))}
         </ul>
       </section>
 
-      <section className="mt-16 border-t border-[color:var(--color-border)] pt-10">
-        <p className="font-mono text-xs tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
-          How it works
-        </p>
+      <section className="daybreak-panel mt-16 p-6">
+        <p className="eyebrow">How it works</p>
         <ol className="mt-4 flex flex-col gap-0">
           {steps.map((s, i) => (
             <li
@@ -106,11 +100,9 @@ export default function Home() {
                 i > 0 ? "border-t border-[color:var(--color-border)]" : "",
               ].join(" ")}
             >
-              <span className="font-mono text-xs tracking-[0.18em] text-[color:var(--color-ink-soft)]">
-                {s.n}
-              </span>
+              <span className="eyebrow">{s.n}</span>
               <div className="flex flex-col gap-2">
-                <h4 className="font-serif text-xl tracking-tight">{s.title}</h4>
+                <h4 className="font-display text-xl tracking-tight">{s.title}</h4>
                 <p className="text-sm text-[color:var(--color-ink-soft)]">{s.body}</p>
               </div>
             </li>
@@ -118,10 +110,8 @@ export default function Home() {
         </ol>
       </section>
 
-      <section className="mt-16 flex flex-col gap-4 border-t border-[color:var(--color-border)] pt-10">
-        <p className="font-mono text-xs tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
-          Private by design
-        </p>
+      <section className="daybreak-panel mt-16 flex flex-col gap-4 p-6">
+        <p className="eyebrow">Private by design</p>
         <p className="max-w-xl text-base leading-relaxed">
           No ads. No tracking pixels. Magic-link sign-in, a database you could point at your own
           Postgres tomorrow, and a quiet monthly cadence — not another app pinging you in the
@@ -129,13 +119,13 @@ export default function Home() {
         </p>
         <Link
           href="/login"
-          className="mt-2 inline-flex h-11 w-fit items-center rounded-[var(--radius-sm)] bg-[color:var(--color-foreground)] px-5 text-sm font-medium text-[color:var(--color-background)] transition-opacity hover:opacity-90"
+          className="daybreak-button mt-2 inline-flex h-11 w-fit items-center bg-[color:var(--glass-primary)] px-5 text-sm font-medium text-[color:var(--glass-primary-ink)] transition-opacity hover:opacity-90"
         >
           Begin with your email
         </Link>
       </section>
 
-      <footer className="mt-16 flex items-center justify-between border-t border-[color:var(--color-border)] pt-6 font-mono text-xs tracking-tight text-[color:var(--color-ink-soft)]">
+      <footer className="brand-mark mt-16 flex items-center justify-between border-t border-[color:var(--color-border)] pt-6">
         <span>© {new Date().getFullYear()} freedom-four</span>
         <span>v0.1 · private beta</span>
       </footer>
