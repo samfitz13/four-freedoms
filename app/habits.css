@@ -1,0 +1,513 @@
+/* Habits: one shared surface, with a clear place for each day. */
+.habit-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+.habit-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 10px 2px 8px;
+}
+.habit-heading h2 {
+  margin-block: 10px 12px;
+  font-size: clamp(2rem, 3.8vw, 3.5rem);
+  line-height: 1.12;
+}
+.habit-intro {
+  color: var(--color-ink-soft);
+  font-size: 14px;
+}
+.habit-today-note {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-ink-soft);
+  font-size: 12px;
+  line-height: 1.65;
+}
+.habit-today-note strong {
+  color: var(--color-ink);
+  font-size: 18px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.habit-today-mark {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--glass-active);
+  color: var(--color-accent);
+  box-shadow: var(--glass-rim);
+}
+.habit-tracker {
+  container-type: inline-size;
+}
+.habit-tracker-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 25px 28px;
+  border-bottom: 1px solid var(--glass-stroke);
+}
+.habit-tracker-heading h3 {
+  font-size: 19px;
+}
+.habit-tracker-heading p {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--color-ink-soft);
+}
+.habit-target-note {
+  border-radius: 24px;
+  background: var(--glass-control);
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--color-ink-soft);
+}
+.habit-list {
+  list-style: none;
+  padding: 0 28px;
+}
+.habit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 22px;
+  row-gap: 20px;
+  padding-block: 26px 12px;
+}
+.habit-row + .habit-row {
+  border-top: 1px solid color-mix(in oklch, var(--color-border) 45%, transparent);
+}
+.habit-identity {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+}
+.habit-context {
+  color: var(--color-ink-soft);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.habit-identity h3 {
+  margin-block: 6px 9px;
+  font-size: 22px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.habit-source {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--color-ink-soft);
+  font-size: 12px;
+}
+.habit-source svg {
+  flex-shrink: 0;
+}
+.habit-week {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.habit-week-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(44px, 1fr));
+  gap: 4px;
+}
+.habit-day {
+  display: flex;
+  min-width: 44px;
+  min-height: 76px;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  border-radius: 16px;
+  padding: 3px 0;
+  background: transparent;
+  color: var(--color-ink);
+}
+.habit-weekday {
+  color: var(--color-ink-soft);
+  font-size: 12px;
+  line-height: 18px;
+}
+.habit-day-mark {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid var(--control-border);
+  border-radius: 50%;
+  background: var(--glass-control);
+  box-shadow: var(--glass-rim);
+  transition:
+    background-color 160ms,
+    transform 160ms;
+}
+.habit-day-number {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.habit-day[data-hit="true"] .habit-day-mark {
+  border-color: var(--glass-primary);
+  background: var(--glass-primary);
+  color: var(--glass-primary-ink);
+}
+.habit-day[data-today="true"] .habit-weekday {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+.habit-day[data-today="true"] .habit-day-mark {
+  outline: 1px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.habit-day[data-available="false"] .habit-day-mark {
+  border-style: dashed;
+  background: transparent;
+}
+.habit-day:disabled {
+  cursor: default;
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  button.habit-day:not(:disabled):hover .habit-day-mark {
+    transform: translateY(-2px);
+    box-shadow:
+      0 5px 12px var(--glass-shadow),
+      var(--glass-rim);
+  }
+}
+.habit-save-status {
+  display: block;
+  color: var(--color-accent-warning);
+  font-size: 12px;
+}
+.habit-save-status:not(:empty) {
+  margin-top: 10px;
+}
+.habit-progress {
+  grid-column: 2;
+  grid-row: 1;
+  width: 126px;
+}
+.habit-progress p {
+  color: var(--color-ink-soft);
+  font-size: 12px;
+}
+.habit-progress strong {
+  font-size: 27px;
+  font-weight: 500;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+.habit-progress > span {
+  font-size: 12px;
+  color: var(--color-ink-soft);
+}
+.habit-progress progress {
+  display: block;
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  border: 0;
+  border-radius: 5px;
+  margin-block: 9px;
+  overflow: hidden;
+  background: var(--glass-active);
+  color: var(--color-accent);
+}
+.habit-progress progress::-webkit-progress-bar {
+  background: var(--glass-active);
+  border-radius: 5px;
+}
+.habit-progress progress::-webkit-progress-value {
+  background: var(--color-accent);
+  border-radius: 5px;
+}
+.habit-progress progress::-moz-progress-bar {
+  background: var(--color-accent);
+  border-radius: 5px;
+}
+.habit-details {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--color-ink-soft);
+}
+.habit-details > summary,
+.habit-edit > summary {
+  min-height: 44px;
+  padding-block: 12px;
+  width: fit-content;
+}
+.habit-detail-content {
+  padding-block: 14px;
+}
+.habit-history-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  line-height: 1.7;
+}
+.habit-history-heading h4 {
+  font-size: 16px;
+  color: var(--color-ink);
+}
+.habit-history {
+  display: grid;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  gap: 5px;
+  list-style: none;
+  margin-block: 15px 10px;
+}
+.habit-history li {
+  display: grid;
+  min-height: 30px;
+  place-items: center;
+  border: 1px solid var(--control-border);
+  border-radius: 9px;
+  background: var(--glass-control);
+  color: var(--color-ink);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.habit-history li[data-hit="true"] {
+  background: var(--glass-primary);
+  color: var(--glass-primary-ink);
+  border-color: var(--glass-primary);
+}
+.habit-history li[data-available="false"] {
+  background: transparent;
+  border-style: dashed;
+}
+.habit-linked-note {
+  margin-top: 20px;
+  max-width: 65ch;
+  line-height: 1.8;
+}
+.habit-linked-note a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.habit-edit {
+  margin-top: 18px;
+  border-top: 1px solid var(--glass-stroke);
+}
+.habit-edit > summary {
+  color: var(--color-ink);
+  font-size: 14px;
+}
+.habit-archive {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}
+.habit-archive p {
+  flex-basis: 100%;
+}
+.habit-archive button {
+  font-size: 12px;
+}
+.habit-empty {
+  padding: clamp(25px, 5vw, 55px);
+  background: var(--color-surface-time);
+}
+.habit-empty > svg {
+  color: var(--color-accent);
+  margin-bottom: 22px;
+}
+.habit-empty h3 {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+.habit-empty p {
+  max-width: 48ch;
+  color: var(--color-ink-soft);
+  font-size: 14px;
+  line-height: 1.8;
+}
+.habit-empty .habit-empty-hint {
+  font-size: 12px;
+  margin-top: 18px;
+}
+.habit-composer {
+  padding: 10px 26px;
+}
+.habit-composer > summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 78px;
+  list-style: none;
+}
+.habit-composer > summary::-webkit-details-marker {
+  display: none;
+}
+.habit-composer-icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--glass-stroke);
+  border-radius: 50%;
+  background: var(--glass-control);
+  color: var(--color-accent);
+}
+.habit-composer[open] .habit-composer-icon {
+  transform: rotate(45deg);
+}
+.habit-composer strong {
+  display: block;
+  font-size: 17px;
+  font-weight: 500;
+}
+.habit-composer small {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-ink-soft);
+  font-size: 12px;
+}
+.habit-form {
+  padding-block: 12px 22px;
+}
+.habit-form fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+.habit-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-ink-soft);
+}
+.habit-form .habit-form-title {
+  font-size: 14px;
+  color: var(--color-ink);
+}
+.habit-form input,
+.habit-form select {
+  width: 100%;
+  min-width: 0;
+  font-size: 14px;
+}
+.habit-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.habit-link-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  padding-block: 20px;
+  border-block: 1px solid var(--glass-stroke);
+}
+.habit-link-fields p {
+  grid-column: 1 / -1;
+  color: var(--color-ink-soft);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.habit-form button {
+  align-self: flex-start;
+}
+.habit-form-result {
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--color-ink);
+}
+.habit-form-result[data-error="true"] {
+  color: var(--color-accent-warning);
+}
+@container (min-width: 780px) {
+  .habit-row {
+    grid-template-columns: minmax(170px, 1fr) minmax(340px, 1.7fr) 126px;
+  }
+  .habit-week {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .habit-progress {
+    grid-column: 3;
+  }
+}
+@container (max-width: 440px) {
+  .habit-tracker-heading {
+    padding: 22px 20px;
+  }
+  .habit-list {
+    padding-inline: 20px;
+  }
+  .habit-row {
+    column-gap: 14px;
+  }
+  .habit-identity h3 {
+    font-size: 20px;
+  }
+  .habit-progress {
+    width: 90px;
+  }
+  .habit-week-days {
+    grid-template-columns: repeat(4, minmax(44px, 1fr));
+    row-gap: 12px;
+  }
+  .habit-history {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+  .habit-form-grid,
+  .habit-link-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 580px) {
+  .habit-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .habit-composer {
+    padding-inline: 20px;
+  }
+  .habit-composer > summary {
+    padding-block: 12px;
+  }
+  .habit-form-grid,
+  .habit-link-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .habit-form input,
+  .habit-form select {
+    font-size: 16px;
+  }
+}
+@media (forced-colors: active) {
+  .habit-day-mark,
+  .habit-history li {
+    border-color: CanvasText;
+  }
+  .habit-day[data-hit="true"] .habit-day-mark,
+  .habit-history li[data-hit="true"] {
+    outline: 2px solid Highlight;
+    outline-offset: -4px;
+  }
+}

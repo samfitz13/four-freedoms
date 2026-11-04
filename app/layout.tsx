@@ -1,18 +1,12 @@
 import type { Metadata } from "next";
-import { Inter, Fraunces, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
+import { Manrope, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
   display: "swap",
-});
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  display: "swap",
-  axes: ["opsz", "SOFT"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -42,10 +36,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${inter.variable} ${fraunces.variable} ${jetbrainsMono.variable} antialiased`}
-      >
+    <html
+      lang="en"
+      className={`${manrope.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        <Script id="theme-preference" strategy="beforeInteractive">
+          {`try {
+            const theme = localStorage.getItem("freedom-four-theme");
+            if (theme === "light" || theme === "dark") {
+              document.documentElement.classList.add(theme);
+            }
+            const glass = localStorage.getItem("freedom-four-glass");
+            if (glass === "full" || glass === "solid") {
+              document.documentElement.dataset.glass = glass;
+            }
+          } catch { /* System preference still works without storage. */ }`}
+        </Script>
+      </head>
+      <body className="antialiased">
+        <div className="daybreak-scene" aria-hidden />
         {children}
       </body>
     </html>
