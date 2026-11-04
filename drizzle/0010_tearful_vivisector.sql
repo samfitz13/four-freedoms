@@ -1,0 +1,1 @@
+ALTER TYPE "public"."account_type" ADD VALUE 'equity_comp' BEFORE 'other';

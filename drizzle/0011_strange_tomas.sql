@@ -1,0 +1,1 @@
+ALTER TYPE "public"."financial_goal_kind" ADD VALUE 'savings_rate_target';
