@@ -1,285 +1,612 @@
+import type { ReactNode } from "react";
+import { latestBalances, listFinancialGoals } from "@/lib/db/queries/financial";
 import {
-  currentInvestedBalance,
-  latestReportedNetWorth,
-  listFinancialGoals,
-} from "@/lib/db/queries/financial";
+  getDerivedFiInputs,
+  getSavingsRateSeries,
+  getTrailingSavingsRate,
+  type SavingsRatePoint,
+} from "@/lib/freedoms/financial-derived";
 import type { FinancialGoal } from "@/lib/db/schema";
-import { projectFi } from "@/lib/freedoms/fi-projection";
-import type { FiProjection } from "@/lib/freedoms/types";
+import { getHouseholdFiPlan } from "@/lib/freedoms/fi-plan-server";
+import type { FiPlanView } from "@/lib/freedoms/fi-plan";
+import { classifyAccount } from "@/lib/freedoms/account-subtypes";
+import { AccountClass } from "@/lib/freedoms/enums";
+import type { DerivedFiInputs } from "@/lib/freedoms/types";
 import { Money } from "@/components/freedoms/money";
-import { ScoreRing } from "@/components/freedoms/score-ring";
-import { AreaChart } from "@/components/freedoms/financial/area-chart";
-import { FiGoalForm, NewGoalForm, UpdateProgressForm } from "./goals-forms";
+import { Sparkline } from "@/components/freedoms/sparkline";
+import { FiScenarioComparison } from "@/components/freedoms/financial/fi-scenario-comparison";
+import { UpdateProgressForm } from "./goals-forms";
+import { NewGoalLauncher } from "./new-goal-launcher";
+import { AssumptionsLauncher } from "./assumptions-launcher";
+import { GoalLinksLauncher } from "./goal-links-launcher";
 import { archiveGoal } from "./goals-actions";
+import type { AccountOption } from "./goals-forms";
+import { getUserBirthDate } from "@/lib/db/queries/profile";
+import { formatProjectionDate } from "@/lib/profile/birth-date";
 
 export async function FinancialGoalsTab({
   householdId,
   baseCurrency,
+  userId,
 }: {
   householdId: string;
   baseCurrency: string;
+  userId: string;
 }) {
-  const [goals, invested, reportedNw] = await Promise.all([
+  const [goals, view, observed, balances, savingsSeries, birthDate] = await Promise.all([
     listFinancialGoals(householdId),
-    currentInvestedBalance(householdId),
-    latestReportedNetWorth(householdId),
+    getHouseholdFiPlan(householdId),
+    getDerivedFiInputs(householdId),
+    latestBalances(householdId),
+    getSavingsRateSeries(householdId, 12),
+    getUserBirthDate(userId),
   ]);
+  const derived = { ...observed, trailingContributions: view.trailingContributions };
+
+  const accountOptions: AccountOption[] = balances
+    .filter((b) => !b.isArchived)
+    .map((b) => ({
+      id: b.accountId,
+      name: b.accountName,
+      type: b.type as string,
+      klass: classifyAccount(b.type) as AccountOption["klass"],
+    }));
 
   const fiGoal = goals.find((g) => g.kind === "fi_number" && g.status === "active");
-  const otherGoals = goals.filter((g) => g.kind !== "fi_number" && g.status !== "archived");
+  const otherGoals = goals.filter(
+    (g) => g.kind !== "fi_number" && g.kind !== "savings_rate_target" && g.status !== "archived",
+  );
+  const rateGoals = goals.filter(
+    (g) => g.kind === "savings_rate_target" && g.status !== "archived",
+  );
 
-  const fiParams = readFiParams(fiGoal);
-  // Prefer summed invested balances when the user has accounts wired up;
-  // fall back to reported net worth from daily check-ins.
-  const currentInvested = invested > 0 ? invested : (reportedNw ?? 0);
+  const fiParams = view.settings;
+  const todayMonth = monthStartUtc(new Date());
 
-  const projection = fiParams
-    ? projectFi({
-        currentInvested,
-        monthlyContribution: fiParams.monthlyContribution,
-        realReturn: fiParams.realReturn,
-        withdrawalRate: fiParams.withdrawalRate,
-        targetAnnualSpend: fiParams.annualSpend,
-      })
-    : null;
+  const assumptionDefaults = {
+    ...(fiParams ?? {
+      annualSpend: undefined,
+      withdrawalRate: 0.04,
+      realReturn: 0.05,
+      monthlyContribution: 0,
+    }),
+    inflationRate: fiParams?.version === 2 ? fiParams.assumptions.inflation : 0.03,
+  };
 
   return (
-    <div className="flex flex-col gap-10">
-      <header className="flex flex-col gap-3 border-b border-[color:var(--color-border)] pb-6">
-        <h2 className="font-serif text-2xl tracking-tight">Goals</h2>
-        <p className="max-w-xl text-sm text-[color:var(--color-ink-soft)]">
-          Your FI number, projection, and shorter-horizon targets. FI progress uses your invested
-          accounts (brokerage, retirement, crypto) when available and falls back to your latest
-          reported net worth.
-        </p>
+    <div className="goals-workspace">
+      <header className="goals-page-heading">
+        <h2>Goals</h2>
+        <NewGoalLauncher currency={baseCurrency} accounts={accountOptions} />
       </header>
 
       <FiCard
-        fiGoal={fiGoal}
-        projection={projection}
-        currentInvested={currentInvested}
+        birthDate={birthDate}
+        view={view}
+        milestones={otherGoals}
+        todayMonth={todayMonth}
         currency={baseCurrency}
+        derived={derived}
+        controls={
+          <AssumptionsLauncher
+            defaults={assumptionDefaults}
+            derived={derived}
+            currency={baseCurrency}
+            hasGoal={Boolean(fiGoal)}
+            view={{ settings: view.settings, allocation: view.allocation }}
+            birthDate={birthDate}
+          />
+        }
       />
 
-      <section className="flex flex-col gap-4">
-        <h3 className="font-serif text-xl">Other goals</h3>
-        {otherGoals.length === 0 ? (
-          <p className="text-sm text-[color:var(--color-ink-soft)]">No goals yet. Add one below.</p>
-        ) : (
-          <ul className="flex flex-col divide-y divide-[color:var(--color-border)]">
-            {otherGoals.map((g) => (
-              <li key={g.id} className="py-4">
-                <GoalRow goal={g} currency={baseCurrency} />
+      {rateGoals.length > 0 ? (
+        <section className="daybreak-panel goals-group">
+          <h3 className="goals-group-title">Savings rhythm</h3>
+          <ul className="goals-list">
+            {rateGoals.map((g) => (
+              <li key={g.id}>
+                <SavingsRateRow goal={g} series={savingsSeries} householdId={householdId} />
               </li>
             ))}
           </ul>
-        )}
-      </section>
+        </section>
+      ) : null}
 
-      <section className="flex flex-col gap-3">
-        <h3 className="font-mono text-[11px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
-          New goal
-        </h3>
-        <NewGoalForm currency={baseCurrency} />
-      </section>
+      {otherGoals.length > 0 ? (
+        <section className="daybreak-panel goals-group">
+          <h3 className="goals-group-title">Milestones</h3>
+          <ul className="goals-list">
+            {otherGoals.map((g) => (
+              <li key={g.id}>
+                <GoalRow
+                  goal={g}
+                  currency={baseCurrency}
+                  balances={balances}
+                  accounts={accountOptions}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }
 
 function FiCard({
-  fiGoal,
-  projection,
-  currentInvested,
+  birthDate,
+  view,
+  milestones,
+  todayMonth,
   currency,
+  derived,
+  controls,
 }: {
-  fiGoal: FinancialGoal | undefined;
-  projection: FiProjection | null;
-  currentInvested: number;
+  birthDate: string | null;
+  view: FiPlanView;
+  milestones: FinancialGoal[];
+  todayMonth: string;
   currency: string;
+  controls: ReactNode;
+  derived: DerivedFiInputs;
 }) {
-  const params = readFiParams(fiGoal);
-  const defaults = params ?? {
-    annualSpend: undefined as number | undefined,
-    withdrawalRate: 0.04,
-    realReturn: 0.05,
-    monthlyContribution: 0,
-  };
+  const { settings: params, plan, actualSeries, contribution: contributionUsed } = view;
+  const currentInvested = view.allocation.balance;
 
-  const progressPct = projection
-    ? Math.round(Math.max(0, Math.min(1, currentInvested / Math.max(1, projection.fiNumber))) * 100)
-    : 0;
+  if (!plan || !params) {
+    return (
+      <section className="daybreak-panel goals-fi goals-empty">
+        <h3>Financial independence</h3>
+        <p>{params ? "Projection needs attention." : "No FI target set."}</p>
+        {params && (
+          <ul>
+            {view.errors.map((error) => (
+              <li key={error}>{error}</li>
+            ))}
+          </ul>
+        )}
+        <div>{controls}</div>
+      </section>
+    );
+  }
+
+  const progressPct = Math.round(
+    Math.max(0, Math.min(1, currentInvested / Math.max(1, plan.fiNumber))) * 100,
+  );
 
   return (
-    <section className="flex flex-col gap-6 border border-[color:var(--color-border)] p-6">
-      <div className="flex items-start justify-between gap-6">
-        <div className="flex flex-col gap-2">
-          <span className="font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
-            Financial independence
-          </span>
-          <h3 className="font-serif text-2xl tracking-tight">
-            {projection ? (
-              <>
-                <Money value={projection.fiNumber} currency={currency} fractionDigits={0} />
-                <span className="ml-3 font-mono text-sm tracking-[0.14em] text-[color:var(--color-ink-soft)] uppercase">
-                  FI number
-                </span>
-              </>
-            ) : (
-              "Set your FI target"
-            )}
-          </h3>
-          {projection ? (
-            <p className="text-sm text-[color:var(--color-ink-soft)]">
-              At <span className="font-mono">{(projection.realReturn * 100).toFixed(1)}%</span> real
-              return and{" "}
-              <span className="font-mono">{(projection.withdrawalRate * 100).toFixed(1)}%</span>{" "}
-              SWR,{" "}
-              {projection.yearsToFi !== null
-                ? `you reach FI in ~${projection.yearsToFi} year${projection.yearsToFi === 1 ? "" : "s"}.`
-                : "your current plan doesn't reach FI within 50 years."}
-            </p>
-          ) : null}
+    <section className="daybreak-panel goals-fi">
+      <div className="goals-section-heading">
+        <h3>Financial independence</h3>
+        {controls}
+      </div>
+      <dl className="goals-stats">
+        <div>
+          <dt>Invested now</dt>
+          <dd>
+            <Money value={currentInvested} currency={currency} fractionDigits={0} />
+          </dd>
         </div>
-        {projection ? (
-          <div className="flex flex-col items-end gap-1">
-            <ScoreRing
-              score={progressPct}
-              color="var(--color-freedom-financial, #065f46)"
-              size={72}
-              stroke={5}
-            />
-            <span className="font-serif text-2xl tabular-nums">{progressPct}%</span>
-            <span className="font-mono text-[10px] tracking-[0.14em] text-[color:var(--color-ink-soft)] uppercase">
-              <Money value={currentInvested} currency={currency} compact /> invested
-            </span>
-          </div>
-        ) : null}
+        <div>
+          <dt>FI target</dt>
+          <dd>
+            <Money value={plan.fiNumber} currency={currency} fractionDigits={0} />
+          </dd>
+        </div>
+        <div>
+          <dt>Base plan reaches target</dt>
+          <dd>
+            {plan.monthsToFi === 0
+              ? "Met at projection start"
+              : plan.fiMonth
+                ? formatProjectionDate(plan.fiMonth, birthDate)
+                : "Not reached by plan end"}
+          </dd>
+        </div>
+      </dl>
+
+      <div className="flex flex-col gap-2">
+        <div className="flex items-baseline justify-between gap-4 font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
+          <span>{progressPct}% of target</span>
+          <span>
+            <Money
+              value={Math.max(0, plan.fiNumber - currentInvested)}
+              currency={currency}
+              compact
+            />{" "}
+            to go
+          </span>
+        </div>
+        <div
+          className="goals-progress"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={progressPct}
+          aria-label="Progress toward FI"
+        >
+          <div
+            className="goals-progress-fill"
+            style={{
+              width: `${Math.min(100, progressPct)}%`,
+            }}
+          />
+        </div>
       </div>
 
-      {projection ? (
-        <div className="flex flex-col gap-2">
-          <AreaChart
-            series={projection.years.map((y) => ({
-              date: isoYear(y.year),
-              value: y.balance,
-            }))}
-            color="var(--color-freedom-financial, #065f46)"
-            ariaLabel="Projected FI balance by year"
-            height={180}
-          />
-          <div className="flex items-center justify-between font-mono text-[10px] tracking-[0.14em] text-[color:var(--color-ink-soft)] uppercase">
-            <span>
-              year 0 · <Money value={projection.years[0]!.balance} currency={currency} compact />
-            </span>
-            <span>
-              FI line · <Money value={projection.fiNumber} currency={currency} compact />
-            </span>
-            <span>
-              year {projection.years[projection.years.length - 1]!.year} ·{" "}
-              <Money
-                value={projection.years[projection.years.length - 1]!.balance}
-                currency={currency}
-                compact
-              />
-            </span>
-          </div>
-        </div>
-      ) : null}
+      <p className="fi-chart-note">
+        {params.retirementMonth
+          ? `Retirement · ${formatProjectionDate(params.retirementMonth, birthDate)}`
+          : "Accumulation plan · Adjust assumptions to complete retirement settings"}
+        {" · "}
+        Contributions ·{" "}
+        <Money value={contributionUsed ?? 0} currency={currency} fractionDigits={0} /> / mo.
+        {params.useManualContribution ? (
+          " · Manual"
+        ) : (
+          <>
+            {" · "}12-month average · {derived.trailingContributions.monthsObserved}/12 months
+            recorded
+          </>
+        )}
+      </p>
 
-      <details
-        open={!fiGoal}
-        className="flex flex-col gap-3 border-t border-dashed border-[color:var(--color-border)] pt-4"
-      >
-        <summary className="cursor-pointer font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase select-none hover:text-[color:var(--color-foreground)]">
-          {fiGoal ? "Adjust assumptions" : "Set FI target"}
-        </summary>
-        <div className="mt-4">
-          <FiGoalForm defaults={defaults} currency={currency} />
-        </div>
+      <FiScenarioComparison
+        scenarios={view.scenarios}
+        stress={view.stress}
+        returnHistory={derived.returnHistory}
+        chart={{
+          birthDate,
+          actualSeries,
+          todayMonth,
+          currency,
+          milestones: milestones.map((goal) => ({
+            id: goal.id,
+            title: goal.title,
+            targetDate: goal.targetDate,
+            targetAmount: goal.targetAmount === null ? null : Number(goal.targetAmount),
+            status: goal.status,
+          })),
+        }}
+      />
+
+      <details className="goals-assumptions">
+        <summary>Plan assumptions & statement history</summary>
+        <dl className="goals-assumption-grid">
+          <AssumptionRow
+            label="Annual spend"
+            value={<Money value={params.annualSpend} currency={currency} fractionDigits={0} />}
+          />
+          <AssumptionRow
+            label="Withdrawal rate"
+            value={`${(params.withdrawalRate * 100).toFixed(1)}% / yr`}
+          />
+          <AssumptionRow
+            label="Base real return"
+            value={`${(view.scenarios.find((s) => s.kind === "base")!.realReturn! * 100).toFixed(2)}% / yr · ${params.returnMode === "manual" ? "Manual, net of fees" : params.assumptions.version}`}
+          />
+          <AssumptionRow
+            label="Monthly contribution"
+            value={
+              <>
+                <Money value={contributionUsed ?? 0} currency={currency} fractionDigits={0} /> / mo
+              </>
+            }
+          />
+        </dl>
+        <p className="fi-chart-note">
+          Contributions, retirement spending (including your tax budget), and after-tax income are
+          in today’s dollars. FI is a milestone, not a retirement instruction or a measure of
+          whole-retirement funding.
+        </p>
+        {params.version === 2 && params.returnMode === "portfolio" && (
+          <>
+            <p className="fi-chart-note">
+              Constant allocation with modeled rebalancing · Weighted fund expenses{" "}
+              {(view.allocation.expenseRate * 100).toFixed(3)}%{" · "}Additional fee{" "}
+              {(params.assumptions.additionalFee * 100).toFixed(2)}%{" · "}Inflation{" "}
+              {(params.assumptions.inflation * 100).toFixed(1)}%. Nominal planning returns: equities{" "}
+              {(params.assumptions.equities * 100).toFixed(1)}%, bonds{" "}
+              {(params.assumptions.bonds * 100).toFixed(1)}%, cash{" "}
+              {(params.assumptions.cash * 100).toFixed(1)}%. Equities ±2 pp, bonds ±1 pp, cash ±0.5
+              pp.
+            </p>
+            <dl className="goals-assumption-grid">
+              {(
+                [
+                  ["usEquity", "US equities"],
+                  ["developedEquity", "Developed international"],
+                  ["emergingEquity", "Emerging markets"],
+                  ["bonds", "Municipal bonds"],
+                  ["cash", "Cash"],
+                ] as const
+              ).map(([key, label]) => (
+                <AssumptionRow
+                  key={key}
+                  label={label}
+                  value={`${(view.allocation.weights[key] * 100).toFixed(1)}%`}
+                />
+              ))}
+            </dl>
+          </>
+        )}
+        <p className="fi-chart-note">
+          Allocation: {view.allocation.coverage.filter((a) => a.included && a.allocation).length}/
+          {view.allocation.coverage.filter((a) => a.included).length} accounts
+          {" · "}
+          <Money
+            value={view.allocation.coveredBalance}
+            currency={currency}
+            fractionDigits={0}
+          />{" "}
+          covered. Statements anchor balances at month end; modeled cash flows begin the following
+          month.
+        </p>
+        <ul className="fi-chart-note">
+          {view.allocation.coverage
+            .filter((a) => a.included)
+            .map((a) => (
+              <li key={a.id}>
+                {a.name} · {a.source ?? "Allocation not set"} · Statement{" "}
+                {a.statementMonth?.slice(0, 7) ?? "missing"}
+                {" · "}Snapshot {a.snapshotDate ?? "missing"} · Quotes {a.quoteDate ?? "unknown"} ·
+                Cash {a.cashDate ?? "unknown"}
+              </li>
+            ))}
+        </ul>
+        {params.retirementMonth && (
+          <p className="fi-chart-note">
+            Retirement {formatProjectionDate(params.retirementMonth, birthDate)} · Plan end{" "}
+            {formatProjectionDate(params.endMonth!, birthDate)}
+            {" · "}After-tax income{" "}
+            <Money value={params.monthlyRetirementIncome} currency={currency} /> / mo
+            {params.incomeStartMonth
+              ? ` from ${formatProjectionDate(params.incomeStartMonth, birthDate)}`
+              : ""}
+            . No jurisdiction-specific tax calculation or account withdrawal ordering.
+          </p>
+        )}
+
+        {derived.monthsObserved > 0 ? (
+          <div className="goals-observed">
+            <span className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
+              Realized so far
+            </span>
+            <p className="text-sm text-[color:var(--color-ink-soft)]">
+              {derived.avgMonthlyContribution !== null ? (
+                <>
+                  all-history avg contribution{" "}
+                  <span className="font-sans text-[color:var(--color-foreground)] tabular-nums">
+                    <Money
+                      value={derived.avgMonthlyContribution}
+                      currency={currency}
+                      fractionDigits={0}
+                    />{" "}
+                    / mo
+                  </span>
+                  {" · "}
+                </>
+              ) : null}
+              {derived.realizedAnnualReturn !== null ? (
+                <>
+                  balance-based annual return estimate{" "}
+                  <span className="font-sans text-[color:var(--color-foreground)] tabular-nums">
+                    {(derived.realizedAnnualReturn * 100).toFixed(1)}% / yr (nominal)
+                  </span>
+                  {" · "}
+                </>
+              ) : null}
+              <span className="font-sans tabular-nums">
+                {derived.monthsObserved} month{derived.monthsObserved === 1 ? "" : "s"} observed
+                {derived.oldestMonth ? ` since ${formatMonth(derived.oldestMonth)}` : ""}
+              </span>
+            </p>
+          </div>
+        ) : null}
       </details>
     </section>
   );
 }
 
-function GoalRow({ goal, currency }: { goal: FinancialGoal; currency: string }) {
-  const current = readNumber((goal.params as Record<string, unknown> | null)?.currentProgress) ?? 0;
-  const target = goal.targetAmount ? Number(goal.targetAmount) : 0;
-  const ratio = target > 0 ? Math.max(0, Math.min(1.25, current / target)) : 0;
-  const pct = Math.round(ratio * 100);
-  const achieved = goal.status === "achieved";
-
+function AssumptionRow({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-baseline justify-between gap-4">
-        <div className="flex flex-col">
-          <div className="flex items-baseline gap-3">
-            <span className="font-serif text-lg tracking-tight">{goal.title}</span>
-            <span className="font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
-              {goal.kind.replace(/_/g, " ")}
-            </span>
-            {achieved ? (
-              <span className="font-mono text-[10px] tracking-[0.14em] text-[color:var(--color-freedom-financial,#065f46)] uppercase">
-                Achieved
-              </span>
-            ) : null}
-          </div>
-          <span className="font-mono text-[11px] text-[color:var(--color-ink-soft)] tabular-nums">
-            <Money value={current} currency={currency} fractionDigits={0} /> /{" "}
-            <Money value={target} currency={currency} fractionDigits={0} />
-            {goal.targetDate ? ` · by ${goal.targetDate}` : ""}
-          </span>
-        </div>
-        <div className="flex flex-col items-end gap-1">
-          <ScoreRing
-            score={pct}
-            color={achieved ? "var(--color-freedom-financial, #065f46)" : "var(--color-foreground)"}
-          />
-          <span className="font-mono text-[11px] tabular-nums">{pct}%</span>
-        </div>
-      </div>
-      <div
-        className="relative h-1.5 w-full overflow-hidden rounded-full"
-        style={{ background: "var(--color-border)" }}
-        aria-hidden
-      >
-        <div
-          className="absolute inset-y-0 left-0 rounded-full"
-          style={{
-            width: `${Math.min(100, pct)}%`,
-            background: achieved
-              ? "var(--color-freedom-financial, #065f46)"
-              : "var(--color-foreground)",
-            opacity: 0.85,
-          }}
-        />
-      </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <UpdateProgressForm id={goal.id} currentProgress={current} currency={currency} />
-        <form action={archiveGoal} className="ml-auto">
-          <input type="hidden" name="id" value={goal.id} />
-          <button
-            type="submit"
-            className="font-mono text-[10px] tracking-[0.14em] text-[color:var(--color-ink-soft)] uppercase hover:text-[color:var(--color-accent-warning,#9a3412)]"
-          >
-            Archive
-          </button>
-        </form>
-      </div>
+    <div className="flex flex-col gap-1">
+      <dt className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
+        {label}
+      </dt>
+      <dd className="font-display text-base tabular-nums">{value}</dd>
     </div>
   );
 }
 
-function readFiParams(goal: FinancialGoal | undefined) {
-  if (!goal) return null;
-  const p = (goal.params ?? {}) as Record<string, unknown>;
-  const annualSpend = readNumber(p.annualSpend);
-  if (annualSpend === undefined) return null;
-  return {
-    annualSpend,
-    withdrawalRate: readNumber(p.withdrawalRate) ?? 0.04,
-    realReturn: readNumber(p.realReturn) ?? 0.05,
-    monthlyContribution: readNumber(p.monthlyContribution) ?? 0,
-  };
+function GoalRow({
+  goal,
+  currency,
+  balances,
+  accounts,
+}: {
+  goal: FinancialGoal;
+  currency: string;
+  balances: Awaited<ReturnType<typeof latestBalances>>;
+  accounts: AccountOption[];
+}) {
+  const params = (goal.params ?? {}) as Record<string, unknown>;
+  const linkedAccountIds = readStringArray(params.linkedAccountIds);
+  const linkedClass = readString(params.linkedClass);
+  const invert = params.invert === true;
+
+  const linkMode: "manual" | "accounts" | "class" =
+    linkedAccountIds.length > 0 ? "accounts" : linkedClass !== null ? "class" : "manual";
+
+  const target = goal.targetAmount ? Number(goal.targetAmount) : 0;
+  const linkedSum = (() => {
+    if (linkMode === "accounts") {
+      const ids = new Set(linkedAccountIds);
+      return balances.filter((b) => ids.has(b.accountId)).reduce((s, b) => s + b.balance, 0);
+    }
+    if (linkMode === "class" && linkedClass) {
+      return balances
+        .filter((b) => classifyAccount(b.type) === (linkedClass as AccountClass))
+        .reduce((s, b) => s + Math.abs(b.balance), 0);
+    }
+    return null;
+  })();
+
+  // For inverted (debt-payoff) goals, "current" is paid-down progress vs target.
+  const manualProgress = readNumber(params.currentProgress) ?? 0;
+  let current = manualProgress;
+  if (linkedSum !== null) {
+    current = invert ? Math.max(0, target - linkedSum) : linkedSum;
+  }
+  const ratio = target > 0 ? Math.max(0, Math.min(1.25, current / target)) : 0;
+  const pct = Math.round(ratio * 100);
+  const achieved = goal.status === "achieved" || (target > 0 && current >= target);
+
+  const linkLabel = (() => {
+    if (linkMode === "manual") return "manual";
+    if (linkMode === "class") return `class · ${linkedClass}`;
+    const names = balances
+      .filter((b) => linkedAccountIds.includes(b.accountId))
+      .map((b) => b.accountName);
+    return `linked · ${names.length > 2 ? `${names.length} accounts` : names.join(", ")}`;
+  })();
+
+  return (
+    <div className="goals-row">
+      <div className="goals-row-heading">
+        <div className="flex flex-col">
+          <div className="goals-title-line">
+            <h4>{goal.title}</h4>
+            <span className="goals-kind">{goal.kind.replace(/_/g, " ")}</span>
+            {achieved ? <span className="goals-status">Achieved</span> : null}
+          </div>
+          <p className="goals-row-amount">
+            <Money value={current} currency={currency} fractionDigits={0} />
+            <span className="goals-row-target">
+              {" "}
+              of <Money value={target} currency={currency} fractionDigits={0} />
+            </span>
+          </p>
+          <p className="goals-row-meta">
+            {goal.targetDate ? `By ${goal.targetDate} · ` : ""}
+            {linkLabel}
+          </p>
+        </div>
+        <span className="goals-percent">{pct}%</span>
+      </div>
+      <div
+        className="goals-progress"
+        role="progressbar"
+        aria-label={`${goal.title} progress`}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.min(100, pct)}
+        aria-valuetext={`${pct}% of target`}
+      >
+        <div
+          className="goals-progress-fill"
+          style={{
+            width: `${Math.min(100, pct)}%`,
+          }}
+        />
+      </div>
+      <details className="goals-manage">
+        <summary>Manage goal</summary>
+        <div className="goals-actions">
+          {linkMode === "manual" ? (
+            <UpdateProgressForm id={goal.id} currentProgress={current} currency={currency} />
+          ) : (
+            <span className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
+              Auto-updates from latest statement
+            </span>
+          )}
+          <GoalLinksLauncher
+            goalId={goal.id}
+            initial={{
+              linkMode,
+              linkedAccountIds,
+              linkedClass,
+              invert,
+            }}
+            accounts={accounts}
+          />
+          <form action={archiveGoal} className="ml-auto">
+            <input type="hidden" name="id" value={goal.id} />
+            <button
+              type="submit"
+              className="daybreak-button font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-accent-warning,#9a3412)]"
+            >
+              Archive
+            </button>
+          </form>
+        </div>
+      </details>
+    </div>
+  );
+}
+
+async function SavingsRateRow({
+  goal,
+  series,
+  householdId,
+}: {
+  goal: FinancialGoal;
+  series: SavingsRatePoint[];
+  householdId: string;
+}) {
+  const params = (goal.params ?? {}) as Record<string, unknown>;
+  const targetRate = readNumber(params.targetRate) ?? 0.2;
+  const window = readNumber(params.window) ?? 12;
+  const trailing = await getTrailingSavingsRate(householdId, window);
+
+  // Map the savings-rate series to DailyPoint[] (sparkline scale 0..100).
+  const sparkSeries = series.slice(-Math.min(12, series.length)).map((p) => ({
+    date: p.month,
+    score: p.savingsRate !== null ? Math.max(0, Math.min(100, p.savingsRate * 100)) : null,
+  }));
+
+  const ratePct = trailing.rate !== null ? trailing.rate * 100 : null;
+  const targetPct = targetRate * 100;
+  const above = ratePct !== null && ratePct >= targetPct;
+
+  return (
+    <div className="goals-row">
+      <div className="goals-row-heading">
+        <div className="flex flex-col">
+          <div className="goals-title-line">
+            <h4>{goal.title}</h4>
+            <span className="goals-kind">savings rate · {window}-mo trailing</span>
+            {above ? <span className="goals-status">Above target</span> : null}
+          </div>
+          <p className="goals-row-amount">
+            {ratePct !== null ? `${ratePct.toFixed(1)}%` : "—"}
+            <span className="goals-row-target"> · target {targetPct.toFixed(0)}%</span>
+          </p>
+          <p className="goals-row-meta">
+            {trailing.months > 0 ? `${trailing.months} mo observed` : "Waiting for statements"}
+          </p>
+        </div>
+        <div className="goals-rate-trend">
+          <Sparkline series={sparkSeries} color="var(--color-accent)" width={160} height={32} />
+          <span className="goals-row-meta">Monthly savings rate</span>
+        </div>
+      </div>
+      <details className="goals-manage">
+        <summary>Manage target</summary>
+        <div className="goals-actions">
+          <form action={archiveGoal} className="ml-auto">
+            <input type="hidden" name="id" value={goal.id} />
+            <button
+              type="submit"
+              className="daybreak-button font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-accent-warning,#9a3412)]"
+            >
+              Archive
+            </button>
+          </form>
+        </div>
+      </details>
+    </div>
+  );
 }
 
 function readNumber(v: unknown): number | undefined {
@@ -291,9 +618,20 @@ function readNumber(v: unknown): number | undefined {
   return undefined;
 }
 
-/** Synthetic ISO date for the Area chart's X-axis (year-over-year points). */
-function isoYear(n: number): string {
-  const base = new Date();
-  const year = base.getUTCFullYear() + n;
-  return `${year}-01-01`;
+function readString(v: unknown): string | null {
+  return typeof v === "string" && v.length > 0 ? v : null;
+}
+
+function readStringArray(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  return v.filter((x): x is string => typeof x === "string" && x.length > 0);
+}
+
+function formatMonth(m: string): string {
+  const d = new Date(m + "T00:00:00Z");
+  return d.toLocaleDateString(undefined, { month: "short", year: "numeric", timeZone: "UTC" });
+}
+
+function monthStartUtc(d: Date): string {
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-01`;
 }

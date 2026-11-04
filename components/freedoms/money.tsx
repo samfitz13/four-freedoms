@@ -17,7 +17,11 @@ export function Money({
   compact?: boolean;
 }) {
   if (value === null || value === undefined || !Number.isFinite(value)) {
-    return <span className="tabular-nums">—</span>;
+    return (
+      <span aria-label="not available" className="text-[color:var(--color-ink-soft)] tabular-nums">
+        —
+      </span>
+    );
   }
   const formatted = new Intl.NumberFormat("en", {
     style: "currency",

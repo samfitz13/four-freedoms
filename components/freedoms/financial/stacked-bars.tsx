@@ -99,7 +99,7 @@ export function StackedBars({
                 y={height - 2}
                 textAnchor="middle"
                 className="fill-[color:var(--color-ink-soft)]"
-                style={{ fontSize: 10, fontFamily: "var(--font-mono, monospace)" }}
+                style={{ fontSize: 10, fontFamily: "var(--font-sans, monospace)" }}
               >
                 {monthLabel(d.month)}
               </text>
@@ -109,9 +109,6 @@ export function StackedBars({
       })}
 
       <path d={netPath} fill="none" stroke={netColor} strokeWidth={1.25} strokeLinejoin="round" />
-      {netPoints.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r={1.75} fill={netColor} />
-      ))}
     </svg>
   );
 }

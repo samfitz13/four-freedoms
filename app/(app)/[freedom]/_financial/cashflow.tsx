@@ -3,14 +3,18 @@ import {
   cashflowByMonth,
   listAccounts,
   listBudgetCategories,
-  listRecentTransactions,
+  listLedger,
+  peerAccountsForTransfers,
 } from "@/lib/db/queries/financial";
 import { Money } from "@/components/freedoms/money";
 import { StackedBars } from "@/components/freedoms/financial/stacked-bars";
 import { BudgetHeatmap } from "@/components/freedoms/financial/heatmap";
 import { Sparkline } from "@/components/freedoms/sparkline";
-import { AddCategoryForm, AddTransactionForm, SetPlanRow } from "./cashflow-forms";
-import { archiveCategory, deleteTransaction } from "./cashflow-actions";
+import { AddCategoryForm, SetPlanRow } from "./cashflow-forms";
+import { AddTransactionLauncher } from "./add-transaction-launcher";
+import { LedgerView } from "./ledger";
+import { archiveCategory } from "./cashflow-actions";
+import type { PeerInfo } from "./types";
 
 export async function FinancialCashflowTab({
   householdId,
@@ -20,13 +24,34 @@ export async function FinancialCashflowTab({
   baseCurrency: string;
 }) {
   const monthStart = firstOfCurrentMonth();
-  const [monthly, actuals, accounts, categories, transactions] = await Promise.all([
-    cashflowByMonth(householdId, 12),
+  const [monthly, actuals, accounts, categories, ledgerPage] = await Promise.all([
+    cashflowByMonth(householdId, 12, { fromEarliest: true }),
     budgetActuals(householdId, monthStart),
-    listAccounts(householdId),
+    listAccounts(householdId, { includeArchived: true }),
     listBudgetCategories(householdId),
-    listRecentTransactions(householdId, 15),
+    listLedger(householdId, {}, null, 50),
   ]);
+
+  const transferGroupIds = Array.from(
+    new Set(
+      ledgerPage.rows
+        .filter((t) => t.kind === "transfer" && t.transferGroupId)
+        .map((t) => t.transferGroupId as string),
+    ),
+  );
+  const peerMap = await peerAccountsForTransfers(householdId, transferGroupIds);
+
+  const initialPeers: Record<string, PeerInfo> = {};
+  for (const r of ledgerPage.rows) {
+    if (r.kind !== "transfer" || !r.transferGroupId) continue;
+    const group = peerMap.get(r.transferGroupId);
+    if (!group) continue;
+    const peer = group.find((g) => g.id !== r.id);
+    if (peer) {
+      initialPeers[r.id] = { accountId: peer.accountId, accountName: peer.accountName };
+    }
+  }
+  const transactions = ledgerPage.rows;
 
   const currentMonth = monthly[monthly.length - 1];
   const totalPlanned = actuals.reduce((s, a) => s + a.planned, 0);
@@ -39,174 +64,167 @@ export async function FinancialCashflowTab({
   }));
 
   const empty = transactions.length === 0 && accounts.length === 0 && categories.length === 0;
+  const hasFlow = monthly.some((m) => m.income > 0 || m.expense > 0);
+  const hasCategories = categories.length > 0;
+  const hasTransactions = transactions.length > 0;
+
+  const cashflowStats: Array<{ label: string; value: React.ReactNode }> = [];
+  if (currentMonth && currentMonth.income > 0) {
+    cashflowStats.push({
+      label: "Income · this mo",
+      value: <Money value={currentMonth.income} currency={baseCurrency} compact />,
+    });
+  }
+  if (currentMonth && currentMonth.expense > 0) {
+    cashflowStats.push({
+      label: "Expenses · this mo",
+      value: <Money value={currentMonth.expense} currency={baseCurrency} compact />,
+    });
+  }
+  if (currentMonth && (currentMonth.income > 0 || currentMonth.expense > 0)) {
+    cashflowStats.push({
+      label: "Net · this mo",
+      value:
+        currentMonth.net === 0 ? (
+          <Money value={0} currency={baseCurrency} compact />
+        ) : currentMonth.net > 0 ? (
+          <>
+            +<Money value={currentMonth.net} currency={baseCurrency} compact />
+          </>
+        ) : (
+          <span className="text-[color:var(--color-accent-warning,#9a3412)]">
+            <Money value={currentMonth.net} currency={baseCurrency} compact />
+          </span>
+        ),
+    });
+  }
+  if (currentMonth && currentMonth.income > 0) {
+    cashflowStats.push({
+      label: "Savings rate",
+      value: `${Math.round(currentMonth.savingsRate * 100)}%`,
+    });
+  }
 
   return (
     <div className="flex flex-col gap-10">
-      <header className="flex flex-col gap-3 border-b border-[color:var(--color-border)] pb-6">
-        <h2 className="font-serif text-2xl tracking-tight">Cashflow</h2>
-        <p className="max-w-xl text-sm text-[color:var(--color-ink-soft)]">
-          Monthly income vs. expenses, savings rate, and budget actuals for{" "}
-          <span className="font-mono text-xs">{monthLabel(monthStart)}</span>.
-        </p>
+      <header className="daybreak-section-head flex flex-col gap-3 border-b border-[color:var(--color-border)] pb-6">
+        <h2 className="font-display text-2xl tracking-tight">Cashflow</h2>
+        {empty ? (
+          <p className="max-w-xl text-sm text-[color:var(--color-ink-soft)]">
+            Add a transaction below. Monthly flow, budget, and savings rate fill in as you go.
+          </p>
+        ) : null}
       </header>
 
-      {empty ? <EmptyCashflow /> : null}
+      {cashflowStats.length ? (
+        <section className="flex flex-wrap gap-x-10 gap-y-8">
+          {cashflowStats.map((s) => (
+            <Stat key={s.label} label={s.label} value={s.value} />
+          ))}
+        </section>
+      ) : null}
 
-      <section className="grid gap-4 sm:grid-cols-4">
-        <Stat
-          label="Income · this mo"
-          value={
-            currentMonth ? (
-              <Money value={currentMonth.income} currency={baseCurrency} compact />
-            ) : (
-              "—"
-            )
-          }
-        />
-        <Stat
-          label="Expenses · this mo"
-          value={
-            currentMonth ? (
-              <Money value={currentMonth.expense} currency={baseCurrency} compact />
-            ) : (
-              "—"
-            )
-          }
-        />
-        <Stat
-          label="Net · this mo"
-          value={
-            currentMonth ? (
-              <span
-                className={
-                  currentMonth.net >= 0 ? "" : "text-[color:var(--color-accent-warning,#9a3412)]"
-                }
-              >
-                {currentMonth.net >= 0 ? "+" : ""}
-                <Money value={currentMonth.net} currency={baseCurrency} compact />
-              </span>
-            ) : (
-              "—"
-            )
-          }
-        />
-        <Stat
-          label="Savings rate"
-          value={
-            currentMonth && currentMonth.income > 0
-              ? `${Math.round(currentMonth.savingsRate * 100)}%`
-              : "—"
-          }
-        />
-      </section>
-
-      <section className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-serif text-xl">Monthly flow · 12mo</h3>
-          <Sparkline
-            series={savingsSeries}
-            color="var(--color-freedom-financial, #065f46)"
-            width={180}
+      {hasFlow ? (
+        <section className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-display text-xl">Monthly flow · 12mo</h3>
+            <Sparkline
+              series={savingsSeries}
+              color="var(--color-freedom-financial, #065f46)"
+              width={180}
+              interactive
+              valueSuffix="% saved"
+            />
+          </div>
+          <StackedBars
+            data={monthly}
+            ariaLabel="Monthly income vs. expenses for the last 12 months"
           />
-        </div>
-        <StackedBars
-          data={monthly}
-          ariaLabel="Monthly income vs. expenses for the last 12 months"
-        />
-        <Legend />
-      </section>
+          <Legend />
+        </section>
+      ) : null}
 
-      <section className="flex flex-col gap-4">
-        <div className="flex items-baseline justify-between gap-4">
-          <h3 className="font-serif text-xl">Budget · {monthLabel(monthStart)}</h3>
-          <p className="font-mono text-[11px] text-[color:var(--color-ink-soft)] tabular-nums">
-            <Money value={totalActual} currency={baseCurrency} compact /> /{" "}
-            <Money value={totalPlanned} currency={baseCurrency} compact />
+      {hasCategories ? (
+        <section className="flex flex-col gap-4">
+          <div className="flex items-baseline justify-between gap-4">
+            <h3 className="font-display text-xl">Budget · {monthLabel(monthStart)}</h3>
+            <p className="font-sans text-xs text-[color:var(--color-ink-soft)] tabular-nums">
+              <Money value={totalActual} currency={baseCurrency} compact /> /{" "}
+              <Money value={totalPlanned} currency={baseCurrency} compact />
+            </p>
+          </div>
+          <BudgetHeatmap rows={actuals} currency={baseCurrency} />
+        </section>
+      ) : null}
+
+      {hasTransactions ? (
+        <section className="flex flex-col gap-3">
+          <header className="flex items-baseline justify-between gap-6">
+            <h3 className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
+              Transactions
+            </h3>
+            <AddTransactionLauncher
+              accounts={accounts
+                .filter((a) => !a.isArchived)
+                .map((a) => ({ id: a.id, name: a.name, currency: a.currency }))}
+              categories={categories.map((c) => ({ id: c.id, name: c.name, kind: c.kind }))}
+            />
+          </header>
+          <LedgerView
+            initial={{
+              rows: ledgerPage.rows,
+              nextCursor: ledgerPage.nextCursor,
+              peers: initialPeers,
+            }}
+            accounts={accounts.map((a) => ({
+              id: a.id,
+              name: a.name,
+              currency: a.currency,
+              isArchived: a.isArchived,
+            }))}
+            categories={categories.map((c) => ({ id: c.id, name: c.name, kind: c.kind }))}
+          />
+        </section>
+      ) : (
+        <section className="flex flex-col gap-3">
+          <header className="flex items-baseline justify-between gap-6">
+            <h3 className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
+              Transactions
+            </h3>
+            <AddTransactionLauncher
+              accounts={accounts
+                .filter((a) => !a.isArchived)
+                .map((a) => ({ id: a.id, name: a.name, currency: a.currency }))}
+              categories={categories.map((c) => ({ id: c.id, name: c.name, kind: c.kind }))}
+            />
+          </header>
+          <p className="text-sm text-[color:var(--color-ink-soft)]">
+            No transactions yet. Add one to get started, or import a CSV from Accounts.
           </p>
-        </div>
-        <BudgetHeatmap rows={actuals} currency={baseCurrency} />
-      </section>
+        </section>
+      )}
 
-      <section className="flex flex-col gap-3">
-        <h3 className="font-mono text-[11px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
-          New transaction
-        </h3>
-        <AddTransactionForm
-          accounts={accounts.map((a) => ({ id: a.id, name: a.name, currency: a.currency }))}
-          categories={categories.map((c) => ({ id: c.id, name: c.name, kind: c.kind }))}
-        />
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <h3 className="font-mono text-[11px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
-          Recent transactions
-        </h3>
-        {transactions.length === 0 ? (
-          <p className="text-sm text-[color:var(--color-ink-soft)]">No transactions yet.</p>
-        ) : (
-          <ul className="flex flex-col divide-y divide-[color:var(--color-border)]">
-            {transactions.map((t) => {
-              const amt = Number(t.amount);
-              const isIncome = amt > 0;
-              return (
-                <li key={t.id} className="flex items-center gap-4 py-2">
-                  <span className="font-mono text-xs text-[color:var(--color-ink-soft)] tabular-nums">
-                    {t.occurredOn}
-                  </span>
-                  <span className="flex-1 text-sm">{t.description ?? "—"}</span>
-                  <span
-                    className={`tabular-nums ${
-                      isIncome ? "" : "text-[color:var(--color-accent-warning,#9a3412)]"
-                    }`}
-                  >
-                    {isIncome ? "+" : ""}
-                    <Money value={amt} currency={t.currency} fractionDigits={2} />
-                  </span>
-                  <span className="font-mono text-[10px] tracking-[0.14em] text-[color:var(--color-ink-soft)] uppercase">
-                    {t.source}
-                  </span>
-                  <form action={deleteTransaction}>
-                    <input type="hidden" name="id" value={t.id} />
-                    <button
-                      type="submit"
-                      aria-label="Delete transaction"
-                      className="font-mono text-[10px] tracking-[0.14em] text-[color:var(--color-ink-soft)] uppercase hover:text-[color:var(--color-accent-warning,#9a3412)]"
-                    >
-                      Delete
-                    </button>
-                  </form>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
-
-      <details className="flex flex-col gap-3 border-t border-[color:var(--color-border)] pt-6">
-        <summary className="cursor-pointer font-mono text-[11px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase select-none hover:text-[color:var(--color-foreground)]">
+      <details className="daybreak-panel flex flex-col gap-3 p-6">
+        <summary className="cursor-pointer font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)] select-none hover:text-[color:var(--color-foreground)]">
           Manage categories &amp; plans
         </summary>
         <div className="mt-4 flex flex-col gap-8">
           <section className="flex flex-col gap-3">
-            <h4 className="font-serif text-lg">Categories</h4>
+            <h4 className="font-display text-lg">Categories</h4>
             <AddCategoryForm />
-            {categories.length === 0 ? (
-              <p className="text-sm text-[color:var(--color-ink-soft)]">
-                No categories yet. Add your first one above (e.g. Rent, Groceries, Salary).
-              </p>
-            ) : (
+            {categories.length > 0 ? (
               <ul className="flex flex-col divide-y divide-[color:var(--color-border)]">
                 {categories.map((c) => (
                   <li key={c.id} className="flex items-center gap-3 py-2">
                     <span className="text-sm">{c.name}</span>
-                    <span className="font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
+                    <span className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
                       {c.kind}
                     </span>
                     <form action={archiveCategory} className="ml-auto">
                       <input type="hidden" name="id" value={c.id} />
                       <button
                         type="submit"
-                        className="font-mono text-[10px] tracking-[0.14em] text-[color:var(--color-ink-soft)] uppercase hover:text-[color:var(--color-accent-warning,#9a3412)]"
+                        className="daybreak-button font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-accent-warning,#9a3412)]"
                       >
                         Archive
                       </button>
@@ -214,16 +232,12 @@ export async function FinancialCashflowTab({
                   </li>
                 ))}
               </ul>
-            )}
+            ) : null}
           </section>
 
-          <section className="flex flex-col gap-3">
-            <h4 className="font-serif text-lg">Plan · {monthLabel(monthStart)}</h4>
-            {actuals.length === 0 ? (
-              <p className="text-sm text-[color:var(--color-ink-soft)]">
-                Add categories first, then set this month&rsquo;s plan.
-              </p>
-            ) : (
+          {actuals.length > 0 ? (
+            <section className="flex flex-col gap-3">
+              <h4 className="font-display text-lg">Plan · {monthLabel(monthStart)}</h4>
               <ul className="flex flex-col divide-y divide-[color:var(--color-border)]">
                 {actuals.map((row) => (
                   <li key={row.categoryId}>
@@ -238,8 +252,8 @@ export async function FinancialCashflowTab({
                   </li>
                 ))}
               </ul>
-            )}
-          </section>
+            </section>
+          ) : null}
         </div>
       </details>
     </div>
@@ -249,17 +263,17 @@ export async function FinancialCashflowTab({
 function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
-      <dt className="font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
+      <dt className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
         {label}
       </dt>
-      <dd className="font-serif text-2xl tabular-nums">{value}</dd>
+      <dd className="font-display text-2xl tabular-nums">{value}</dd>
     </div>
   );
 }
 
 function Legend() {
   return (
-    <div className="flex flex-wrap items-center gap-6 font-mono text-[10px] tracking-[0.14em] text-[color:var(--color-ink-soft)] uppercase">
+    <div className="flex flex-wrap items-center gap-6 font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
       <span className="flex items-center gap-2">
         <span
           aria-hidden
@@ -284,18 +298,6 @@ function Legend() {
         />
         Net
       </span>
-    </div>
-  );
-}
-
-function EmptyCashflow() {
-  return (
-    <div className="flex flex-col gap-3 border border-dashed border-[color:var(--color-border)] p-6">
-      <h3 className="font-serif text-xl">No cashflow yet.</h3>
-      <p className="max-w-xl text-sm text-[color:var(--color-ink-soft)]">
-        Add a couple of categories and a few transactions below to see your monthly flow, savings
-        rate, and plan vs. actual come to life.
-      </p>
     </div>
   );
 }

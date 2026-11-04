@@ -46,12 +46,20 @@ export function Donut({
       label: s.label,
       value: s.value,
       pct: Math.round(frac * 100),
+      startAngle: (-cumulative[i]! / c) * 2 * Math.PI - Math.PI / 2,
     };
   });
 
   return (
-    <div className="flex items-center gap-6">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-label={ariaLabel}>
+    <div className="flex flex-wrap items-center gap-6">
+      <svg
+        role="img"
+        className="shrink-0"
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        aria-label={`${ariaLabel ?? "Asset allocation"}. ${segments.map((seg) => `${seg.label.replace(/_/g, " ")} ${seg.pct}%`).join(", ")}`}
+      >
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -62,6 +70,7 @@ export function Donut({
         />
         {segments.map((seg, i) => (
           <circle
+            data-slot="allocation-segment"
             key={i}
             cx={size / 2}
             cy={size / 2}
@@ -72,11 +81,28 @@ export function Donut({
             strokeDasharray={`${seg.dash} ${seg.gap}`}
             strokeDashoffset={seg.offset}
             transform={`rotate(-90 ${size / 2} ${size / 2})`}
-          />
+          >
+            <title>{`${seg.label.replace(/_/g, " ")}: ${seg.pct}%`}</title>
+          </circle>
         ))}
+        {segments.length > 1
+          ? segments.map((seg, i) => (
+              <line
+                key={i}
+                data-slot="allocation-separator"
+                aria-hidden
+                x1={size / 2 + (r - stroke / 2) * Math.cos(seg.startAngle)}
+                y1={size / 2 + (r - stroke / 2) * Math.sin(seg.startAngle)}
+                x2={size / 2 + (r + stroke / 2) * Math.cos(seg.startAngle)}
+                y2={size / 2 + (r + stroke / 2) * Math.sin(seg.startAngle)}
+                stroke="var(--color-paper)"
+                strokeWidth={1.5}
+              />
+            ))
+          : null}
       </svg>
 
-      <ul className="flex flex-col gap-2 text-sm">
+      <ul className="flex min-w-40 flex-1 flex-col gap-2 text-sm">
         {positive.length === 0 ? (
           <li className="text-[color:var(--color-ink-soft)]">No positive balances yet.</li>
         ) : (
@@ -87,7 +113,7 @@ export function Donut({
                 className="inline-block h-2 w-4 rounded-full"
                 style={{ background: s.color }}
               />
-              <span className="font-mono text-[11px] tracking-[0.14em] uppercase">
+              <span className="font-sans text-xs tracking-normal">
                 {s.label.replace(/_/g, " ")}
               </span>
               <span className="ml-auto text-[color:var(--color-ink-soft)] tabular-nums">
