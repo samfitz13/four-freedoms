@@ -1,0 +1,684 @@
+@media (min-width: 1600px) {
+  body {
+    padding-top: 45px;
+  }
+  .console-body {
+    gap: 43px;
+    padding-bottom: 35px;
+  }
+  .screen-head {
+    padding-bottom: 35px;
+  }
+}
+@media (max-width: 1200px) {
+  body {
+    padding: 20px;
+  }
+  .console-body {
+    grid-template-columns: 177px minmax(0, 1fr);
+    gap: 22px;
+    padding-right: 23px;
+    padding-left: 10px;
+  }
+  .blade {
+    gap: 7px;
+    padding-left: 10px;
+  }
+  .blade small {
+    font-size: 8px;
+  }
+  .blade-icon {
+    width: 29px;
+  }
+  .tile {
+    padding: 22px;
+  }
+  .screen-head {
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  .screen-head h1 {
+    font-size: 35px;
+  }
+  .top-center {
+    display: none;
+  }
+  .home-grid {
+    gap: 14px;
+  }
+  .place-copy h2 {
+    font-size: 39px;
+  }
+  .place-orbit {
+    right: 7px;
+    top: 65px;
+    transform: scale(0.8);
+    transform-origin: top right;
+  }
+  .home-place {
+    min-height: 345px;
+  }
+  .home-place .place-copy {
+    padding-top: 84px;
+  }
+  .next-place {
+    gap: 8px;
+  }
+  .next-place strong {
+    flex-wrap: wrap;
+    gap: 2px 9px;
+  }
+  .summary-strip > div {
+    padding: 0 16px;
+  }
+  .summary-strip dd {
+    font-size: 23px;
+  }
+  .financial-grid,
+  .health-grid {
+    grid-template-columns: 1.5fr 1fr;
+  }
+  .finance-chart .tile-top {
+    flex-wrap: wrap;
+  }
+  .time-bottom {
+    grid-template-columns: 1.4fr 1fr;
+  }
+  .attention-panel {
+    grid-template-columns: 1fr;
+    gap: 23px;
+  }
+  .day-heading small {
+    position: static;
+    align-self: flex-start;
+  }
+  .day-heading {
+    min-height: 96px;
+  }
+  .week-columns {
+    gap: 8px;
+  }
+  .focus-block,
+  .people-block {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .people-block {
+    min-height: 105px;
+  }
+  .soft-bars {
+    gap: 8px;
+  }
+  .bar-value {
+    font-size: 8px;
+  }
+}
+@media (max-width: 900px) {
+  .console {
+    border-radius: 29px;
+  }
+  .console-top {
+    padding: 15px 23px;
+    min-height: 81px;
+  }
+  .console-body {
+    display: block;
+    padding: 0 23px 25px;
+  }
+  .blade-rail {
+    padding: 0;
+  }
+  .rail-label,
+  .rail-foot {
+    display: none;
+  }
+  .blades {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 5px;
+    padding: 5px 0 19px;
+  }
+  .blade {
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 11px 2px;
+    min-height: 73px;
+    border-radius: 20px;
+  }
+  .blade strong {
+    font-size: 11px;
+  }
+  .blade-icon {
+    height: 26px;
+  }
+  .blade small,
+  .blade-chevron {
+    display: none;
+  }
+  .blade[aria-current] {
+    transform: none;
+  }
+  .blade[aria-current]::before {
+    width: 22px;
+    height: 2px;
+    left: calc(50% - 11px);
+    top: auto;
+    bottom: 1px;
+  }
+  .screen-head {
+    padding: 18px 3px 26px;
+  }
+  .screen-head h1 {
+    font-size: 34px;
+  }
+  .home-time,
+  .home-health {
+    grid-column: span 6;
+  }
+  .moment-tile {
+    grid-column: span 12;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 25px;
+  }
+  .moment-tile .tile-top {
+    grid-column: 1/-1;
+  }
+  .moment-tile h2 {
+    grid-column: 1;
+    grid-row: 2/4;
+    font-size: 30px;
+  }
+  .moment-tile > p {
+    margin: 0;
+  }
+  .moment-button {
+    margin-top: 13px;
+  }
+  .location-grid {
+    grid-template-columns: 1fr 1.4fr;
+  }
+  .trip-row {
+    flex-wrap: wrap;
+    gap: 13px;
+  }
+  .trip-length {
+    margin-left: 69px;
+    margin-top: -5px;
+  }
+  .nights-panel {
+    gap: 20px;
+  }
+  .keyboard-hints {
+    gap: 13px;
+  }
+}
+@media (max-width: 580px) {
+  body {
+    padding: 12px 10px 15px;
+  }
+  .study-label {
+    font-size: 8px;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .study-label > span {
+    padding: 4px 8px;
+  }
+  .study-label a {
+    padding: 4px 8px;
+    min-height: 24px;
+  }
+  .console {
+    border-radius: 25px;
+  }
+  .console-top {
+    gap: 10px;
+    padding: 15px 15px 9px;
+    min-height: 74px;
+  }
+  .brand {
+    font-size: 18px;
+    gap: 8px;
+  }
+  .brand-orbit {
+    grid-template-columns: repeat(2, 7px);
+  }
+  .brand-orbit i {
+    width: 7px;
+    height: 7px;
+  }
+  .top-controls {
+    gap: 7px;
+  }
+  .profile-mark {
+    display: none;
+  }
+  .glass-switch {
+    font-size: 9px;
+    padding: 7px 9px;
+    gap: 5px;
+  }
+  .console-body {
+    padding: 0 13px 18px;
+  }
+  .blades {
+    gap: 2px;
+    padding-bottom: 8px;
+  }
+  .blade {
+    min-height: 67px;
+    border-radius: 17px;
+  }
+  .blade strong {
+    font-size: 9px;
+  }
+  .blade-icon svg {
+    width: 19px;
+    height: 19px;
+  }
+  .screen-head {
+    padding: 22px 5px;
+    gap: 16px;
+  }
+  .screen-head h1 {
+    font-size: 33px;
+    max-width: 370px;
+  }
+  .screen-description {
+    font-size: 11px;
+  }
+  .eyebrow {
+    font-size: 10px;
+  }
+  .quiet-button {
+    font-size: 10px;
+    min-height: 44px;
+  }
+  .tile {
+    padding: 22px;
+    border-radius: 23px;
+  }
+  .home-grid {
+    gap: 13px;
+  }
+  .home-money,
+  .home-place,
+  .home-time,
+  .home-health,
+  .moment-tile {
+    grid-column: 1/-1;
+  }
+  .balance-line h2 {
+    font-size: 42px;
+  }
+  .growth-tag {
+    margin-bottom: 0;
+  }
+  .worth-chart {
+    margin-top: 22px;
+  }
+  .chart-label {
+    font-size: 16px;
+  }
+  .home-place {
+    min-height: 292px;
+  }
+  .home-place .place-copy {
+    padding-top: 15px;
+  }
+  .place-orbit {
+    top: 56px;
+    right: 17px;
+    transform: scale(0.85);
+  }
+  .place-copy h2 {
+    font-size: 43px;
+  }
+  .next-place {
+    margin-top: 22px;
+    padding-top: 17px;
+  }
+  .home-time,
+  .home-health {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    column-gap: 14px;
+  }
+  .home-time .tile-top,
+  .home-health .tile-top {
+    grid-column: 1/-1;
+    margin-bottom: 20px;
+  }
+  .small-feature-number {
+    font-size: 36px;
+  }
+  .feature-caption {
+    grid-column: 1;
+    font-size: 11px;
+  }
+  .focus-marks {
+    grid-column: 2;
+    grid-row: 2/4;
+    min-width: 83px;
+    align-self: center;
+    margin-top: 0;
+    height: 49px;
+  }
+  .rest-line {
+    grid-column: 2;
+    grid-row: 2/4;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+    margin-top: 0;
+    font-size: 8px;
+  }
+  .tile-note {
+    grid-column: 1/-1;
+    font-size: 10px;
+    margin-top: 21px;
+  }
+  .moment-tile {
+    display: flex;
+    gap: 0;
+  }
+  .moment-tile h2 {
+    font-size: 30px;
+  }
+  .moment-tile > p {
+    font-size: 11px;
+    margin-top: 15px;
+  }
+  .moment-button {
+    margin-top: 23px;
+    font-size: 11px;
+  }
+  .summary-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0;
+    gap: 0;
+    border-radius: 22px;
+    margin-bottom: 15px;
+  }
+  .summary-strip > div {
+    padding: 18px;
+  }
+  .summary-strip > div:nth-child(2) {
+    border-right: 0;
+  }
+  .summary-strip > div:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--line);
+  }
+  .summary-strip dd {
+    font-size: 23px;
+  }
+  .summary-strip dt {
+    font-size: 9px;
+  }
+  .financial-grid,
+  .location-grid,
+  .health-grid,
+  .time-bottom {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 15px;
+  }
+  .period-control button {
+    min-height: 44px;
+  }
+  .accounts-tile {
+    margin-top: 15px;
+    padding: 22px 16px;
+  }
+  .accounts-tile .tile-top,
+  .movement-panel .tile-top {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .table-scroll table {
+    min-width: 440px;
+  }
+  .homebase-panel {
+    min-height: 385px;
+  }
+  .location-motif {
+    margin: 0 0 5px;
+  }
+  .trip-row {
+    flex-wrap: nowrap;
+    gap: 10px;
+  }
+  .trip-row h3 {
+    font-size: 15px;
+  }
+  .trip-row p {
+    font-size: 9px;
+  }
+  .trip-code {
+    width: 44px;
+    height: 48px;
+    font-size: 13px;
+    border-radius: 15px;
+  }
+  .trip-length {
+    font-size: 8px;
+    margin: 0 0 0 auto;
+  }
+  .nights-panel {
+    grid-template-columns: 1fr;
+    padding-top: 26px;
+    padding-bottom: 28px;
+    gap: 26px;
+  }
+  .calendar-panel .tile-top {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .week-columns {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  .week-day {
+    display: grid;
+    grid-template-columns: 43px 1fr 1fr;
+    gap: 8px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--line);
+  }
+  .day-heading {
+    padding: 9px 0 0;
+    gap: 5px;
+    min-height: auto;
+  }
+  .day-heading strong {
+    font-size: 26px;
+  }
+  .day-heading small {
+    font-size: 7px;
+    padding: 3px;
+  }
+  .focus-block {
+    min-height: 104px;
+    padding: 13px 10px;
+  }
+  .people-block {
+    margin: 0;
+    min-height: 104px;
+    padding: 15px 9px;
+  }
+  .people-block > span {
+    font-size: 8px;
+  }
+  .focus-block p,
+  .people-block p {
+    font-size: 9px;
+  }
+  .open-block {
+    grid-column: 2/-1;
+    margin: 0;
+    min-height: 37px;
+    flex-direction: row;
+    gap: 10px;
+  }
+  .attention-panel {
+    padding-top: 27px;
+    padding-bottom: 27px;
+  }
+  .time-bottom {
+    margin-top: 15px;
+  }
+  .attention-panel h2 br {
+    display: none;
+  }
+  .sleep-panel .tile-top {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .soft-bars {
+    gap: 8px;
+  }
+  .bar-track {
+    height: 150px;
+  }
+  .bar-value,
+  .bar-day {
+    font-size: 8px;
+  }
+  .feeling-panel {
+    min-height: 340px;
+  }
+  .feeling-panel h2 {
+    font-size: 35px;
+  }
+  .movement-panel li {
+    grid-template-columns: 30px 1fr auto 20px;
+    gap: 8px;
+  }
+  .movement-panel h3 {
+    font-size: 11px;
+  }
+  .movement-duration {
+    font-size: 9px;
+  }
+  .console-footer {
+    padding: 15px 18px;
+    gap: 15px;
+    font-size: 8px;
+  }
+  .keyboard-hints {
+    flex-wrap: wrap;
+  }
+  .scene-credit {
+    font-size: 8px;
+    margin-top: 14px;
+    gap: 7px;
+  }
+  .note-dialog {
+    padding: 20px 24px 25px;
+  }
+  .note-dialog h2 {
+    font-size: 32px;
+  }
+  #note-area {
+    font-size: 16px;
+  }
+}
+@media (max-width: 350px) {
+  .brand {
+    font-size: 16px;
+  }
+  .glass-switch {
+    padding: 7px;
+    font-size: 8px;
+  }
+  .screen-head h1 {
+    font-size: 30px;
+  }
+  .tile {
+    padding: 19px;
+  }
+  .tile-bottom {
+    flex-wrap: wrap;
+  }
+  .home-money .balance-line h2 {
+    font-size: 38px;
+  }
+  .home-health .small-feature-number {
+    font-size: 31px;
+  }
+  .trip-row {
+    flex-wrap: wrap;
+  }
+  .trip-length {
+    flex-basis: 100%;
+    padding-left: 54px;
+  }
+  .summary-strip > div {
+    padding: 16px 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .selectable:hover {
+    transform: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .console {
+    background: #f3e7d6;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .tile {
+    background-color: #fff6e8;
+  }
+  .note-dialog::backdrop {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+@media (forced-colors: active) {
+  .ambient-scene,
+  .place-orbit,
+  .location-motif {
+    display: none;
+  }
+  .console,
+  .tile,
+  .blade,
+  button,
+  .summary-strip,
+  .note-dialog {
+    border: 1px solid CanvasText;
+  }
+  .blade[aria-current] {
+    outline: 2px solid Highlight;
+    outline-offset: -3px;
+  }
+  .worth-chart {
+    color: CanvasText;
+  }
+  .chart-label {
+    fill: CanvasText;
+  }
+  .focus-marks > span,
+  .bar-track > span,
+  .night-track > span,
+  .attention-track > span,
+  .flow-track > span {
+    forced-color-adjust: none;
+    background: CanvasText;
+    border: 1px solid Canvas;
+  }
+}

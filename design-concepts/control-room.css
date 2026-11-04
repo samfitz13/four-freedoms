@@ -1,0 +1,262 @@
+body.control-room {
+  --body: "Geist", sans-serif;
+  --display: "Geist", sans-serif;
+  --bg: oklch(17% 0.005 150);
+  --surface: oklch(20.5% 0.006 150);
+  --subtle: oklch(25% 0.009 150);
+  --ink: oklch(94% 0.012 100);
+  --muted: oklch(71% 0.012 145);
+  --rule: oklch(32% 0.008 150);
+  --accent: oklch(83% 0.103 155);
+  --positive: oklch(83% 0.103 155);
+  --secondary: oklch(66% 0.07 240);
+  --tertiary: oklch(72% 0.12 60);
+  --on-accent: oklch(19% 0.009 150);
+  --preview-bg: oklch(14% 0.005 150);
+  --preview-ink: oklch(82% 0.023 100);
+  --radius: 5px;
+}
+.control-room .app {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  max-width: 1900px;
+  margin: auto;
+}
+.control-room .app-header {
+  position: sticky;
+  top: 53px;
+  height: calc(100svh - 53px);
+  border-right: 1px solid var(--rule);
+  padding: 31px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  background: oklch(15.5% 0.004 150);
+}
+.control-room .brand {
+  font-size: 21px;
+}
+.control-room .brand-symbol i {
+  background: var(--accent);
+}
+.control-room .nav-caption {
+  margin-top: 26px;
+  margin-bottom: -19px;
+  font-size: 9px;
+}
+.control-room .workspace-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.control-room .workspace-nav a {
+  padding: 11px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  gap: 12px;
+}
+.control-room .workspace-nav a[aria-current] {
+  background: var(--subtle);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.control-room .workspace-nav a svg {
+  width: 16px;
+  height: 16px;
+}
+.control-room .workspace-nav small {
+  display: block;
+  margin-left: auto;
+  font-family: "Geist Mono", monospace;
+  font-size: 8px;
+  opacity: 0.6;
+}
+.control-room .nav-footer {
+  margin-top: auto;
+  padding-top: 22px;
+  border-top: 1px solid var(--rule);
+}
+.control-room main {
+  padding: 33px 32px;
+  max-width: 1500px;
+  width: 100%;
+  margin: auto;
+}
+.control-room h1 {
+  font-size: 34px;
+  letter-spacing: -0.045em;
+  font-weight: 550;
+}
+.control-room .page-head {
+  margin-bottom: 29px;
+}
+.control-room .page-head .eyebrow {
+  font-size: 9px;
+  color: var(--muted);
+  margin-bottom: 11px;
+}
+.control-room .page-description {
+  font-size: 12px;
+  margin-top: 10px;
+}
+.control-room .week-tag {
+  font-size: 10px;
+  border: 1px solid var(--rule);
+  padding: 8px 11px;
+  border-radius: 4px;
+}
+.control-room .summary {
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  margin-bottom: 23px;
+}
+.control-room .metric {
+  padding: 21px 19px;
+  border-right: 1px solid var(--rule);
+}
+.control-room .metric:last-child {
+  border: 0;
+}
+.control-room .metric dt {
+  font-size: 10px;
+}
+.control-room .metric dd {
+  font:
+    500 25px/1.2 "Geist Mono",
+    monospace;
+  letter-spacing: -0.06em;
+}
+.control-room .metric > span {
+  font-size: 10px;
+}
+.control-room .workspace-grid {
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  grid-template-areas: "money time" "money health" "place horizon";
+  gap: 16px;
+}
+.control-room .panel {
+  padding: 20px;
+}
+.control-room .panel-head {
+  margin-bottom: 16px;
+}
+.control-room .eyebrow {
+  font-size: 9px;
+  letter-spacing: 0.065em;
+}
+.control-room .panel-head p {
+  font-size: 10px;
+}
+.control-room .number-line h2 {
+  font:
+    500 30px/1.15 "Geist Mono",
+    monospace;
+  letter-spacing: -0.05em;
+}
+.control-room .number-line .big-number {
+  font-size: 40px;
+}
+.control-room .money {
+  display: flex;
+  flex-direction: column;
+}
+.control-room .money .money-chart {
+  margin: auto 0;
+  width: 100%;
+  min-height: 230px;
+  flex: 1;
+}
+.control-room .money-chart text {
+  font-size: 15px;
+}
+.control-room .money .panel-foot {
+  margin-top: auto;
+}
+.control-room .change {
+  font-size: 10px;
+}
+.control-room .workspace-grid > .time .bars,
+.control-room .workspace-grid > .health .bars {
+  margin-top: 14px;
+  gap: 8px;
+}
+.control-room .workspace-grid .bar-track {
+  height: 48px;
+  max-width: 21px;
+}
+.control-room .workspace-grid .bar-number {
+  display: none;
+}
+.control-room .workspace-grid .panel-foot {
+  font-size: 9px;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+.control-room .time .bar-track > span {
+  background: oklch(77% 0.12 65);
+}
+.control-room .health .bar-track > span {
+  background: oklch(78% 0.083 15);
+}
+.control-room .horizon .agenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.control-room .horizon .agenda li {
+  flex: 1;
+  min-width: 130px;
+  border: 0;
+  padding: 5px 0;
+  gap: 10px;
+}
+.control-room .horizon .agenda strong {
+  font-size: 11px;
+}
+.control-room .horizon .agenda p {
+  font-size: 10px;
+}
+.control-room .horizon .aside-note {
+  font-size: 11px;
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+}
+.control-room .horizon .aside-note br {
+  display: none;
+}
+.control-room .place-feature {
+  margin-top: 10px;
+}
+.control-room .place-code {
+  font-family: "Geist Mono", monospace;
+  font-size: 23px;
+}
+.control-room .place-feature h2 {
+  font-size: 26px;
+}
+.control-room .domain-grid {
+  gap: 17px;
+  grid-template-columns: minmax(0, 1.8fr) minmax(220px, 1fr);
+}
+.control-room .domain-main {
+  gap: 17px;
+}
+.control-room .domain-main .money-chart {
+  height: 230px;
+}
+.control-room .domain-main .money {
+  min-height: 420px;
+}
+.control-room .reflection h2 {
+  font-size: 33px;
+}
+.control-room .flow h2 {
+  font-size: 28px;
+}
+.control-room .panel-head h2 {
+  font-size: 19px;
+}
+.control-room .page-footer {
+  font-size: 9px;
+  margin-top: 32px;
+}

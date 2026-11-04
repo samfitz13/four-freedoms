@@ -1,0 +1,448 @@
+@media (min-width: 1700px) {
+  body.control-room .workspace-grid {
+    grid-template-columns: 1.6fr 1fr 0.9fr;
+    grid-template-areas: "money time health" "place place horizon";
+  }
+  body.control-room .money .money-chart {
+    min-height: 200px;
+  }
+}
+@media (max-width: 1150px) {
+  body.fieldnotes .app {
+    padding: 0 30px;
+  }
+  body.fieldnotes .workspace-nav {
+    gap: 15px;
+  }
+  body.fieldnotes .workspace-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "money money" "time health" "place horizon";
+  }
+  body.fieldnotes .workspace-grid > .place {
+    padding-left: 0;
+    border-left: 0;
+  }
+  body.compass main {
+    padding: 32px 28px;
+  }
+  body.compass .horizon {
+    display: block;
+  }
+  body.compass .horizon .agenda {
+    margin-top: 25px;
+  }
+  body.control-room main {
+    padding: 30px 22px;
+  }
+  body.control-room .week-tag {
+    display: none;
+  }
+  body[class] .domain-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body[class] .domain-grid > .flow,
+  body[class] .domain-grid > .reflection {
+    padding: 25px;
+    border: 1px solid var(--rule);
+  }
+  body[class] .domain-grid > .time {
+    grid-area: auto;
+  }
+  body[class] .domain-main .money {
+    min-height: 0;
+  }
+  body[class] .domain-main .money-chart {
+    min-height: 0;
+    height: auto;
+  }
+  .week-columns {
+    gap: 10px;
+  }
+  .number-line .change {
+    font-size: 10px;
+  }
+}
+@media (max-width: 900px) {
+  body[class] .app {
+    display: block;
+    padding: 0 23px;
+  }
+  body[class] .app-header {
+    position: static;
+    height: auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 22px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 26px 0 19px;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  body[class] .brand > span:last-child {
+    display: inline;
+  }
+  body[class] .brand {
+    font-size: 23px;
+  }
+  body[class] .brand-symbol {
+    grid-template-columns: repeat(2, 8px);
+    gap: 3px;
+  }
+  body[class] .brand-symbol i {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+  body[class] .nav-caption,
+  body[class] .nav-footer {
+    display: none;
+  }
+  body[class] .workspace-nav {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+    width: auto;
+    flex-wrap: wrap;
+  }
+  body[class] .workspace-nav a {
+    flex-direction: row;
+    gap: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  body[class] .workspace-nav a svg {
+    width: 16px;
+    height: 16px;
+  }
+  body[class] .workspace-nav small {
+    display: none;
+  }
+  body[class] main {
+    padding: 30px 0;
+    max-width: none;
+  }
+  body[class] .page-head {
+    align-items: start;
+  }
+  .week-tag {
+    display: none;
+  }
+  body[class] .workspace-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "money money" "time health" "place horizon";
+    gap: 20px;
+  }
+  body[class] .workspace-grid > .money .money-chart {
+    min-height: 0;
+    height: auto;
+    margin: 18px 0;
+  }
+  .control-room .workspace-grid > .time .bar-track,
+  .control-room .workspace-grid > .health .bar-track {
+    height: 75px;
+  }
+  body[class] .workspace-grid > .horizon {
+    display: block;
+  }
+  body[class] .horizon .agenda {
+    display: block;
+  }
+  body[class] .horizon .agenda li {
+    padding: 14px 0;
+  }
+  body.compass .place .place-feature {
+    margin: 0;
+  }
+  body.compass .place .place-code {
+    font-size: 42px;
+    min-height: 60px;
+  }
+  body.compass .horizon {
+    padding: 24px 0 0;
+  }
+  body.compass .location-layout > .place {
+    min-height: 380px;
+  }
+  .location-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .location-layout .nights {
+    grid-column: auto;
+  }
+  body[class] h1 {
+    font-size: 43px;
+  }
+  .summary {
+    margin-bottom: 25px;
+  }
+  body[class] .metric {
+    padding: 17px 15px;
+  }
+  body[class] .metric dd {
+    font-size: 25px;
+  }
+  .metric dt {
+    font-size: 11px;
+  }
+  .compass .summary {
+    gap: 0;
+  }
+}
+@media (max-width: 600px) {
+  .preview-bar {
+    grid-template-columns: 1fr auto;
+    padding: 8px 17px;
+    gap: 2px 10px;
+  }
+  .preview-label {
+    font-size: 11px;
+  }
+  .sample-note {
+    grid-column: 1/-1;
+    grid-row: 2;
+    font-size: 10px;
+    padding: 2px 0 3px;
+  }
+  .concept-switch {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .concept-switch a {
+    min-width: 34px;
+    min-height: 34px;
+  }
+  body[class] .app {
+    padding: 0 19px;
+  }
+  body[class] .app-header {
+    gap: 17px;
+    padding-top: 21px;
+    padding-bottom: 14px;
+  }
+  body[class] .workspace-nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px 8px;
+    width: 100%;
+  }
+  body[class] .workspace-nav a {
+    padding: 8px 7px;
+    justify-content: start;
+    border-radius: 4px;
+    font-size: 11px;
+    gap: 8px;
+  }
+  body[class] .workspace-nav a svg {
+    width: 15px;
+    height: 15px;
+  }
+  .fieldnotes .workspace-nav a {
+    border-bottom-width: 1px;
+  }
+  body[class] .page-head {
+    display: block;
+    margin-bottom: 24px;
+  }
+  body[class] h1 {
+    font-size: 37px;
+    line-height: 1.1;
+  }
+  body[class] .page-head .eyebrow {
+    font-size: 9px;
+    margin-bottom: 14px;
+  }
+  .page-description {
+    font-size: 13px !important;
+    line-height: 1.65;
+    margin-top: 13px;
+  }
+  .page-head .text-link {
+    margin-top: 13px;
+    font-size: 11px;
+  }
+  body[class] .summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0;
+    border: 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    border-radius: 0;
+    gap: 0;
+  }
+  body[class] .metric {
+    padding: 18px 8px 18px 0;
+    border: 0;
+  }
+  body[class] .metric:nth-child(even) {
+    padding-left: 18px;
+    border-left: 1px solid var(--rule);
+  }
+  body[class] .metric:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--rule);
+  }
+  body[class] .metric dd {
+    font-size: 26px;
+  }
+  body[class] .workspace-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 23px;
+  }
+  body[class] .workspace-grid > .panel {
+    width: 100%;
+    margin: 0;
+  }
+  body[class] .panel {
+    padding: 22px 20px;
+  }
+  body.fieldnotes .panel {
+    padding: 23px 0;
+    border-left: 0;
+  }
+  body.fieldnotes .workspace-grid > .money,
+  body.fieldnotes .domain-main > .money {
+    padding: 23px 19px;
+    border: 1px solid var(--rule);
+  }
+  body.fieldnotes .workspace-grid > .place,
+  body.fieldnotes .workspace-grid > .health,
+  body.fieldnotes .workspace-grid > .horizon {
+    padding: 23px 0;
+    border: 0;
+    border-top: 1px solid var(--rule);
+  }
+  body[class] .number-line .big-number {
+    font-size: 37px;
+  }
+  .number-line h2 {
+    font-size: 32px;
+  }
+  .panel-head {
+    margin-bottom: 22px;
+  }
+  .number-line {
+    gap: 8px;
+  }
+  .number-line .change {
+    font-size: 10px;
+    margin-top: 5px;
+  }
+  .money-chart text {
+    font-size: 16px;
+  }
+  .panel-foot {
+    font-size: 10px;
+  }
+  .money .panel-foot {
+    gap: 8px;
+  }
+  .money .panel-foot > span {
+    font-size: 9px;
+  }
+  .place-code {
+    min-width: 66px;
+  }
+  .place-feature p {
+    font-size: 11px;
+  }
+  body.compass .place .place-feature {
+    flex-direction: row;
+    align-items: center;
+    gap: 25px;
+  }
+  body.compass .place .place-feature h2 {
+    font-size: 29px;
+  }
+  body.compass .place .route {
+    margin-top: 15px;
+  }
+  body.compass .horizon .agenda {
+    margin-top: 0;
+  }
+  .place-next > span:last-child {
+    white-space: normal;
+  }
+  .aside-note {
+    font-size: 14px !important;
+  }
+  body[class] .domain-grid,
+  body[class] .domain-main {
+    gap: 24px;
+  }
+  body[class] .domain-main .health .bar-track {
+    height: 100px;
+  }
+  .week-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 14px;
+  }
+  .day:last-child {
+    grid-column: 1/-1;
+    max-width: calc(50% - 7px);
+  }
+  .time-block {
+    min-height: 84px;
+  }
+  .time-block.open {
+    min-height: 52px;
+  }
+  .trip-duration {
+    display: none;
+  }
+  .travel .trip {
+    gap: 15px;
+  }
+  .trip h3 {
+    font-size: 21px;
+  }
+  .inline-legend {
+    gap: 10px 20px;
+    font-size: 11px;
+  }
+  .reflection h2 {
+    font-size: 34px;
+  }
+  .workouts li {
+    grid-template-columns: 30px 1fr auto;
+    font-size: 11px;
+    gap: 8px;
+  }
+  .page-footer {
+    font-size: 9px;
+    gap: 8px;
+    margin-top: 32px !important;
+  }
+  .bar-number {
+    font-size: 9px;
+  }
+  .bar-label {
+    font-size: 10px;
+  }
+  .bars {
+    gap: 10px;
+  }
+  body.control-room .workspace-grid .bar-number {
+    display: block;
+  }
+  body[class] .workspace-grid .bar-track {
+    height: 80px;
+  }
+  body.compass .horizon {
+    padding: 20px 0;
+  }
+  .table-scroll table {
+    min-width: 380px;
+  }
+  .panel-head h2 {
+    font-size: 23px;
+  }
+  .panel-head .quiet {
+    max-width: 90px;
+    text-align: right;
+    font-size: 9px;
+  }
+}

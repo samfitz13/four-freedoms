@@ -10,7 +10,7 @@ Working name. Private beta.
 ## Stack
 
 - **Framework:** Next.js 16 (App Router, Turbopack) · TypeScript strict
-- **UI:** Tailwind CSS v4 + custom editorial theme (serif display, ink/paper neutrals, per-freedom accents)
+- **UI:** Daybreak design system · Tailwind CSS v4 · locally owned, shadcn-style components with Radix primitives · Manrope
 - **DB:** Postgres 17 (local Docker) / **PlanetScale Postgres** in prod
 - **ORM:** Drizzle ORM + drizzle-kit (schema-as-TS)
 - **Auth:** [better-auth](https://www.better-auth.com) — magic link, DB-backed sessions
@@ -84,7 +84,7 @@ This prints a public `https://<random>.trycloudflare.com` URL that proxies to
 app/
   (marketing)            # public landing
   (auth)/login           # magic-link sign-in
-  (app)/                 # protected app group (dashboard, review, settings)
+  (app)/                 # protected app group (dashboard, [freedom], settings)
   api/auth/[...all]      # better-auth catch-all route handler
 components/              # UI primitives, freedom widgets
 lib/
@@ -101,6 +101,11 @@ drizzle/                 # Generated SQL migrations
 docker/compose.dev.yml   # Local Postgres
 proxy.ts                 # Next 16 proxy (session-gate for protected routes)
 ```
+
+Workspace tabs use `/section/tab`, for example `/financial/goals`,
+`/location/travel`, and `/time/agenda?view=week`. Section roots redirect to
+`/section/overview`. Existing `?tab=` bookmarks permanently redirect to the
+matching path and retain filters such as `month`, `year`, and `view`.
 
 ## Deploy
 
@@ -165,13 +170,13 @@ Point an A/CNAME record at Vercel, add it in Project → Domains, then update
 
 1. ✅ Scaffold (Next 16, Tailwind v4, tooling)
 2. ✅ Auth + household bootstrap (better-auth + Drizzle + Postgres)
-3. ✅ Data model: freedom_settings, entries, goals, weekly_reviews
-4. ✅ Freedom abstraction + unified dashboard
-5. ✅ Daily check-in + entry logging
-6. ✅ Weekly review flow
-7. ✅ Theme polish, landing copy, deploy recipe
-8. Integrations: Plaid (financial), Strava/Apple Health (health)
-9. Goals + goal-linked entries
+3. ✅ Typed Financial workspace (accounts, statements, income, transactions, FI goals)
+4. ✅ Daybreak dashboard + per-freedom pages
+5. ✅ Theme polish, landing copy, deploy recipe
+6. ✅ Typed Location workspace (places, stays, satisfaction)
+7. ✅ Typed Time workspace (agenda, habits, pursuits, time logs)
+8. ✅ Typed Health workspace (sleep, training, energy)
+9. Integrations: Strava/Apple Health (health)
 10. Household (multi-user) surfaces
 11. Export / archive
 12. PostHog + Sentry

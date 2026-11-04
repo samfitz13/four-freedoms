@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Daybreak / freedom-four concept</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      __STYLES__
+    </style>
+  </head>
+  <body>
+    <a href="#workspace" class="skip-link">Skip to workspace</a>
+    <div class="ambient-scene" aria-hidden="true"></div>
+    <div class="study-label">
+      <a href="../index.html">freedom-four / design studies</a
+      ><span>Daybreak · fictional data · nothing saved</span>
+    </div>
+    <div class="console">
+      <header class="console-top">
+        <a class="brand" href="#overview" aria-label="Freedom-four home"
+          ><span class="brand-orbit" aria-hidden="true"><i></i><i></i><i></i><i></i></span
+          ><span>freedom<span class="brand-divider">/</span>four</span></a
+        >
+        <div class="top-center">
+          <span class="day-indicator" aria-hidden="true"></span>Thursday, October 15
+        </div>
+        <div class="top-controls">
+          <button class="glass-switch" id="glass-toggle" aria-pressed="false">
+            <span aria-hidden="true">◒</span><span>Reduce glass</span></button
+          ><span class="profile-mark" aria-label="Sample profile">Y</span>
+        </div>
+      </header>
+      <div class="console-body">
+        <aside class="blade-rail">
+          <p class="rail-label">Your world</p>
+          <nav class="blades" aria-label="Freedoms">
+            <a href="#overview" class="blade" aria-current="page" data-view="overview"
+              ><span class="blade-icon">__HOME_ICON__</span
+              ><span><strong>Home</strong><small>The whole picture</small></span
+              ><span class="blade-chevron" aria-hidden="true">›</span></a
+            ><a href="#financial" class="blade" data-view="financial"
+              ><span class="blade-icon">__MONEY_ICON__</span
+              ><span><strong>Financial</strong><small>Room to choose</small></span
+              ><span class="blade-chevron" aria-hidden="true">›</span></a
+            ><a href="#location" class="blade" data-view="location"
+              ><span class="blade-icon">__PLACE_ICON__</span
+              ><span><strong>Location</strong><small>Somewhere that fits</small></span
+              ><span class="blade-chevron" aria-hidden="true">›</span></a
+            ><a href="#time" class="blade" data-view="time"
+              ><span class="blade-icon">__TIME_ICON__</span
+              ><span><strong>Time</strong><small>A little breathing room</small></span
+              ><span class="blade-chevron" aria-hidden="true">›</span></a
+            ><a href="#health" class="blade" data-view="health"
+              ><span class="blade-icon">__HEALTH_ICON__</span
+              ><span><strong>Health</strong><small>Find your rhythm</small></span
+              ><span class="blade-chevron" aria-hidden="true">›</span></a
+            >
+          </nav>
+          <div class="rail-foot">
+            <span class="little-sun" aria-hidden="true"></span>
+            <p>At your pace.<br />In your own way.</p>
+          </div>
+        </aside>
+        <main id="workspace" tabindex="-1"><div id="screens"></div></main>
+      </div>
+      <footer class="console-footer">
+        <div class="keyboard-hints">
+          <span><kbd>←</kbd><kbd>→</kbd> switch blades when focused</span
+          ><span><kbd>esc</kbd> close a note</span>
+        </div>
+        <span class="private-label"
+          ><span aria-hidden="true">○</span> Just a local design study</span
+        >
+      </footer>
+    </div>
+    <div class="scene-credit">
+      <span>A softer kind of operating system.</span
+      ><span>Generated backdrop · no personal records</span>
+    </div>
+    <dialog class="note-dialog" id="note-dialog" aria-labelledby="note-title">
+      <div class="dialog-top">
+        <span class="dialog-symbol" aria-hidden="true">✳</span
+        ><button class="round-button" data-close aria-label="Close note">×</button>
+      </div>
+      <p class="eyebrow">A moment for yourself</p>
+      <h2 id="note-title">What needs a<br />little more room?</h2>
+      <p class="note-intro">
+        Try a quick check-in. This is a preview; your words aren’t saved and are cleared when you
+        close it.
+      </p>
+      <form id="note-form">
+        <label for="note-area">Today, I’m noticing…</label
+        ><textarea
+          id="note-area"
+          name="reflection"
+          rows="4"
+          placeholder="A little space to think."
+          required
+        ></textarea
+        ><button class="warm-button" type="submit">
+          Preview my note <span aria-hidden="true">↗</span>
+        </button>
+      </form>
+    </dialog>
+    <div class="toast" id="toast" role="status" hidden>
+      <span class="toast-dot" aria-hidden="true"></span
+      ><span>A little pause. Nothing was saved.</span
+      ><button class="round-button" aria-label="Dismiss confirmation">×</button>
+    </div>
+    <script>
+      __SCRIPT__;
+    </script>
+  </body>
+</html>

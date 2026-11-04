@@ -1,0 +1,159 @@
+body.fieldnotes {
+  --body: "Geist", sans-serif;
+  --display: "Fraunces", serif;
+  --bg: oklch(97% 0.012 85);
+  --surface: oklch(98.5% 0.008 85);
+  --subtle: oklch(94% 0.019 100);
+  --ink: oklch(27% 0.024 150);
+  --muted: oklch(47% 0.018 145);
+  --rule: oklch(86% 0.014 95);
+  --accent: oklch(42% 0.072 155);
+  --positive: oklch(41% 0.075 155);
+  --secondary: oklch(43% 0.052 245);
+  --tertiary: oklch(45% 0.058 60);
+  --on-accent: oklch(99% 0.008 90);
+  --preview-bg: oklch(92.5% 0.021 92);
+  --preview-ink: oklch(32% 0.025 145);
+  --radius: 3px;
+}
+.fieldnotes .app {
+  max-width: 1432px;
+  margin: auto;
+  padding: 0 52px;
+}
+.fieldnotes .app-header {
+  min-height: 100px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+}
+.fieldnotes .brand {
+  font-family: var(--display);
+  font-weight: 450;
+  font-size: 26px;
+}
+.fieldnotes .brand-hyphen {
+  margin: 0 2px;
+}
+.fieldnotes .workspace-nav {
+  display: flex;
+  gap: 23px;
+}
+.fieldnotes .workspace-nav a {
+  border-bottom: 2px solid transparent;
+  padding: 12px 0;
+  font-size: 12px;
+}
+.fieldnotes .workspace-nav a[aria-current] {
+  border-color: var(--accent);
+}
+.fieldnotes .workspace-nav a svg {
+  width: 16px;
+  height: 16px;
+}
+.fieldnotes .nav-caption,
+.fieldnotes .nav-footer {
+  display: none;
+}
+.fieldnotes main {
+  padding: 46px 0 30px;
+}
+.fieldnotes .page-head {
+  margin-bottom: 35px;
+}
+.fieldnotes .page-description {
+  font-size: 14px;
+}
+.fieldnotes h1 {
+  font-weight: 430;
+  letter-spacing: -0.045em;
+}
+.fieldnotes .summary {
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  padding: 22px 0;
+}
+.fieldnotes .metric {
+  padding-left: 25px;
+  border-left: 1px solid var(--rule);
+}
+.fieldnotes .metric:first-child {
+  padding-left: 0;
+  border: 0;
+}
+.fieldnotes .metric dd {
+  font-family: var(--display);
+  font-size: 30px;
+}
+.fieldnotes .workspace-grid {
+  grid-template-columns: 1fr 1fr 0.9fr;
+  grid-template-areas: "money money horizon" "time place health";
+  gap: 25px;
+}
+.fieldnotes .panel {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  background: transparent;
+  padding: 24px 0 0;
+}
+.fieldnotes .money {
+  padding: 26px 28px 20px;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+}
+.fieldnotes .horizon {
+  padding: 26px 0 20px 25px;
+  border-top: 0;
+  border-left: 1px solid var(--rule);
+}
+.fieldnotes .horizon .panel-head {
+  margin-bottom: 28px;
+}
+.fieldnotes .horizon .aside-note {
+  font-family: var(--display);
+  font-size: 20px;
+  line-height: 1.45;
+  font-weight: 400;
+  color: var(--ink);
+  margin-top: 25px;
+}
+.fieldnotes .horizon .agenda li {
+  padding: 19px 0;
+}
+.fieldnotes .workspace-grid > .health {
+  padding-left: 23px;
+  border-left: 1px solid var(--rule);
+}
+.fieldnotes .workspace-grid > .place {
+  padding: 24px 22px 0;
+  border-left: 1px solid var(--rule);
+}
+.fieldnotes .health .bar-track > span {
+  background: oklch(49% 0.07 20);
+}
+.fieldnotes .time .bar-track > span {
+  background: oklch(52% 0.064 65);
+}
+.fieldnotes .place-code {
+  font-size: 25px;
+  background: transparent;
+  border: 1px solid var(--rule);
+}
+.fieldnotes .domain-grid,
+.fieldnotes .location-layout {
+  gap: 32px;
+}
+.fieldnotes .domain-grid > .flow,
+.fieldnotes .domain-grid > .reflection {
+  padding: 24px 0 0 25px;
+  border-left: 1px solid var(--rule);
+  border-top: 0;
+}
+.fieldnotes .domain-main > .panel:not(.money) {
+  padding: 26px 0;
+}
+.fieldnotes .page-footer {
+  margin-top: 52px;
+}
