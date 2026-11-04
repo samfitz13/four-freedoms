@@ -33,6 +33,10 @@ yarn-error.log*
 # factory cli
 .factory/
 
+# local browser and generated visual QA artifacts
+.playwright-mcp/
+screenshots/
+
 # ide / os
 .idea
 .vscode/*
