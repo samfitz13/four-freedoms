@@ -1,0 +1,91 @@
+.env.example
+  s_41737182c51141::t_19232e7ec2c8da 24-28
+app/(app)/[freedom]/_time/actions.ts
+  s_41737182c51141::t_10c82d0a755fbc 1-58
+app/(app)/[freedom]/_time/agenda-actions.ts
+  s_41737182c51141::t_80931bddd0b6ab 1-153
+app/(app)/[freedom]/_time/agenda-event-form.tsx
+  s_41737182c51141::t_fcd571cadfd91e 1-87
+app/(app)/[freedom]/_time/agenda.tsx
+  s_41737182c51141::t_725ef7fd8030d6 1-196
+app/(app)/[freedom]/_time/calendar-connect.tsx
+  s_41737182c51141::t_f1721b0bd276f2 1-66
+app/(app)/[freedom]/_time/calendar-sync-actions.ts
+  s_41737182c51141::t_d2bc4a96a15c4a 1-72
+app/(app)/[freedom]/_time/constants.ts
+  s_41737182c51141::t_127a3d0ef97044 1-7
+app/(app)/[freedom]/_time/habit-controls.tsx
+  s_41737182c51141::t_cc439a47321a60 1-156
+app/(app)/[freedom]/_time/habit-form.tsx
+  s_41737182c51141::t_3e7f78b93bf473 1-214
+app/(app)/[freedom]/_time/habit-view.test.ts
+  s_41737182c51141::t_3e3cbb6ec7d3fb 1-69
+app/(app)/[freedom]/_time/habit-view.ts
+  s_41737182c51141::t_3344bb3676a9bc 1-39
+app/(app)/[freedom]/_time/habits-actions.ts
+  s_41737182c51141::t_b5fbf4f87a9896 1-159
+app/(app)/[freedom]/_time/habits.tsx
+  s_41737182c51141::t_fe7a8155a8b623 1-194
+app/(app)/[freedom]/_time/log-actions.ts
+  s_41737182c51141::t_2db103ed8f151d 1-143
+app/(app)/[freedom]/_time/log.tsx
+  s_41737182c51141::t_fcb4ada8090eb2 1-121
+app/(app)/[freedom]/_time/nav.tsx
+  s_41737182c51141::t_ca9eee9409f10c 1-23
+app/(app)/[freedom]/_time/overview.tsx
+  s_41737182c51141::t_c8e19ce0ffb74c 1-339
+app/(app)/[freedom]/_time/pursuit-form.tsx
+  s_41737182c51141::t_2fa85e70491e70 1-65
+app/(app)/[freedom]/_time/pursuits-actions.ts
+  s_41737182c51141::t_8b5df8aacd6f83 1-164
+app/(app)/[freedom]/_time/pursuits.tsx
+  s_41737182c51141::t_b4fa948e855643 1-90
+app/(app)/[freedom]/_time/schemas.ts
+  s_41737182c51141::t_d7c4aa81089464 1-26
+app/(app)/[freedom]/_time/tab-shortcuts.tsx
+  s_41737182c51141::t_0b8b0da71dac35 1-31
+app/(app)/[freedom]/_time/types.ts
+  s_41737182c51141::t_6c29de9457046f 1-18
+app/api/time/calendar/callback/route.ts
+  s_41737182c51141::t_15a6006aa6b9fc 1-26
+app/api/time/calendar/sync/route.ts
+  s_41737182c51141::t_e795c9c6082a23 1-27
+lib/calendar/google.ts
+  s_41737182c51141::t_82023ff4512fb9 1-243
+lib/crypto.ts
+  s_41737182c51141::t_11d41ad5b727a1 1-36
+lib/db/queries/time.ts
+  s_41737182c51141::t_4833222018f137 1-161
+lib/env.ts
+  s_41737182c51141::t_6a33bf68004f76 12-14,28-30
+lib/freedoms/time-agenda.ts
+  s_41737182c51141::t_b121acb54ffd81 1-79
+lib/freedoms/time-allocation.ts
+  s_41737182c51141::t_bc2e322ef75ec4 1-62
+lib/freedoms/time-habits.ts
+  s_41737182c51141::t_a915a00eee255e 1-76
+lib/freedoms/time-seed.ts
+  s_41737182c51141::t_5e7e710cb70101 1-126
+lib/freedoms/time-summary.ts
+  s_41737182c51141::t_f5adab4f34d1ed 1-142
+lib/freedoms/time.ts
+  s_41737182c51141::t_dc92ed04665b6c 4,6
+scripts/migrate-time-blocks.ts
+  s_41737182c51141::t_c757f5fc2e69db 1-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3f7df68b545480c0f46515e53503b607e9aa0d8f",
+  "prompts": {},
+  "sessions": {
+    "s_41737182c51141": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "f00fd9d4-a4bb-491d-8872-2c3a7e1cf1df",
+        "model": "unknown"
+      },
+      "human_author": "Sam Fitzgerald <sam@factory.ai>"
+    }
+  }
+}
