@@ -1,0 +1,19 @@
+scripts/unit-test-isolation.test.mjs
+  s_cca7490b0db3e9::t_82fb4570adc819 71,88,90-91,96
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ace398b4381b080b6156fbe553b577dd3a828c40",
+  "prompts": {},
+  "sessions": {
+    "s_cca7490b0db3e9": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "48cb2f0a-27cc-404b-85f9-9e690fad3dd6",
+        "model": "unknown"
+      },
+      "human_author": "Sam Fitzgerald <sam@factory.ai>"
+    }
+  }
+}
