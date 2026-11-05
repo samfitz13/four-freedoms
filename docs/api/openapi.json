@@ -1,0 +1,132 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Freedom-four calendar integration API",
+    "version": "0.1.0",
+    "description": "Application-owned calendar endpoints. Session authentication uses better-auth cookies. These endpoints are not a public third-party API. Better-auth's delegated /api/auth/* endpoints and Next.js server actions are outside this specification; see README.md."
+  },
+  "servers": [{ "url": "/", "description": "Current application origin" }],
+  "security": [{ "sessionCookie": [] }, { "secureSessionCookie": [] }],
+  "paths": {
+    "/api/time/calendar/callback": {
+      "get": {
+        "operationId": "completeCalendarConnection",
+        "summary": "Consume a session-bound Google OAuth state and finish calendar connection",
+        "description": "Requires a verified session and a primary household. State is opaque, expires after ten minutes and is consumed once, including when authorization is cancelled. An invalid state returns 400 before any code exchange. With valid state but no code, redirect to the stored local return path. With code, exchange credentials, sync the most recently created household calendar account and redirect. Provider or database errors surface as server errors. The authorization request is initiated by the connectGoogle server action, not by calling this callback directly.",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "description": "Opaque state returned unchanged by Google. Bound to the initiating session and household; never construct or reuse it.",
+            "schema": { "type": "string", "pattern": "^[A-Za-z0-9_-]{43}$" }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "description": "Google authorization code. Omitted when authorization is cancelled.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "error",
+            "in": "query",
+            "description": "Google cancellation/error marker. The handler does not inspect this field; absence of code triggers the cancellation redirect after consuming valid state.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "307": {
+            "description": "Redirect to the stored local return path, or /login?next=%2Ftime%2Fagenda when the session is missing or invalid.",
+            "headers": {
+              "Location": {
+                "description": "Local return destination or sign-in URL.",
+                "schema": { "type": "string" }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing, invalid, expired, replayed or foreign-session OAuth state.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CalendarConnectionError" }
+              }
+            }
+          },
+          "500": {
+            "description": "Uncaught provider, household or database failure. Framework response is not a stable JSON contract."
+          }
+        }
+      }
+    },
+    "/api/time/calendar/sync": {
+      "post": {
+        "operationId": "syncHouseholdCalendars",
+        "summary": "Synchronize eligible Google calendars belonging to the signed-in household",
+        "description": "No request body is read. Disabled accounts and accounts synced less than 60 seconds ago are skipped. When Google integration is unconfigured, returns ok=true and synced=0. The synced count is the number of accounts processed, not the number of events. Provider or database failures abort the request; previously processed accounts may already be updated. This is a cookie-authenticated browser endpoint, not a cron endpoint or bearer-token API.",
+        "responses": {
+          "200": {
+            "description": "Synchronization completed, or no accounts were eligible.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CalendarSyncResult" },
+                "examples": {
+                  "noAccounts": { "value": { "ok": true, "synced": 0 } },
+                  "oneAccount": { "value": { "ok": true, "synced": 1 } }
+                }
+              }
+            }
+          },
+          "307": {
+            "description": "Missing or invalid session redirects to /login?next=%2F. Do not interpret a followed login page as successful synchronization.",
+            "headers": { "Location": { "schema": { "type": "string" } } }
+          },
+          "500": {
+            "description": "Uncaught provider, household or database failure. Framework response is not a stable JSON contract."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "better-auth.session_token",
+        "description": "Development/default better-auth session cookie. Obtain it through the normal magic-link sign-in flow; never commit or log it."
+      },
+      "secureSessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Secure-better-auth.session_token",
+        "description": "HTTPS secure-cookie variant of the better-auth session cookie."
+      }
+    },
+    "schemas": {
+      "CalendarSyncResult": {
+        "type": "object",
+        "required": ["ok", "synced"],
+        "properties": {
+          "ok": { "type": "boolean", "enum": [true] },
+          "synced": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of eligible accounts synchronized."
+          }
+        },
+        "additionalProperties": false
+      },
+      "CalendarConnectionError": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "enum": ["Invalid or expired calendar connection. Please try connecting again."]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
