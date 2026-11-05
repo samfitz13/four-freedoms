@@ -1,0 +1,31 @@
+.github/workflows/maintainability.yml
+  s_cca7490b0db3e9::t_0a8d22919831b6 31,34
+docs/maintenance/README.md
+  s_cca7490b0db3e9::t_c68dd49f5a132d 37
+scripts/check-maintainability.mjs
+  s_cca7490b0db3e9::t_ecb7829e4845f9 44,46,52,83-90,92-93,106,142-143,170,173
+scripts/ci-reporting.mjs
+  s_cca7490b0db3e9::t_061361c18c3e76 4-7,20-21
+scripts/ci-reporting.test.mjs
+  s_cca7490b0db3e9::t_8194a291d24056 7,13-14,64-83
+scripts/maintainability-policy.mjs
+  s_cca7490b0db3e9::t_1c6204e310508e 14
+scripts/maintainability.test.mjs
+  s_cca7490b0db3e9::t_351b507e53865c 15,19,21,104,106,108,111-112,114,119-153,237-255
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "98c666cfb47c3c98601358891ec54b905eb2d8f6",
+  "prompts": {},
+  "sessions": {
+    "s_cca7490b0db3e9": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "48cb2f0a-27cc-404b-85f9-9e690fad3dd6",
+        "model": "unknown"
+      },
+      "human_author": "Sam Fitzgerald <sam@factory.ai>"
+    }
+  }
+}
