@@ -1,0 +1,79 @@
+.env.example
+  s_7a7d16caabbd3b::t_e4a99a120d7860 8,10-13
+.github/workflows/duplicate-code.yml
+  s_7a7d16caabbd3b::t_4a4b86e9b1338c 1-41
+.github/workflows/module-boundaries.yml
+  s_7a7d16caabbd3b::t_96287a3ff75889 1-36
+.github/workflows/paystub-unit-tests.yml
+  s_7a7d16caabbd3b::t_bc376907d04bfc 1-34
+.gitignore
+  s_7a7d16caabbd3b::t_b49f119437a2b0 30-32
+.jscpd-baseline.json
+  s_7a7d16caabbd3b::t_dc1a106619c85b 1-28
+.jscpd.json
+  s_7a7d16caabbd3b::t_d9838af3cbd7f0 1-9
+AGENTS.md
+  s_7a7d16caabbd3b::t_883c76071cdaa8 55,69-72,121-126
+README.md
+  s_7a7d16caabbd3b::t_6d11cccff95ade 32-34,38-135,146,191,194-213,249
+app/(app)/[freedom]/_location/actions.ts
+  s_7a7d16caabbd3b::t_4145453571955a 82-87
+app/(app)/[freedom]/_location/community-actions.ts
+  s_7a7d16caabbd3b::t_41acfe48625aac 80-82,90
+app/(app)/[freedom]/_time/calendar-sync-actions.ts
+  s_7a7d16caabbd3b::t_7430f0af8f2a8b 6,12,19-21,23-28
+app/(app)/[freedom]/_time/pursuits-actions.ts
+  s_7a7d16caabbd3b::t_67a7e4d8407db8 5,119-131
+app/api/time/calendar/callback/route.ts
+  s_7a7d16caabbd3b::t_cf8ff135ff9cf9 2-3,5,12-13,15-25,27,37
+eslint.config.mjs
+  s_7a7d16caabbd3b::t_a337e268e46c17 5-12,36-82
+lib/auth-server.ts
+  s_7a7d16caabbd3b::t_2b5614c148ec57 21,31-35
+lib/calendar/google.ts
+  s_7a7d16caabbd3b::t_75476048ac1a19 22,31
+lib/calendar/oauth-state.ts
+  s_7a7d16caabbd3b::t_2aff86cb543b09 1-61
+lib/correspondences/sync.ts
+  s_7a7d16caabbd3b::t_6ee26d2aae349d 46-47,159-169
+lib/db/queries/location.ts
+  s_7a7d16caabbd3b::t_9df38705c5f822 60,77,98-101,129,151,233,251,267-277
+lib/db/queries/time.ts
+  s_7a7d16caabbd3b::t_9497caba715f01 58-61,141-144
+lib/email.ts
+  s_7a7d16caabbd3b::t_10db48864998e1 3,17-19
+lib/freedoms/paystub-math.test.ts
+  s_7a7d16caabbd3b::t_05d0c7d6e09166 1-197
+lib/freedoms/time-allocation.ts
+  s_7a7d16caabbd3b::t_b36759966d1546 22-25
+package.json
+  s_7a7d16caabbd3b::t_b40de714d51f62 8-11,17-20,26-29,68
+pnpm-lock.yaml
+  s_7a7d16caabbd3b::t_fdf1758cdbb41f 111-113,3163-3207,7251-7285
+scripts/check-module-boundaries.mjs
+  s_7a7d16caabbd3b::t_c851d005664077 1-182
+scripts/security-fixtures.mjs
+  s_7a7d16caabbd3b::t_90fbdee7027a40 1-235
+scripts/security-regression.mjs
+  s_7a7d16caabbd3b::t_48963ebe096de2 1-361
+scripts/with-database.mjs
+  s_7a7d16caabbd3b::t_f66bca193d1a19 1-55
+scripts/with-database.test.mjs
+  s_7a7d16caabbd3b::t_6270f8fb2b212e 1-86
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5cd1a926c71a94aced9f3129a03dbffe7603dc76",
+  "prompts": {},
+  "sessions": {
+    "s_7a7d16caabbd3b": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "411ffb01-673f-4320-b2fd-47ba73ee1180",
+        "model": "unknown"
+      },
+      "human_author": "Sam Fitzgerald <sam@factory.ai>"
+    }
+  }
+}
