@@ -7,8 +7,11 @@ import {
   parseFiSettings,
   resolveFiTiming,
   shiftFiMonth,
+  FI_ASSUMPTION_VERSION,
+  FI_ASSETS,
+  FI_PLANNING_DEFAULTS,
+  EMPTY_ALLOCATION,
 } from "./fi-plan-settings";
-import { FI_PLANNING_DEFAULTS, EMPTY_ALLOCATION } from "./constants";
 import { planMonthlySeries } from "./fi-projection";
 import { portfolioRealReturn } from "./fi-scenarios";
 import { buildFiStressTests } from "./fi-stress";
@@ -460,4 +463,72 @@ test("timing resolves to the first monthly boundary at the entered age and survi
   const p = settings();
   p.endMonth = null;
   assert.equal(fiPlanSettingsSchema.safeParse(p).success, false);
+});
+
+test("public planning defaults match the settings schema and expose every allocation class", () => {
+  assert.equal(FI_ASSUMPTION_VERSION, "planning-v1");
+  assert.equal(FI_PLANNING_DEFAULTS.version, FI_ASSUMPTION_VERSION);
+  assert.deepEqual(Object.keys(EMPTY_ALLOCATION), [...FI_ASSETS]);
+  assert.equal(
+    Object.values(EMPTY_ALLOCATION).reduce((sum, weight) => sum + weight, 0),
+    0,
+  );
+  assert.deepEqual(fiPlanSettingsSchema.parse(settings()).assumptions, FI_PLANNING_DEFAULTS);
+});
+
+test("settings reject incomplete timing, reversed horizons and retirement income without a start", () => {
+  for (const [overrides, message] of [
+    [{ retirementMonth: null }, "Enter both retirement and plan-end timing."],
+    [{ endMonth: "2039-12-01" }, "Plan end must follow retirement."],
+    [{ endMonth: "2040-01-01" }, "Plan end must follow retirement."],
+    [{ monthlyRetirementIncome: 100 }, "Enter the retirement income start month."],
+  ] as const) {
+    const invalid = { ...settings(), ...overrides };
+    const result = fiPlanSettingsSchema.safeParse(invalid);
+    assert.equal(result.success, false);
+    if (!result.success) assert.ok(result.error.issues.some((issue) => issue.message === message));
+    assert.equal(parseFiSettings(invalid), null);
+  }
+  const valid = { ...settings(), monthlyRetirementIncome: 100, incomeStartMonth: "2041-01-01" };
+  assert.equal(fiPlanSettingsSchema.safeParse(valid).success, true);
+});
+
+test("legacy settings retain safe defaults for blank, nonnumeric and nonfinite stored values", () => {
+  const parsed = parseFiSettings({
+    version: 1,
+    annualSpend: "48000",
+    withdrawalRate: Infinity,
+    realReturn: " ",
+    downsideReduction: "not-a-number",
+    monthlyContribution: null,
+  })!;
+  assert.equal(parsed.annualSpend, 48000);
+  assert.equal(parsed.withdrawalRate, 0.04);
+  assert.equal(parsed.realReturn, 0.05);
+  assert.equal(parsed.downsideReduction, 0.02);
+  assert.equal(parsed.monthlyContribution, 0);
+  for (const invalid of [null, undefined, false, 123, {}, { annualSpend: " " }])
+    assert.equal(parseFiSettings(invalid), null);
+});
+
+test("legacy settings reject unsafe financial assumptions while accepting documented boundaries", () => {
+  for (const overrides of [
+    { withdrawalRate: 0 },
+    { withdrawalRate: 0.26 },
+    { realReturn: -0.21 },
+    { realReturn: 0.31 },
+    { downsideReduction: 0 },
+    { downsideReduction: 0.21 },
+    { monthlyContribution: -1 },
+  ])
+    assert.equal(parseFiSettings({ annualSpend: 48000, ...overrides }), null);
+  for (const overrides of [
+    { withdrawalRate: 0.25 },
+    { realReturn: -0.2 },
+    { realReturn: 0.3 },
+    { downsideReduction: 0.001 },
+    { downsideReduction: 0.2 },
+    { monthlyContribution: 0 },
+  ])
+    assert.notEqual(parseFiSettings({ annualSpend: 48000, ...overrides }), null);
 });

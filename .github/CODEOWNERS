@@ -1,0 +1,4 @@
+# Repository-wide review ownership, including this file and GitHub workflows.
+# Use real GitHub users or teams with write access when delegating ownership.
+# More specific rules belong below the default; the last matching rule wins.
+* @samfitz13

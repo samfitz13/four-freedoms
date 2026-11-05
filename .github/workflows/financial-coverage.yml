@@ -1,0 +1,44 @@
+name: Financial coverage
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    name: Financial calculation coverage thresholds
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Enforce per-file coverage thresholds
+        run: pnpm test:coverage
+      - name: Retain coverage reports, including threshold failures
+        if: always() && hashFiles('reports/coverage/coverage-summary.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: financial-coverage
+          path: |
+            reports/coverage/
+            !reports/coverage/tmp/**
+          retention-days: 14
+          if-no-files-found: error
