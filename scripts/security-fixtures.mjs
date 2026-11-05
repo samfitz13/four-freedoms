@@ -7,6 +7,7 @@ class FixtureState {
   exchanges = [];
   transactions = 0;
   authenticated = true;
+  emailFailure = null;
 }
 class FixtureEnvironment {
   NODE_ENV = "development";
@@ -227,7 +228,14 @@ export async function exchangeGoogleCalendarCode(householdId, code) {
 }
 export async function syncGoogleCalendarAccount() {}
 export class Resend {
-  emails = { send: async () => ({ data: { id: "sent" } }) };
+  emails = {
+    send: async () => {
+      const error = { message: "fixture-secret fixture@example.invalid" };
+      if (state.emailFailure === "throw") throw new Error(error.message);
+      if (state.emailFailure === "return") return { error };
+      return { data: { id: "sent" } };
+    },
+  };
 }
 
 export { buildGoogleCalendarAuthUrl, googleCalendarConfigured } from "../lib/calendar/google";

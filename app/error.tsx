@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { AppearanceControls } from "@/components/ui/appearance-controls";
+import { logError } from "@/lib/logger";
 import { useEffect } from "react";
 
 export default function GlobalError({
@@ -12,7 +13,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error(error);
+    logError("app.render.failed", error);
   }, [error]);
 
   return (
@@ -21,7 +22,7 @@ export default function GlobalError({
       <p className="eyebrow">Something broke</p>
       <h1 className="font-display text-5xl leading-[1.02] tracking-tight">A small fault.</h1>
       <p className="max-w-md text-sm text-[color:var(--color-ink-soft)]">
-        Try again — or head home. If this keeps happening, the request id is{" "}
+        Try again — or head home. If this keeps happening, the error reference is{" "}
         <code className="font-mono text-xs">{error.digest ?? "(dev)"}</code>.
       </p>
       <div className="flex items-center gap-4">

@@ -12,12 +12,14 @@ import { magicLink } from "better-auth/plugins";
 import { db, schema } from "@/lib/db/client";
 import { env } from "@/lib/env";
 import { sendEmail } from "@/lib/email";
+import { logAuthError } from "@/lib/logger";
 import { randomUUID } from "node:crypto";
 
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL ?? env.NEXT_PUBLIC_SITE_URL,
   secret: env.BETTER_AUTH_SECRET,
   trustedOrigins: [env.NEXT_PUBLIC_SITE_URL],
+  logger: { log: logAuthError },
 
   database: drizzleAdapter(db, {
     provider: "pg",

@@ -11,7 +11,7 @@ Working name. Private beta.
 
 - **Framework:** Next.js 16 (App Router, Turbopack) · TypeScript strict
 - **UI:** Daybreak design system · Tailwind CSS v4 · locally owned, shadcn-style components with Radix primitives · Manrope
-- **DB:** Postgres 17 (local Docker) / **PlanetScale Postgres** in prod
+- **DB:** Postgres 17 (local Docker) / **Supabase Postgres** in prod; PlanetScale supported
 - **ORM:** Drizzle ORM + drizzle-kit (schema-as-TS)
 - **Auth:** [better-auth](https://www.better-auth.com) — magic link, DB-backed sessions
 - **Email:** Resend (dev falls back to console log if `RESEND_API_KEY` is unset)
@@ -39,6 +39,8 @@ Agent instructions are checked with `pnpm check:docs` locally and in CI.
 See [API contracts](docs/api/README.md) for calendar HTTP endpoints and the
 scope of the OpenAPI specification. For a containerized development environment,
 see [devcontainer setup](.devcontainer/README.md).
+See [operations and recovery](docs/operations/README.md) for failed deployments,
+database recovery, magic-link email and Google Calendar sync.
 
 | Command                      | Description                                                         |
 | ---------------------------- | ------------------------------------------------------------------- |
@@ -54,6 +56,7 @@ see [devcontainer setup](.devcontainer/README.md).
 | `pnpm check:maintainability` | Enforce function/file budgets and validate owned technical debt     |
 | `pnpm test:paystub`          | Unit tests for paystub tax totals and take-home pay                 |
 | `pnpm test:unit`             | Discover and run unit files in isolated parallel processes          |
+| `pnpm test:list`             | List selected unit files without importing or executing them        |
 | `pnpm test:coverage`         | Financial calculation tests with enforced per-file coverage gates   |
 | `pnpm test:isolation`        | Verify worker isolation, clean environments and failure propagation |
 | `pnpm test:security`         | Isolated authorization, OAuth and email regression tests            |
@@ -92,6 +95,13 @@ This does not run the browser QA
 or security regression harnesses.
 
 ### Unit test isolation
+
+For discovery without execution, run `pnpm test:list`, `pnpm test:list financial`,
+or `pnpm test:unit --list <path-to-file.test.ts>`. This lists file paths only,
+not individual test names. It uses the same selection, validation, sorting and
+deduplication as execution, but never starts a worker or imports a test file.
+It does not collect the separate security/browser harnesses. Timing and
+execution flags are rejected in list-only mode.
 
 `pnpm test:unit` discovers `*.test.ts` under `app/`, `components/` and `lib/`.
 Pass file paths to run a focused subset. `test:unit`, `test:paystub` and
@@ -222,6 +232,9 @@ ownership of `.github/CODEOWNERS` itself.
 ## Environment variables
 
 See `.env.example` for the full list. Minimum for local dev:
+
+Git ignores `.env` and every `.env.*` variant, except `.env.example`. Keep
+that template synthetic. Ignore rules do not remove files already tracked by Git.
 
 | Var                    | Purpose                                            |
 | ---------------------- | -------------------------------------------------- |

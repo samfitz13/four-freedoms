@@ -18,8 +18,8 @@ next-env.d.ts
 
 # env
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
 # logs
 npm-debug.log*
@@ -40,8 +40,11 @@ reports/tests/
 # vercel
 .vercel
 
-# factory cli
-.factory/
+# local Factory state stays private; share only the repository verification skill
+.factory/*
+!.factory/skills/
+.factory/skills/*
+!.factory/skills/apply-repo-verification/
 
 # local browser and generated visual QA artifacts
 .playwright-mcp/

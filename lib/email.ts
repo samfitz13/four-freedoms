@@ -15,7 +15,9 @@ type SendArgs = {
 export async function sendEmail(args: SendArgs) {
   if (!env.RESEND_API_KEY) {
     if (env.NODE_ENV !== "development") {
-      throw new Error("Email delivery is not configured.");
+      throw Object.assign(new Error("Email delivery is not configured."), {
+        code: "EMAIL_NOT_CONFIGURED",
+      });
     }
     console.log("\n─── dev email ───────────────────────────────");
     console.log("to     :", args.to);
@@ -26,16 +28,20 @@ export async function sendEmail(args: SendArgs) {
     return { id: "dev" };
   }
 
-  const resend = new Resend(env.RESEND_API_KEY);
-  const { data, error } = await resend.emails.send({
-    from: env.EMAIL_FROM,
-    to: args.to,
-    subject: args.subject,
-    html: args.html,
-    text: args.text,
-  });
-  if (error) throw new Error(`Email send failed: ${error.message}`);
-  return { id: data?.id ?? "sent" };
+  try {
+    const resend = new Resend(env.RESEND_API_KEY);
+    const { data, error } = await resend.emails.send({
+      from: env.EMAIL_FROM,
+      to: args.to,
+      subject: args.subject,
+      html: args.html,
+      text: args.text,
+    });
+    if (error) throw new Error("Email provider rejected the request.");
+    return { id: data?.id ?? "sent" };
+  } catch {
+    throw Object.assign(new Error("Email send failed."), { code: "EMAIL_DELIVERY_FAILED" });
+  }
 }
 
 function stripHtml(html: string) {
