@@ -27,11 +27,18 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# generated duplicate-code reports
+reports/duplication/
+
 # vercel
 .vercel
 
 # factory cli
 .factory/
+
+# local browser and generated visual QA artifacts
+.playwright-mcp/
+screenshots/
 
 # ide / os
 .idea

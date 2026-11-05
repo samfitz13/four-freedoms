@@ -10,9 +10,10 @@ to make safe, consistent changes.
 ## 1. Project overview
 
 `freedom-four` is a personal instrument for measuring and reflecting on four
-dimensions of freedom: **Financial, Location, Time, Health**. It pairs a daily
-check-in with a weekly review so the user can compound progress over time.
-Working name, private beta, single-tenant-per-household data model.
+dimensions of freedom: **Financial, Location, Time, Health**. Each freedom has
+its own dedicated section with the tools, metrics, and data-entry flows that
+make sense for that domain. Working name, private beta,
+single-tenant-per-household data model.
 
 ---
 
@@ -22,7 +23,7 @@ Working name, private beta, single-tenant-per-household data model.
 | ---------------- | ------------------------------------------------------------------------ |
 | Framework        | Next.js 16 (App Router, Turbopack), React 19                             |
 | Language         | TypeScript (strict)                                                      |
-| UI               | Tailwind CSS v4 + custom editorial theme (serif display, ink/paper)      |
+| UI               | Tailwind CSS v4 + Daybreak (Manrope), locally owned components + Radix   |
 | Database (prod)  | **PostgreSQL 18.3 on PlanetScale Postgres**                              |
 | Database (local) | Postgres 17 via `docker/compose.dev.yml`                                 |
 | ORM              | Drizzle ORM `^0.45` + drizzle-kit `^0.31` (dialect: `postgresql`)        |
@@ -51,6 +52,7 @@ All commands use `pnpm`. Never substitute `npm` or `yarn` (see §8).
 | `pnpm format`       | Prettier write                                           |
 | `pnpm format:check` | Prettier check (CI-style)                                |
 | `pnpm typecheck`    | `tsc --noEmit` — **must pass before finishing any task** |
+| `pnpm test:paystub` | Focused unit tests for paystub taxes and take-home pay   |
 | `pnpm db:up`        | Start local Postgres (Docker)                            |
 | `pnpm db:down`      | Stop local Postgres                                      |
 | `pnpm db:logs`      | Follow Postgres logs                                     |
@@ -64,6 +66,10 @@ All commands use `pnpm`. Never substitute `npm` or `yarn` (see §8).
 **Always-run before handing work back:** `pnpm typecheck && pnpm lint`. For
 anything touching routes, components, or config, also run `pnpm build`.
 
+For paystub calculation changes, also run `pnpm test:paystub`. Pure TypeScript
+unit tests use `node:test` in colocated `*.test.ts` files; keep fixtures synthetic
+and tests independent of live databases, environment secrets and providers.
+
 ---
 
 ## 4. Architecture
@@ -74,7 +80,7 @@ Repository layout (trimmed):
 app/
   (marketing)              public landing
   (auth)/login             magic-link sign-in
-  (app)/                   protected group: dashboard, check-in, review, settings
+  (app)/                   protected group: dashboard, [freedom], settings
   api/auth/[...all]        better-auth catch-all route handler
 components/                UI primitives and freedom widgets
 lib/
@@ -112,6 +118,12 @@ Key rules:
   Never import the Drizzle client into a `"use client"` module.
 - The Drizzle client is a singleton cached on `globalThis` — do not `new` one
   per request.
+- ESLint enforces `app/` → `components/` → `lib/` dependency direction:
+  libraries cannot import routes/components, and components cannot import routes.
+  `components/ui/` may import other primitives and `lib/utils.ts`, not domain
+  widgets or other libraries. Pass domain data/actions through props.
+  `pnpm check:boundaries` verifies alias, relative, type-only and deferred import
+  restrictions without running application code.
 
 ---
 
@@ -131,8 +143,22 @@ Tables today:
 
 - **Auth:** `users`, `sessions`, `accounts`, `verifications`
 - **Tenancy:** `households`, `memberships` (enum: `household_role`)
-- **Freedoms:** `freedom_settings`, `entries`, `goals`, `weekly_reviews`
-- **Enums:** `freedom`, `entry_source`, `goal_period`, `goal_status`
+- **Freedom config:** `freedom_settings`
+- **Financial:** `financial_accounts`, `monthly_statements`, `monthly_summaries`,
+  `cashflow_transactions`, `budget_categories`, `budget_periods`,
+  `financial_goals`, `csv_imports`, `paystubs`, `investment_snapshots`, and
+  the `iso_option_*` tables
+- **Location:** `places`, `stays`, `trips`, `residences`, `properties`,
+  `connections`, `connection_visits`, `location_satisfactions`
+- **Time:** `time_events`, `time_event_exceptions`, `time_blocks`, `time_pursuits`,
+  `time_log_entries`, `habits`, `habit_checkins`, `calendar_accounts`
+- **Health:** `sleep_logs`, `health_checkins`, `workouts`, `body_measurements`
+- **Cross-domain:** `sync_events`
+
+All four freedoms use typed tables and tenant-scoped readers in
+`lib/db/queries/`. Enum definitions live with the schema. There is no generic
+`entries` table; financial balances come from monthly statements, not the
+retired holdings or account-balances tables.
 
 ---
 
@@ -162,7 +188,8 @@ Only the `NEXT_PUBLIC_*` variables are safe to surface to the client.
   interactivity or browser APIs.
 - Drizzle queries live in `lib/**` (or colocated server actions). Never in a
   client component.
-- Tailwind v4 tokens from the editorial theme. Avoid ad-hoc hex values.
+- Tailwind v4 tokens from the Daybreak theme. Avoid ad-hoc hex values.
+  Follow `.impeccable.md` and `design.md` for material, typography, and accessibility.
 - Match the style of surrounding files — indentation, import order, comment
   tone, and component shape.
 - Conventional Commits (enforced by commitlint). Examples:
@@ -213,6 +240,10 @@ Only the `NEXT_PUBLIC_*` variables are safe to surface to the client.
    explaining the framework constraint. Overrides must name specific files
    and specific rules — never disable a rule globally and never use them as
    a convenience escape hatch.
+
+9. **Screenshot location.** Save every screenshot under `screenshots/`, never
+   in the repository root or `.playwright-mcp/`. When a screenshot tool accepts
+   a filename or path, always pass `screenshots/<descriptive-name>.png`.
 
 ---
 

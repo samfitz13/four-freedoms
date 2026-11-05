@@ -1,0 +1,1 @@
+ALTER TABLE "iso_option_grants" ADD COLUMN "early_exercise_allowed" boolean DEFAULT false NOT NULL;

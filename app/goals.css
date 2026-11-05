@@ -1,0 +1,700 @@
+.goals-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  container-type: inline-size;
+}
+.goals-page-heading,
+.goals-section-heading,
+.goals-row-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}
+.goals-page-heading h2 {
+  font-size: 1.75rem;
+  letter-spacing: -0.04em;
+  font-weight: 600;
+}
+.goals-fi,
+.goals-group {
+  padding: 24px;
+}
+.goals-fi {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.goals-section-heading h3,
+.goals-empty h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.goals-empty p {
+  max-width: 42ch;
+  font-size: 0.875rem;
+  color: var(--color-ink-soft);
+}
+.goals-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: 24px;
+}
+.goals-stats > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+.goals-stats dt,
+.goals-kind {
+  color: var(--color-ink-soft);
+  font-size: 0.75rem;
+}
+.goals-stats dd {
+  font-size: 1.75rem;
+  line-height: 1.25;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.goals-progress {
+  position: relative;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 100px;
+  background: var(--color-border);
+}
+.goals-progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--color-accent);
+}
+.fi-scenarios {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+.fi-scenarios h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.fi-scenario-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: 12px 24px;
+}
+.fi-scenario-options > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding-block: 12px;
+  border-bottom: 2px solid var(--control-border);
+  text-align: left;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+.fi-scenario-options dt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fi-scenario-options dt svg {
+  flex-shrink: 0;
+}
+.fi-scenario-options strong {
+  font-size: 1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.fi-scenario-date {
+  font-size: 0.75rem;
+  color: var(--color-ink-soft);
+}
+.fi-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  container-type: inline-size;
+}
+.fi-chart-heading,
+.fi-chart-legend,
+.fi-chart-legend > span,
+.fi-chart-threshold {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fi-chart-heading,
+.fi-chart-threshold {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+.fi-chart-legend {
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  color: var(--color-ink-soft);
+  font-size: 0.75rem;
+}
+.fi-chart-legend i {
+  width: 24px;
+  border-top: 3px solid var(--color-accent);
+}
+.fi-chart-legend .fi-legend-projected {
+  border-top: 2px solid var(--color-chart-base);
+}
+.fi-chart-legend .fi-legend-recorded {
+  border-top-color: var(--color-foreground);
+}
+.fi-chart-legend .fi-legend-threshold {
+  border-top: 2px dotted var(--color-ink-soft);
+}
+.fi-chart-views {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.fi-chart-views button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  border: 1px solid transparent;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+}
+.fi-chart-views button[aria-pressed="true"] {
+  border-color: var(--control-border);
+  background: var(--glass-control);
+  color: var(--color-foreground);
+  font-weight: 600;
+}
+.fi-chart-threshold {
+  font-size: 0.75rem;
+  color: var(--color-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.fi-chart-threshold strong {
+  color: var(--color-foreground);
+  margin-left: 8px;
+  font-weight: 600;
+}
+.fi-chart-grid {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+}
+.fi-chart-y-axis {
+  position: relative;
+  color: var(--color-ink-soft);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.fi-chart-y-axis span {
+  position: absolute;
+  right: 12px;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+.fi-chart-plot {
+  min-width: 0;
+  cursor: crosshair;
+}
+.fi-chart-plot svg {
+  display: block;
+  overflow: visible;
+}
+.fi-gridline {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+.fi-threshold-line {
+  stroke: var(--color-ink-soft);
+  stroke-width: 1.5;
+  stroke-dasharray: 2 5;
+}
+.fi-today-line {
+  stroke: var(--color-ink-soft);
+  stroke-width: 1;
+  stroke-dasharray: 1 5;
+}
+.fi-recorded-line,
+.fi-projected-line {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.fi-projected-line.fi-line-base {
+  stroke: var(--color-chart-base);
+  stroke-width: 2.5;
+  stroke-dasharray: none;
+}
+.fi-projected-line.fi-line-downside {
+  stroke: var(--color-chart-lower);
+  stroke-dasharray: none;
+}
+.fi-projected-line.fi-line-upside {
+  stroke: var(--color-chart-upside);
+  stroke-dasharray: none;
+}
+.fi-crossing-point.fi-crossing-downside {
+  fill: var(--color-chart-lower);
+}
+.fi-scenario-marker.fi-marker-base {
+  fill: var(--color-chart-base);
+}
+.fi-scenario-marker.fi-marker-downside {
+  fill: var(--color-chart-lower);
+}
+.fi-scenario-marker.fi-marker-upside {
+  fill: var(--color-chart-upside);
+}
+.fi-crossing-point.fi-crossing-upside {
+  fill: var(--color-chart-upside);
+}
+.fi-inspection-point.fi-inspection-downside {
+  stroke: var(--color-chart-lower);
+}
+.fi-inspection-point.fi-inspection-upside {
+  stroke: var(--color-chart-upside);
+}
+.fi-recorded-line {
+  stroke: var(--color-foreground);
+  stroke-width: 3;
+}
+.fi-projected-line {
+  stroke: var(--color-chart-base);
+  stroke-width: 2;
+  stroke-dasharray: none;
+}
+.fi-recorded-point {
+  fill: var(--color-foreground);
+}
+.fi-crossing-point {
+  fill: var(--color-chart-base);
+}
+.fi-inspection-line {
+  stroke: var(--color-ink-soft);
+  stroke-width: 1;
+}
+.fi-inspection-point {
+  fill: var(--color-background);
+  stroke: var(--color-accent);
+  stroke-width: 2.5;
+}
+.fi-goal-guide {
+  stroke: var(--color-accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 5;
+}
+.fi-chart-axis-title {
+  color: var(--color-ink-soft);
+  font-size: 0.75rem;
+  align-self: center;
+}
+.fi-chart-rail {
+  position: relative;
+  height: 32px;
+  margin-top: 8px;
+}
+.fi-chart-rail::before {
+  content: "";
+  position: absolute;
+  inset: 50% 8px auto;
+  border-top: 1px solid var(--color-ink-soft);
+}
+.fi-chart-rail i,
+.fi-chart-rail b {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--color-ink-soft);
+  border-radius: 50%;
+  background: var(--color-background);
+}
+.fi-chart-rail i.is-selected {
+  width: 13px;
+  height: 13px;
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+.fi-chart-rail b.fi-rail-fi {
+  border-radius: 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+.fi-chart-x-axis {
+  position: relative;
+  min-height: 1.5rem;
+  font-size: 0.75rem;
+  color: var(--color-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.fi-chart-x-axis span {
+  position: absolute;
+  white-space: nowrap;
+}
+.fi-chart-inspector {
+  display: flex;
+  flex-direction: column;
+  padding-block: 8px;
+  border-block: 1px solid var(--color-border);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+.fi-chart-inspector output {
+  overflow-wrap: anywhere;
+}
+.fi-chart-inspector p,
+.fi-chart-note {
+  color: var(--color-ink-soft);
+  font-size: 0.75rem;
+  line-height: 1.7;
+}
+.fi-chart-milestones h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.fi-chart-milestones ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin-top: 12px;
+}
+.fi-chart-milestones li {
+  min-width: 0;
+  flex: 0 1 auto;
+  max-width: 100%;
+}
+.fi-chart-milestones button {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 8px 0;
+  text-align: left;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  overflow-wrap: anywhere;
+  font-size: 0.875rem;
+}
+.fi-chart-milestones button small {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--color-ink-soft);
+}
+.fi-chart-milestones button[aria-pressed="true"] {
+  border-bottom-color: var(--color-accent);
+  font-weight: 600;
+}
+.fi-chart-goal-detail {
+  margin-top: 12px;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+@container (max-width: 400px) {
+  .fi-scenario-options {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .fi-scenario-options > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 12px;
+    padding-block: 10px;
+  }
+  .fi-scenario-options dt {
+    grid-row: span 2;
+  }
+  .fi-scenario-options dd {
+    text-align: right;
+  }
+  .fi-chart-x-axis span:not(:first-child):not(:last-child) {
+    display: none;
+  }
+}
+.goals-assumptions {
+  border-top: 1px solid var(--color-border);
+  padding-top: 8px;
+}
+.goals-assumptions > summary,
+.goals-manage > summary {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 44px;
+  align-content: center;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--color-ink-soft);
+}
+.goals-assumption-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: 20px;
+  padding-block: 12px;
+}
+.goals-observed {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 16px;
+}
+.goals-group-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.goals-list > li {
+  padding-block: 24px;
+}
+.goals-list > li + li {
+  border-top: 1px solid var(--color-border);
+}
+.goals-list > li:last-child {
+  padding-bottom: 0;
+}
+.goals-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.goals-row-heading > div:first-child {
+  flex: 1;
+  min-width: min(100%, 12rem);
+}
+.goals-title-line {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+}
+.goals-title-line h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.goals-row-amount {
+  margin-top: 6px;
+  font-size: 1.125rem;
+  font-variant-numeric: tabular-nums;
+}
+.goals-row-target,
+.goals-row-meta {
+  font-size: 0.75rem;
+  color: var(--color-ink-soft);
+  overflow-wrap: anywhere;
+}
+.goals-row-meta {
+  margin-top: 4px;
+}
+.goals-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+.goals-percent {
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+.goals-actions,
+.goals-progress-form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.goals-actions {
+  padding-block: 8px;
+}
+.goals-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+.goals-form > * {
+  min-width: 0;
+  grid-column: auto;
+}
+.goals-form .goals-form-footer,
+.goals-form .goals-field-wide {
+  grid-column: 1 / -1;
+}
+.goals-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-top: 8px;
+}
+.goals-form-footer > span,
+.goals-form-footer > p {
+  flex: 1 1 240px;
+}
+.goals-form input + span {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.goals-derived-hint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.goals-account-selection legend {
+  margin-bottom: 8px;
+}
+.goals-account-selection p {
+  font-size: 0.875rem;
+  color: var(--color-ink-soft);
+}
+.goals-account-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding-block: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+.goals-account-option + .goals-account-option {
+  border-top: 1px solid var(--color-border);
+}
+.goals-account-option input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--color-accent);
+}
+.goals-form .goals-account-option span {
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.goals-account-option small {
+  display: block;
+  color: var(--color-ink-soft);
+}
+@media (min-width: 640px) {
+  .goals-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (forced-colors: active) {
+  .fi-projected-line.fi-line-downside {
+    stroke-dasharray: 6 4;
+  }
+  .fi-projected-line.fi-line-upside {
+    stroke-dasharray: 14 4 2 4;
+  }
+  .fi-chart-plot svg * {
+    stroke: CanvasText;
+  }
+  .fi-chart-rail i,
+  .fi-chart-rail b {
+    border-color: CanvasText;
+  }
+  .fi-chart-rail i.is-selected,
+  .fi-chart-rail b.fi-rail-fi {
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+  .fi-chart-views button[aria-pressed="true"],
+  .fi-chart-milestones button[aria-pressed="true"] {
+    border-color: Highlight;
+  }
+  .goals-progress {
+    border: 1px solid CanvasText;
+    background: Canvas;
+  }
+  .goals-progress-fill {
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+}
+
+.fi-plan-fields {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+.fi-input-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: 1rem;
+}
+.fi-input-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  font-size: 0.875rem;
+}
+.fi-input-label .daybreak-field {
+  min-width: 0;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+}
+.fi-account-allocation {
+  display: grid;
+  gap: 0.75rem;
+  padding-block: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.fi-retirement-marker text {
+  fill: var(--color-ink);
+  font-size: 0.75rem;
+}
+.fi-depletion-marker path {
+  fill: none;
+  stroke: var(--color-chart-base);
+  stroke-width: 2;
+}
+.fi-depletion-marker.fi-marker-downside path {
+  stroke: var(--color-chart-lower);
+}
+.fi-depletion-marker.fi-marker-upside path {
+  stroke: var(--color-chart-upside);
+}
+.fi-stress table {
+  width: 100%;
+  font-size: 0.875rem;
+}
+.fi-stress {
+  min-width: 0;
+}
+.fi-stress .daybreak-table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.goals-form [hidden] {
+  display: none;
+}
+.fi-stress :is(th, td) {
+  padding: 0.75rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.fi-stress :is(th, td):first-child {
+  text-align: left;
+}
+@media (forced-colors: active) {
+  .fi-depletion-marker path {
+    stroke: CanvasText;
+  }
+  .fi-retirement-marker text {
+    fill: CanvasText;
+  }
+}

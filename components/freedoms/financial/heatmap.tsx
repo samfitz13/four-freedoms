@@ -25,13 +25,7 @@ export function BudgetHeatmap({
   warnColor?: string;
   baseColor?: string;
 }) {
-  if (rows.length === 0) {
-    return (
-      <p className="text-sm text-[color:var(--color-ink-soft)]">
-        No categories yet. Add one below to start tracking plan vs. actual.
-      </p>
-    );
-  }
+  if (rows.length === 0) return null;
 
   return (
     <ul className="flex flex-col divide-y divide-[color:var(--color-border)]">
@@ -46,11 +40,11 @@ export function BudgetHeatmap({
             <div className="flex items-baseline justify-between gap-4">
               <div className="flex items-baseline gap-3">
                 <span className="text-sm">{r.name}</span>
-                <span className="font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
+                <span className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
                   {r.kind}
                 </span>
               </div>
-              <div className="flex items-baseline gap-3 font-mono text-[11px] tabular-nums">
+              <div className="flex items-baseline gap-3 font-sans text-xs tabular-nums">
                 <span className="text-[color:var(--color-ink-soft)]">
                   <Money value={r.actual} currency={currency} fractionDigits={0} />
                   {" / "}

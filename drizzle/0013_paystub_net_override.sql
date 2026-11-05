@@ -1,0 +1,1 @@
+ALTER TABLE "paystubs" ADD COLUMN "net_overridden" boolean DEFAULT false NOT NULL;

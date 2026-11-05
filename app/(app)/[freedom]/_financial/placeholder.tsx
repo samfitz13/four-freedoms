@@ -12,11 +12,11 @@ export function TabPlaceholder({
   eta?: string;
 }) {
   return (
-    <section className="flex flex-col gap-4 border border-dashed border-[color:var(--color-border)] p-10">
-      <h2 className="font-serif text-2xl tracking-tight">{title}</h2>
+    <section className="daybreak-panel flex flex-col gap-4 border-dashed p-10">
+      <h2 className="font-display text-2xl tracking-tight">{title}</h2>
       <p className="max-w-xl text-sm text-[color:var(--color-ink-soft)]">{description}</p>
       {eta ? (
-        <p className="font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
+        <p className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
           Ships in {eta}
         </p>
       ) : null}

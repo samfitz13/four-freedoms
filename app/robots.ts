@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/dashboard", "/check-in", "/review", "/settings"],
+        disallow: ["/api/", "/dashboard", "/settings"],
       },
     ],
     sitemap: "https://freedom-four.app/sitemap.xml",

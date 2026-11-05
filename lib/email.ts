@@ -1,6 +1,6 @@
 /**
  * Email transport. Uses Resend when RESEND_API_KEY is set, otherwise
- * logs to stdout (handy for local dev without an outbound account).
+ * logs to stdout only in development without an outbound account.
  */
 import { Resend } from "resend";
 import { env } from "@/lib/env";
@@ -14,6 +14,9 @@ type SendArgs = {
 
 export async function sendEmail(args: SendArgs) {
   if (!env.RESEND_API_KEY) {
+    if (env.NODE_ENV !== "development") {
+      throw new Error("Email delivery is not configured.");
+    }
     console.log("\n─── dev email ───────────────────────────────");
     console.log("to     :", args.to);
     console.log("from   :", env.EMAIL_FROM);

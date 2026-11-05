@@ -4,9 +4,16 @@
  * `var(--...)` token).
  */
 type Point = { date: string; value: number };
+type OverlayLine = {
+  label: string;
+  series: Point[];
+  color: string;
+  dashed?: boolean;
+};
 
 export function AreaChart({
   series,
+  overlayLines = [],
   color,
   width = 640,
   height = 160,
@@ -14,6 +21,7 @@ export function AreaChart({
   ariaLabel,
 }: {
   series: Point[];
+  overlayLines?: OverlayLine[];
   color: string;
   width?: number;
   height?: number;
@@ -31,7 +39,10 @@ export function AreaChart({
     );
   }
 
-  const values = series.map((s) => s.value);
+  const values = [
+    ...series.map((s) => s.value),
+    ...overlayLines.flatMap((line) => line.series.map((s) => s.value)),
+  ];
   const lo = Math.min(...values, 0);
   const hi = Math.max(...values, lo + 1);
   const range = hi - lo || 1;
@@ -49,6 +60,15 @@ export function AreaChart({
   )} L${linePoints[0]!.x.toFixed(1)} ${baseY.toFixed(1)} Z`;
 
   const gradientId = `area-gradient-${Math.abs(hashString(color + series.length))}`;
+  const overlayPaths = overlayLines.map((line) => ({
+    ...line,
+    path: line.series
+      .map(
+        (s, i) =>
+          `${i === 0 ? "M" : "L"}${(pad + i * stepX).toFixed(1)} ${toY(s.value).toFixed(1)}`,
+      )
+      .join(" "),
+  }));
 
   // Sparse X-axis ticks: first, last, midpoint.
   const ticks = [0, Math.floor(series.length / 2), series.length - 1];
@@ -78,6 +98,17 @@ export function AreaChart({
 
       <path d={area} fill={`url(#${gradientId})`} />
       <path d={path} fill="none" stroke={color} strokeWidth={1.5} strokeLinejoin="round" />
+      {overlayPaths.map((line) => (
+        <path
+          key={line.label}
+          d={line.path}
+          fill="none"
+          stroke={line.color}
+          strokeWidth={1.25}
+          strokeDasharray={line.dashed ? "4 4" : undefined}
+          strokeLinejoin="round"
+        />
+      ))}
 
       {ticks.map((t) => (
         <text
@@ -86,7 +117,7 @@ export function AreaChart({
           y={height - 1}
           textAnchor={t === 0 ? "start" : t === series.length - 1 ? "end" : "middle"}
           className="fill-[color:var(--color-ink-soft)]"
-          style={{ fontSize: 10, fontFamily: "var(--font-mono, monospace)" }}
+          style={{ fontSize: 10, fontFamily: "var(--font-sans, monospace)" }}
         >
           {formatShort(series[t]!.date)}
         </text>

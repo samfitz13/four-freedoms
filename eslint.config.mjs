@@ -2,6 +2,14 @@ import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 import nextTypescript from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier";
 import factoryPlugin from "@factory/eslint-plugin";
+import { fileURLToPath } from "node:url";
+
+// Next does not register its import plugin for .cjs files. Reuse the exact
+// plugin object globally so every source format gets the same boundary checks.
+const importPlugin = nextCoreWebVitals.find((config) => config.plugins?.import)?.plugins.import;
+if (!importPlugin) {
+  throw new Error("Next.js ESLint preset must provide the import plugin for module boundaries.");
+}
 
 /**
  * Lint config.
@@ -25,6 +33,53 @@ import factoryPlugin from "@factory/eslint-plugin";
 const eslintConfig = [
   ...nextCoreWebVitals,
   ...nextTypescript,
+  // Resolve real files, not import-string patterns, so aliases and relative
+  // paths obey the same layering. The import plugin comes from Next's preset.
+  {
+    plugins: {
+      import: importPlugin,
+    },
+    settings: {
+      "import/resolver": {
+        typescript: {
+          alwaysTryTypes: true,
+          project: fileURLToPath(new URL("./tsconfig.json", import.meta.url)),
+        },
+      },
+    },
+    rules: {
+      "import/no-restricted-paths": [
+        "error",
+        {
+          basePath: fileURLToPath(new URL(".", import.meta.url)),
+          zones: [
+            {
+              target: "./lib",
+              from: ["./app", "./components"],
+              message: "Libraries must not depend on route or presentation modules.",
+            },
+            {
+              target: "./components",
+              from: "./app",
+              message:
+                "Pass route data and actions through props instead of importing app modules.",
+            },
+            {
+              target: "./components/ui",
+              from: "./components/freedoms",
+              message: "UI primitives must not depend on freedom-specific components.",
+            },
+            {
+              target: "./components/ui",
+              from: "./lib",
+              except: ["utils.ts"],
+              message: "UI primitives may use lib/utils, but receive domain data through props.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   {
     plugins: {
       "@factory": factoryPlugin,

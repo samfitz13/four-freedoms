@@ -7,72 +7,39 @@ import { parse } from "csv-parse/sync";
 import { z } from "zod";
 import { db } from "@/lib/db/client";
 import {
-  accountBalances,
   budgetCategories,
   cashflowTransactions,
   csvImports,
   financialAccounts,
-  holdings,
 } from "@/lib/db/schema";
 import { requireUser } from "@/lib/auth-server";
 import { scopeForUser } from "@/lib/db/scope";
 import { DEFAULT_BASE_CURRENCY, isSupportedCurrency } from "@/lib/freedoms/currency";
+import {
+  isBalancePseudoRow,
+  normalizeDate,
+  normalizeHeader,
+  parseLooseNumber,
+  preprocessTransactionCsv,
+} from "@/lib/financial/csv-clean";
 
 import { IMPORT_KINDS, MAX_BYTES, MAX_ROWS } from "./constants";
 import type { ImportKind, ImportResult } from "./types";
 
-const ACCOUNT_TYPES = [
-  "checking",
-  "savings",
-  "brokerage",
-  "retirement",
-  "crypto",
-  "real_estate",
-  "loan",
-  "credit_card",
-  "other",
-] as const;
-
-const ASSET_CLASSES = [
-  "cash",
-  "equity",
-  "fixed_income",
-  "crypto",
-  "real_estate",
-  "alt",
-  "other",
-] as const;
-
 const isoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
-const accountRowSchema = z.object({
-  account_name: z.string().min(1).max(80),
-  type: z.enum(ACCOUNT_TYPES),
-  balance: z.coerce.number().finite(),
-  as_of: isoDateSchema,
-  currency: z.string().optional(),
-  institution: z.string().optional(),
-});
-
+/**
+ * Transaction rows after our `csv-clean` normalization. `date` and
+ * `amount` are already coerced before reaching this schema.
+ */
 const transactionRowSchema = z.object({
   date: isoDateSchema,
   description: z.string().max(200).optional(),
-  amount: z.coerce.number().finite(),
+  amount: z.number().finite(),
   category: z.string().optional(),
   account: z.string().optional(),
   currency: z.string().optional(),
   external_id: z.string().max(200).optional(),
-});
-
-const holdingRowSchema = z.object({
-  account: z.string().min(1).max(80),
-  symbol: z.string().min(1).max(20),
-  name: z.string().optional(),
-  asset_class: z.enum(ASSET_CLASSES).optional(),
-  quantity: z.coerce.number().finite(),
-  cost_basis: z.coerce.number().finite().optional(),
-  as_of: isoDateSchema.optional(),
-  currency: z.string().optional(),
 });
 
 type CsvRecord = Record<string, unknown>;
@@ -98,15 +65,26 @@ export async function importCsv(
     return { ok: false, error: `File too large (> ${MAX_BYTES / 1024 / 1024}MB).` };
   }
 
-  const text = await file.text();
+  const accountIdRaw = (formData.get("accountId") as string | null)?.trim() ?? "";
+  const accountIdOverride = accountIdRaw.length > 0 ? accountIdRaw : null;
+
+  const rawText = await file.text();
+
+  // Strip a bank-style summary preamble before parsing.
+  const pre = preprocessTransactionCsv(rawText);
+  const parseText = pre.body;
+
   let records: CsvRecord[];
   try {
-    records = parse(text, {
-      columns: (header: string[]) => header.map((h) => h.trim().toLowerCase().replace(/\s+/g, "_")),
+    records = parse(parseText, {
+      columns: (header: string[]) =>
+        header.map((h) => normalizeHeader(h.trim().toLowerCase().replace(/\s+/g, "_"))),
       skip_empty_lines: true,
       trim: true,
       relax_quotes: true,
+      relax_column_count: true,
       bom: true,
+      skip_records_with_error: true,
     }) as CsvRecord[];
   } catch (err) {
     return { ok: false, error: `Failed to parse CSV: ${(err as Error).message}` };
@@ -128,32 +106,15 @@ export async function importCsv(
   let skipped = 0;
 
   try {
-    if (kind === "accounts") {
-      const result = await importAccounts({
-        householdId: scope.primaryHouseholdId,
-        records,
-        errors,
-      });
-      inserted = result.inserted;
-      skipped = result.skipped;
-    } else if (kind === "transactions") {
-      const result = await importTransactions({
-        householdId: scope.primaryHouseholdId,
-        records,
-        errors,
-        batchId,
-      });
-      inserted = result.inserted;
-      skipped = result.skipped;
-    } else {
-      const result = await importHoldings({
-        householdId: scope.primaryHouseholdId,
-        records,
-        errors,
-      });
-      inserted = result.inserted;
-      skipped = result.skipped;
-    }
+    const result = await importTransactions({
+      householdId: scope.primaryHouseholdId,
+      records,
+      errors,
+      batchId,
+      accountIdOverride,
+    });
+    inserted = result.inserted;
+    skipped = result.skipped;
   } catch (err) {
     return { ok: false, error: `Import failed: ${(err as Error).message}` };
   }
@@ -171,82 +132,15 @@ export async function importCsv(
     errorJson: errors.length ? { errors: errors.slice(0, 50) } : null,
   });
 
-  revalidatePath("/financial");
+  revalidatePath("/financial", "layout");
 
-  return { ok: true, kind, inserted, skipped, errors: errors.slice(0, 20) };
-}
-
-// ---------------------------------------------------------------------------
-// Per-kind importers
-// ---------------------------------------------------------------------------
-
-async function importAccounts({
-  householdId,
-  records,
-  errors,
-}: {
-  householdId: string;
-  records: CsvRecord[];
-  errors: Array<{ row: number; message: string }>;
-}) {
-  // Cache: name → accountId (create-or-reuse).
-  const existing = await db
-    .select({ id: financialAccounts.id, name: financialAccounts.name })
-    .from(financialAccounts)
-    .where(eq(financialAccounts.householdId, householdId));
-  const byName = new Map(existing.map((a) => [a.name.toLowerCase(), a.id] as const));
-
-  let inserted = 0;
-  let skipped = 0;
-
-  for (const [i, raw] of records.entries()) {
-    const parsed = accountRowSchema.safeParse(raw);
-    if (!parsed.success) {
-      errors.push({ row: i + 2, message: zodMessage(parsed.error) });
-      skipped += 1;
-      continue;
-    }
-    const row = parsed.data;
-    const currency =
-      row.currency && isSupportedCurrency(row.currency.toUpperCase())
-        ? row.currency.toUpperCase()
-        : DEFAULT_BASE_CURRENCY;
-
-    await db.transaction(async (tx) => {
-      let accountId = byName.get(row.account_name.toLowerCase());
-      if (!accountId) {
-        accountId = randomUUID();
-        await tx.insert(financialAccounts).values({
-          id: accountId,
-          householdId,
-          name: row.account_name,
-          type: row.type,
-          currency,
-          institution: row.institution ?? null,
-          isManual: false,
-          isArchived: false,
-        });
-        byName.set(row.account_name.toLowerCase(), accountId);
-      }
-      await tx
-        .insert(accountBalances)
-        .values({
-          id: randomUUID(),
-          accountId,
-          asOf: row.as_of,
-          balance: row.balance.toFixed(2),
-          source: "import",
-        })
-        .onConflictDoUpdate({
-          target: [accountBalances.accountId, accountBalances.asOf],
-          set: { balance: row.balance.toFixed(2), source: "import" },
-        });
-    });
-
-    inserted += 1;
-  }
-
-  return { inserted, skipped };
+  return {
+    ok: true,
+    kind,
+    inserted,
+    skipped,
+    errors: errors.slice(0, 20),
+  };
 }
 
 async function importTransactions({
@@ -254,16 +148,21 @@ async function importTransactions({
   records,
   errors,
   batchId,
+  accountIdOverride,
 }: {
   householdId: string;
   records: CsvRecord[];
   errors: Array<{ row: number; message: string }>;
   batchId: string;
+  accountIdOverride: string | null;
 }) {
-  // Cache accounts + categories by name to avoid N queries inside the loop.
   const [accountRows, categoryRows] = await Promise.all([
     db
-      .select({ id: financialAccounts.id, name: financialAccounts.name })
+      .select({
+        id: financialAccounts.id,
+        name: financialAccounts.name,
+        isArchived: financialAccounts.isArchived,
+      })
       .from(financialAccounts)
       .where(eq(financialAccounts.householdId, householdId)),
     db
@@ -274,14 +173,58 @@ async function importTransactions({
   const accountByName = new Map(accountRows.map((a) => [a.name.toLowerCase(), a.id] as const));
   const categoryByName = new Map(categoryRows.map((c) => [c.name.toLowerCase(), c.id] as const));
 
-  // Track de-dup on (date, amount, description) within the batch to avoid
-  // hammering the DB for obvious dupes.
+  if (accountIdOverride) {
+    const owns = accountRows.some((a) => a.id === accountIdOverride && !a.isArchived);
+    if (!owns) {
+      errors.push({ row: 0, message: "Selected account not found." });
+      return { inserted: 0, skipped: 0 };
+    }
+  }
+
   const seen = new Set<string>();
   let inserted = 0;
   let skipped = 0;
 
   for (const [i, raw] of records.entries()) {
-    const parsed = transactionRowSchema.safeParse(raw);
+    const dateRaw =
+      typeof raw.date === "string" ? raw.date : raw.date != null ? String(raw.date) : "";
+    const isoDate = normalizeDate(dateRaw);
+    const description =
+      typeof raw.description === "string"
+        ? raw.description.trim()
+        : raw.description != null
+          ? String(raw.description)
+          : "";
+
+    if (isBalancePseudoRow(description)) {
+      skipped += 1;
+      continue;
+    }
+
+    let amount = parseLooseNumber(typeof raw.amount === "string" ? raw.amount : null);
+    if (!Number.isFinite(amount)) {
+      const credit = parseLooseNumber(typeof raw.credit === "string" ? raw.credit : null);
+      const debit = parseLooseNumber(typeof raw.debit === "string" ? raw.debit : null);
+      if (Number.isFinite(credit) || Number.isFinite(debit)) {
+        amount = (Number.isFinite(credit) ? credit : 0) - (Number.isFinite(debit) ? debit : 0);
+      }
+    }
+
+    if (!isoDate || !Number.isFinite(amount)) {
+      skipped += 1;
+      continue;
+    }
+
+    const candidate = {
+      date: isoDate,
+      description: description || undefined,
+      amount,
+      category: typeof raw.category === "string" ? raw.category : undefined,
+      account: typeof raw.account === "string" ? raw.account : undefined,
+      currency: typeof raw.currency === "string" ? raw.currency : undefined,
+      external_id: typeof raw.external_id === "string" ? raw.external_id : undefined,
+    };
+    const parsed = transactionRowSchema.safeParse(candidate);
     if (!parsed.success) {
       errors.push({ row: i + 2, message: zodMessage(parsed.error) });
       skipped += 1;
@@ -293,9 +236,14 @@ async function importTransactions({
         ? row.currency.toUpperCase()
         : DEFAULT_BASE_CURRENCY;
 
-    let accountId: string | null = null;
-    if (row.account) {
+    let accountId: string | null = accountIdOverride;
+    if (!accountId && row.account) {
       accountId = accountByName.get(row.account.toLowerCase()) ?? null;
+    }
+    if (accountRows.some((a) => a.id === accountId && a.isArchived)) {
+      errors.push({ row: i + 2, message: "This account is archived and cannot accept new input." });
+      skipped += 1;
+      continue;
     }
 
     let categoryId: string | null = null;
@@ -315,10 +263,10 @@ async function importTransactions({
       categoryId = id;
     }
 
-    // Prefer external_id for dedup; fall back to a synthetic key.
+    const dedupAccount = accountId ?? "no-account";
     const externalId = row.external_id
       ? `${row.external_id}`
-      : `csv:${row.date}:${row.amount.toFixed(2)}:${(row.description ?? "").slice(0, 40)}`;
+      : `csv:${dedupAccount}:${row.date}:${row.amount.toFixed(2)}:${(row.description ?? "").slice(0, 40)}`;
 
     if (seen.has(externalId)) {
       skipped += 1;
@@ -348,91 +296,6 @@ async function importTransactions({
         .returning({ id: cashflowTransactions.id });
 
       if (result.length > 0) inserted += 1;
-      else skipped += 1;
-    } catch (err) {
-      errors.push({ row: i + 2, message: (err as Error).message });
-      skipped += 1;
-    }
-  }
-
-  return { inserted, skipped };
-}
-
-async function importHoldings({
-  householdId,
-  records,
-  errors,
-}: {
-  householdId: string;
-  records: CsvRecord[];
-  errors: Array<{ row: number; message: string }>;
-}) {
-  const existing = await db
-    .select({ id: financialAccounts.id, name: financialAccounts.name })
-    .from(financialAccounts)
-    .where(eq(financialAccounts.householdId, householdId));
-  const accountByName = new Map(existing.map((a) => [a.name.toLowerCase(), a.id] as const));
-
-  let inserted = 0;
-  let skipped = 0;
-
-  for (const [i, raw] of records.entries()) {
-    const parsed = holdingRowSchema.safeParse(raw);
-    if (!parsed.success) {
-      errors.push({ row: i + 2, message: zodMessage(parsed.error) });
-      skipped += 1;
-      continue;
-    }
-    const row = parsed.data;
-
-    let accountId = accountByName.get(row.account.toLowerCase());
-    if (!accountId) {
-      // Create a stub brokerage account so the holding has somewhere to live.
-      accountId = randomUUID();
-      await db.insert(financialAccounts).values({
-        id: accountId,
-        householdId,
-        name: row.account,
-        type: "brokerage",
-        currency: DEFAULT_BASE_CURRENCY,
-        isManual: false,
-        isArchived: false,
-      });
-      accountByName.set(row.account.toLowerCase(), accountId);
-    }
-
-    const currency =
-      row.currency && isSupportedCurrency(row.currency.toUpperCase())
-        ? row.currency.toUpperCase()
-        : DEFAULT_BASE_CURRENCY;
-
-    try {
-      // Upsert on (account_id, symbol).
-      const upsert = await db
-        .insert(holdings)
-        .values({
-          id: randomUUID(),
-          accountId,
-          symbol: row.symbol.toUpperCase(),
-          name: row.name ?? null,
-          assetClass: row.asset_class ?? "equity",
-          quantity: row.quantity.toFixed(8),
-          costBasis: row.cost_basis !== undefined ? row.cost_basis.toFixed(2) : null,
-          currency,
-        })
-        .onConflictDoUpdate({
-          target: [holdings.accountId, holdings.symbol],
-          set: {
-            name: row.name ?? null,
-            assetClass: row.asset_class ?? "equity",
-            quantity: row.quantity.toFixed(8),
-            costBasis: row.cost_basis !== undefined ? row.cost_basis.toFixed(2) : null,
-            updatedAt: new Date(),
-          },
-        })
-        .returning({ id: holdings.id });
-
-      if (upsert.length > 0) inserted += 1;
       else skipped += 1;
     } catch (err) {
       errors.push({ row: i + 2, message: (err as Error).message });

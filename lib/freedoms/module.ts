@@ -1,13 +1,9 @@
 import type { FreedomModule } from "./types";
 
 /**
- * Identity helper. Exists purely so that per-freedom module exports are
- * initialized by a call expression (the one concession our
- * `constants-file-organization` lint rule offers for module objects that
- * legitimately belong next to their logic rather than in `constants.ts`).
+ * Identity helper so per-freedom module exports are initialized by a call
+ * expression (kept to satisfy the `constants-file-organization` lint rule).
  */
-export function defineFreedomModule<Payload extends Record<string, unknown>>(
-  module: FreedomModule<Payload>,
-): FreedomModule<Payload> {
+export function defineFreedomModule(module: FreedomModule): FreedomModule {
   return module;
 }

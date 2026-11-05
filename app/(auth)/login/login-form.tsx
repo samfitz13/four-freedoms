@@ -1,5 +1,9 @@
 "use client";
 
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+
 import { useState, type FormEvent } from "react";
 import { authClient } from "@/lib/auth-client";
 import { env } from "@/lib/env";
@@ -40,13 +44,13 @@ export function LoginForm({ next }: { next?: string }) {
   if (state.status === "sent") {
     return (
       <div className="flex flex-col gap-3 rounded-[var(--radius-sm)] border border-[color:var(--color-border)] bg-[color:var(--color-paper-soft)] px-4 py-6">
-        <p className="font-serif text-lg">Check your inbox.</p>
+        <p className="font-display text-lg">Check your inbox.</p>
         <p className="text-sm text-[color:var(--color-ink-soft)]">
           A sign-in link is on its way to <strong>{state.email}</strong>. It opens a session in this
           browser.
         </p>
         {env.NEXT_PUBLIC_SITE_URL?.includes("localhost") ? (
-          <p className="font-mono text-xs text-[color:var(--color-ink-soft)]">
+          <p className="font-sans text-xs text-[color:var(--color-ink-soft)]">
             Dev mode: if no RESEND_API_KEY is set, the link is printed to the server console.
           </p>
         ) : null}
@@ -58,31 +62,29 @@ export function LoginForm({ next }: { next?: string }) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      <label className="flex flex-col gap-2">
-        <span className="font-mono text-xs tracking-[0.14em] text-[color:var(--color-ink-soft)] uppercase">
+      <Label className="flex flex-col gap-2">
+        <span className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
           Email
         </span>
-        <input
+        <Input
           type="email"
           name="email"
           required
           autoComplete="email"
           placeholder="you@domain.com"
-          className="h-11 rounded-[var(--radius-sm)] border border-[color:var(--color-border)] bg-transparent px-3 text-base text-[color:var(--color-foreground)] ring-0 transition-colors outline-none focus:border-[color:var(--color-foreground)]"
+          className="text-base"
         />
-      </label>
+      </Label>
 
       {state.status === "error" ? (
-        <p className="text-sm text-[color:var(--color-freedom-health)]">{state.message}</p>
+        <p role="alert" className="text-sm text-[color:var(--color-freedom-health)]">
+          {state.message}
+        </p>
       ) : null}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="inline-flex h-11 items-center justify-center rounded-[var(--radius-sm)] bg-[color:var(--color-foreground)] px-5 text-sm font-medium text-[color:var(--color-background)] transition-opacity hover:opacity-90 disabled:opacity-50"
-      >
+      <Button type="submit" disabled={pending} variant="primary">
         {pending ? "Sending…" : "Send magic link"}
-      </button>
+      </Button>
     </form>
   );
 }

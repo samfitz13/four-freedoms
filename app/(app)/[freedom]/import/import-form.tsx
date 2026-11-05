@@ -2,34 +2,46 @@
 
 import { useActionState } from "react";
 import { importCsv } from "./actions";
-import type { ImportResult } from "./types";
+import type { ImportAccountOption, ImportResult } from "./types";
 
 const inputBase =
-  "h-10 w-full rounded-[var(--radius-sm)] border border-[color:var(--color-border)] bg-transparent px-3 text-sm focus:border-[color:var(--color-foreground)] focus:outline-none";
-const labelCls =
-  "font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase";
+  "daybreak-field min-h-11 w-full rounded-[var(--radius-sm)] border border-[color:var(--color-border)] bg-[color:var(--glass-control)] px-3 text-sm focus:border-[color:var(--color-foreground)]";
+const labelCls = "font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]";
 
-export function ImportForm() {
+export function ImportForm({
+  accounts,
+  defaultAccountId = "",
+}: {
+  accounts: ImportAccountOption[];
+  defaultAccountId?: string;
+}) {
   const [state, action, pending] = useActionState<ImportResult | null, FormData>(importCsv, null);
 
   return (
     <div className="flex flex-col gap-6">
-      <form
-        action={action}
-        encType="multipart/form-data"
-        className="grid gap-4 border border-dashed border-[color:var(--color-border)] p-5 sm:grid-cols-4"
-      >
-        <div className="flex flex-col gap-1 sm:col-span-2">
-          <label className={labelCls} htmlFor="import-kind">
-            Format
+      <form action={action} className="daybreak-panel grid gap-4 border-dashed p-6 sm:grid-cols-6">
+        <input type="hidden" name="kind" value="transactions" />
+
+        <div className="flex flex-col gap-1 sm:col-span-3">
+          <label className={labelCls} htmlFor="import-account">
+            Account
           </label>
-          <select id="import-kind" name="kind" defaultValue="transactions" className={inputBase}>
-            <option value="transactions">Transactions</option>
-            <option value="accounts">Accounts snapshot</option>
-            <option value="holdings">Holdings</option>
+          <select
+            id="import-account"
+            name="accountId"
+            defaultValue={defaultAccountId}
+            className={inputBase}
+          >
+            <option value="">— No specific account —</option>
+            {accounts.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name} · {a.type.replace(/_/g, " ")}
+              </option>
+            ))}
           </select>
         </div>
-        <div className="flex flex-col gap-1 sm:col-span-2">
+
+        <div className="flex flex-col gap-1 sm:col-span-3">
           <label className={labelCls} htmlFor="import-file">
             CSV file
           </label>
@@ -39,17 +51,19 @@ export function ImportForm() {
             name="file"
             accept=".csv,text/csv"
             required
-            className="h-10 w-full rounded-[var(--radius-sm)] border border-[color:var(--color-border)] bg-transparent px-3 text-sm file:mr-3 file:border-0 file:bg-transparent file:font-mono file:text-xs file:tracking-[0.14em] file:uppercase"
+            className="daybreak-field file: min-h-11 w-full rounded-[var(--radius-sm)] border border-[color:var(--color-border)] bg-[color:var(--glass-control)] px-3 text-sm file:mr-3 file:border-0 file:bg-[color:var(--glass-control)] file:font-sans file:text-xs file:tracking-normal"
           />
         </div>
-        <div className="flex items-center gap-3 sm:col-span-4">
+
+        <div className="flex items-center gap-3 sm:col-span-6">
           <p className="mr-auto text-xs text-[color:var(--color-ink-soft)]">
-            Max 2MB / 5,000 rows per upload. Unknown accounts and categories are auto-created.
+            Transaction rows will be attached to the selected account. Bank exports with a summary
+            preamble (Bank of America, Chase, Wells Fargo) work as-is.
           </p>
           <button
             type="submit"
             disabled={pending}
-            className="inline-flex h-10 items-center rounded-[var(--radius-sm)] bg-[color:var(--color-foreground)] px-5 text-sm text-[color:var(--color-background)] hover:opacity-90 disabled:opacity-50"
+            className="daybreak-button inline-flex min-h-11 items-center bg-[color:var(--glass-primary)] px-5 text-sm text-[color:var(--glass-primary-ink)] hover:opacity-90 disabled:opacity-50"
           >
             {pending ? "Importing…" : "Import"}
           </button>
@@ -64,49 +78,49 @@ export function ImportForm() {
 function ResultPanel({ result }: { result: ImportResult }) {
   if (!result.ok) {
     return (
-      <div className="border border-[color:var(--color-accent-warning,#9a3412)] bg-[color:var(--color-accent-warning-bg,transparent)] p-4">
+      <div className="daybreak-panel border-[color:var(--color-accent-warning,#9a3412)] bg-[color:var(--color-accent-warning-bg,transparent)] p-6">
         <p className="text-sm text-[color:var(--color-accent-warning,#9a3412)]">{result.error}</p>
       </div>
     );
   }
   return (
-    <div className="flex flex-col gap-3 border border-[color:var(--color-border)] p-5">
+    <div className="daybreak-panel flex flex-col gap-3 p-6">
       <div className="flex items-baseline justify-between">
-        <h3 className="font-serif text-lg">Result</h3>
-        <span className="font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
+        <h3 className="font-display text-lg">Result</h3>
+        <span className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
           {result.kind}
         </span>
       </div>
       <dl className="grid grid-cols-3 gap-6 text-sm">
         <div>
-          <dt className="font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
+          <dt className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
             Inserted
           </dt>
-          <dd className="font-serif text-2xl tabular-nums">{result.inserted}</dd>
+          <dd className="font-display text-2xl tabular-nums">{result.inserted}</dd>
         </div>
         <div>
-          <dt className="font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
+          <dt className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
             Skipped
           </dt>
-          <dd className="font-serif text-2xl tabular-nums">{result.skipped}</dd>
+          <dd className="font-display text-2xl tabular-nums">{result.skipped}</dd>
         </div>
         <div>
-          <dt className="font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
+          <dt className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
             Errors
           </dt>
-          <dd className="font-serif text-2xl tabular-nums">{result.errors.length}</dd>
+          <dd className="font-display text-2xl tabular-nums">{result.errors.length}</dd>
         </div>
       </dl>
       {result.errors.length > 0 ? (
         <details>
-          <summary className="cursor-pointer font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase select-none hover:text-[color:var(--color-foreground)]">
+          <summary className="cursor-pointer font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)] select-none hover:text-[color:var(--color-foreground)]">
             View errors ({result.errors.length})
           </summary>
           <ul className="mt-3 flex flex-col gap-1 text-sm">
             {result.errors.map((e, i) => (
               <li
                 key={i}
-                className="flex items-baseline gap-3 font-mono text-xs text-[color:var(--color-ink-soft)]"
+                className="flex items-baseline gap-3 font-sans text-xs text-[color:var(--color-ink-soft)]"
               >
                 <span className="tabular-nums">row {e.row}</span>
                 <span className="text-[color:var(--color-accent-warning,#9a3412)]">

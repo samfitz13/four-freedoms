@@ -1,0 +1,277 @@
+body.compass {
+  --body: "Geist", sans-serif;
+  --display: "Geist", sans-serif;
+  --bg: oklch(97% 0.008 250);
+  --surface: oklch(99% 0.003 250);
+  --subtle: oklch(94% 0.018 250);
+  --ink: oklch(27% 0.04 255);
+  --muted: oklch(48% 0.025 255);
+  --rule: oklch(88% 0.015 255);
+  --accent: oklch(45% 0.13 155);
+  --positive: oklch(41% 0.11 155);
+  --secondary: oklch(47% 0.16 260);
+  --tertiary: oklch(48% 0.12 45);
+  --on-accent: oklch(99% 0.005 250);
+  --preview-bg: oklch(92% 0.018 252);
+  --preview-ink: oklch(32% 0.05 255);
+  --radius: 19px;
+}
+.compass .app {
+  display: grid;
+  grid-template-columns: 105px minmax(0, 1fr);
+  max-width: 1700px;
+  margin: auto;
+}
+.compass .app-header {
+  position: sticky;
+  top: 53px;
+  height: calc(100svh - 53px);
+  background: var(--surface);
+  border-right: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 29px 12px;
+  gap: 43px;
+}
+.compass .brand > span:last-child {
+  display: none;
+}
+.compass .brand-symbol {
+  grid-template-columns: repeat(2, 12px);
+  gap: 4px;
+}
+.compass .brand-symbol i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+.compass .brand-symbol i:nth-child(1) {
+  background: oklch(47% 0.11 155);
+}
+.compass .brand-symbol i:nth-child(2) {
+  background: oklch(50% 0.14 258);
+  opacity: 1;
+}
+.compass .brand-symbol i:nth-child(3) {
+  background: oklch(58% 0.11 55);
+  opacity: 1;
+}
+.compass .brand-symbol i:nth-child(4) {
+  background: oklch(55% 0.1 15);
+  opacity: 1;
+}
+.compass .nav-caption {
+  display: none;
+}
+.compass .workspace-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+.compass .workspace-nav a {
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 5px;
+  font-size: 10px;
+  border-radius: 13px;
+}
+.compass .workspace-nav a svg {
+  width: 21px;
+  height: 21px;
+}
+.compass .workspace-nav a[aria-current] {
+  background: var(--subtle);
+  color: var(--secondary);
+}
+.compass .workspace-nav a[data-key="financial"][aria-current] {
+  color: var(--accent);
+  background: oklch(93% 0.033 155);
+}
+.compass .workspace-nav a[data-key="health"][aria-current] {
+  color: oklch(44% 0.1 15);
+  background: oklch(93% 0.035 15);
+}
+.compass .workspace-nav a[data-key="time"][aria-current] {
+  color: oklch(42% 0.095 55);
+  background: oklch(94% 0.05 75);
+}
+.compass .nav-footer {
+  margin-top: auto;
+}
+.compass .nav-footer > div {
+  display: none;
+}
+.compass main {
+  padding: 39px 48px;
+  max-width: 1390px;
+  width: 100%;
+  margin: auto;
+}
+.compass h1 {
+  font-weight: 550;
+  font-size: clamp(35px, 4vw, 53px);
+  letter-spacing: -0.065em;
+}
+.compass .page-head {
+  margin: 0 0 34px;
+}
+.compass .page-head .eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 15px;
+}
+.compass .page-description {
+  font-size: 14px;
+}
+.compass .week-tag {
+  border-radius: 30px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 10px 15px;
+  font-size: 10px;
+  gap: 16px;
+}
+.compass #view-overview > .summary {
+  display: none;
+}
+.compass .workspace-grid {
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  grid-template-areas: "money place" "time health" "horizon horizon";
+  gap: 22px;
+}
+.compass .panel {
+  padding: 28px;
+}
+.compass .panel-head .eyebrow {
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+.compass .money .number-line .big-number {
+  font-size: 47px;
+  font-weight: 550;
+  letter-spacing: -0.06em;
+}
+.compass .money-chart {
+  margin-top: 30px;
+}
+.compass .place {
+  --ink: oklch(98% 0.008 250);
+  --muted: oklch(87% 0.026 250);
+  --rule: oklch(64% 0.12 260);
+  --accent: oklch(96% 0.019 250);
+  --subtle: oklch(50% 0.14 260);
+  background: oklch(41% 0.14 260);
+  border-color: transparent;
+  display: flex;
+  flex-direction: column;
+}
+.compass .place .place-feature {
+  flex-direction: column;
+  align-items: start;
+  margin-top: 17px;
+}
+.compass .place .place-code {
+  font-size: 63px;
+  letter-spacing: -0.08em;
+  font-weight: 500;
+  background: transparent;
+  min-height: 90px;
+  min-width: 0;
+}
+.compass .place .place-feature h2 {
+  font-size: 35px;
+  font-weight: 500;
+}
+.compass .place .route {
+  margin-top: auto;
+  padding-top: 28px;
+  max-width: none;
+}
+.compass .place .place-next {
+  padding-top: 7px;
+}
+.compass .health {
+  --ink: oklch(31% 0.075 12);
+  --muted: oklch(44% 0.06 12);
+  --rule: oklch(82% 0.05 12);
+  --subtle: oklch(87% 0.045 12);
+  --accent: oklch(51% 0.105 12);
+  background: oklch(94% 0.031 12);
+  border-color: transparent;
+}
+.compass .time {
+  --accent: oklch(52% 0.11 60);
+  --subtle: oklch(94% 0.035 75);
+}
+.compass .time .bar-track {
+  max-width: 40px;
+  height: 105px;
+}
+.compass .health .bar-track {
+  height: 105px;
+}
+.compass .number-line h2 {
+  font-weight: 550;
+  font-size: 35px;
+}
+.compass .horizon {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  gap: 25px;
+  background: transparent;
+  border: 0;
+  padding: 20px 0;
+}
+.compass .horizon .agenda {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+.compass .horizon .agenda li {
+  padding: 0;
+  border: 0;
+}
+.compass .horizon .aside-note {
+  display: none;
+}
+.compass .horizon .panel-head {
+  padding-top: 3px;
+}
+.compass .horizon .quiet {
+  display: none;
+}
+.compass .summary {
+  gap: 16px;
+}
+.compass .metric {
+  padding: 23px;
+  border-bottom: 1px solid var(--rule);
+}
+.compass .metric dd {
+  font-size: 29px;
+}
+.compass .domain-grid > .flow {
+  background: oklch(94% 0.023 155);
+  border-color: transparent;
+}
+.compass .location-layout .nights {
+  background: var(--surface);
+}
+.compass .reflection {
+  background: oklch(94% 0.035 75);
+  border-color: transparent;
+}
+.compass .reflection h2 {
+  font-size: 35px;
+}
+.compass .time-block.focus {
+  background: oklch(95% 0.039 75);
+}
+.compass .page-footer {
+  margin-top: 35px;
+}

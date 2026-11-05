@@ -9,17 +9,21 @@
  * number for arithmetic or charting, and avoid string-level math.
  */
 import "server-only";
-import { and, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, inArray, lte, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
-  accountBalances,
   budgetCategories,
   budgetPeriods,
   cashflowTransactions,
-  entries,
   financialAccounts,
   financialGoals,
+  monthlyStatements,
 } from "@/lib/db/schema";
+import {
+  isIsoOptionAccount,
+  isoOptionAccountValues,
+  isoOptionAccountValuesByMonth,
+} from "./iso-options";
 
 /** Parse a Drizzle `numeric` string value into a JS number. */
 export function toNumber(n: string | number | null | undefined): number {
@@ -29,23 +33,34 @@ export function toNumber(n: string | number | null | undefined): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-export async function listAccounts(householdId: string) {
+/** Active accounts by default. Historical reads must explicitly include archived accounts. */
+export async function listAccounts(
+  householdId: string,
+  options: { includeArchived?: boolean } = {},
+) {
   return db
     .select()
     .from(financialAccounts)
     .where(
-      and(eq(financialAccounts.householdId, householdId), eq(financialAccounts.isArchived, false)),
+      and(
+        eq(financialAccounts.householdId, householdId),
+        options.includeArchived ? undefined : eq(financialAccounts.isArchived, false),
+      ),
     )
     .orderBy(financialAccounts.name);
 }
 
 /**
- * Latest balance per account for a household. Implemented as a per-account
- * lookup for simplicity; wealth-tab queries will graduate to a window
- * function once the volume justifies it.
+ * Latest ending balance per account, sourced from `monthly_statements`. The
+ * "as of" date is the statement's month (YYYY-MM-01); callers format it as
+ * "as of {Month YYYY}". Accounts with no statement yet return `balance: 0`
+ * and `asOf: null`.
+ * Archived accounts retain their last known balances for reports, not input lists.
  */
 export async function latestBalances(householdId: string) {
-  const accounts = await listAccounts(householdId);
+  const accounts = await listAccounts(householdId, { includeArchived: true });
+  const today = new Date().toISOString().slice(0, 10);
+  const isoValues = await isoOptionAccountValues(householdId, today);
   const results: Array<{
     accountId: string;
     accountName: string;
@@ -53,122 +68,255 @@ export async function latestBalances(householdId: string) {
     currency: string;
     asOf: string | null;
     balance: number;
+    isArchived?: boolean;
   }> = [];
 
   for (const a of accounts) {
     const [latest] = await db
       .select({
-        asOf: accountBalances.asOf,
-        balance: accountBalances.balance,
+        month: monthlyStatements.month,
+        endingBalance: monthlyStatements.endingBalance,
       })
-      .from(accountBalances)
-      .where(eq(accountBalances.accountId, a.id))
-      .orderBy(desc(accountBalances.asOf))
+      .from(monthlyStatements)
+      .where(eq(monthlyStatements.accountId, a.id))
+      .orderBy(desc(monthlyStatements.month))
       .limit(1);
 
+    const isIso = isIsoOptionAccount(a.type, a.subtype);
     results.push({
       accountId: a.id,
       accountName: a.name,
       type: a.type,
       currency: a.currency,
-      asOf: latest?.asOf ?? null,
-      balance: toNumber(latest?.balance),
+      isArchived: a.isArchived,
+      asOf: isIso ? today : (latest?.month ?? null),
+      balance: isIso ? (isoValues.get(a.id) ?? 0) : toNumber(latest?.endingBalance),
     });
   }
   return results;
 }
 
 /**
- * Placeholder implementations — wired in later PRs.
- * Kept as named exports so callers can import without TS errors today.
- */
-
-/**
- * Daily net worth series for the last `months` months, assembled in memory
- * from per-account balance snapshots with forward-fill. Accounts without any
- * snapshot in the window contribute 0 for days before their first snapshot.
- * Loans/credit cards are subtracted (treated as liabilities).
+ * Month-end net worth series. Each point is a YYYY-MM-01 anchor (representing
+ * end-of-month for that ISO month). For each month in the window we sum each
+ * account's most-recent statement ending balance ≤ that month, debt
+ * subtracted. Accounts without any statement on/before a month contribute 0.
  */
 export async function netWorthSeries(
   householdId: string,
   months = 12,
+  options: { fromEarliest?: boolean } = {},
 ): Promise<Array<{ date: string; netWorth: number }>> {
-  const accounts = await listAccounts(householdId);
+  const breakdown = await netWorthBreakdownSeries(householdId, months, options);
+  return breakdown.map((point) => ({ date: point.date, netWorth: point.netWorth }));
+}
+
+export async function netWorthBreakdownSeries(
+  householdId: string,
+  months = 12,
+  options: { fromEarliest?: boolean } = {},
+): Promise<
+  Array<{
+    date: string;
+    netWorth: number;
+    netWorthExcludingEquityComp: number;
+    equityComp: number;
+  }>
+> {
+  const accounts = await listAccounts(householdId, { includeArchived: true });
   if (accounts.length === 0) return [];
 
-  const end = new Date();
-  const start = new Date();
-  start.setMonth(start.getMonth() - months);
-  const startIso = start.toISOString().slice(0, 10);
-
-  const ids = accounts.map((a) => a.id);
+  const accountIds = accounts.map((a) => a.id);
   const byId = new Map(accounts.map((a) => [a.id, a] as const));
 
-  // Pull every balance from ~6mo before the window too so we can forward-fill
-  // into the first day. Simpler: pull all balances for these accounts.
-  const balances = await db
+  // Pull every statement for these accounts, sorted (account, month asc).
+  const statements = await db
     .select({
-      accountId: accountBalances.accountId,
-      asOf: accountBalances.asOf,
-      balance: accountBalances.balance,
+      accountId: monthlyStatements.accountId,
+      month: monthlyStatements.month,
+      endingBalance: monthlyStatements.endingBalance,
     })
-    .from(accountBalances)
-    .where(inArray(accountBalances.accountId, ids))
-    .orderBy(accountBalances.accountId, accountBalances.asOf);
+    .from(monthlyStatements)
+    .where(eq(monthlyStatements.householdId, householdId))
+    .orderBy(monthlyStatements.accountId, monthlyStatements.month);
 
-  if (balances.length === 0) return [];
+  if (statements.length === 0) return [];
 
-  // Group by account, sorted ascending by asOf.
-  const perAccount = new Map<string, Array<{ asOf: string; balance: number }>>();
-  for (const b of balances) {
-    const list = perAccount.get(b.accountId) ?? [];
-    list.push({ asOf: b.asOf, balance: toNumber(b.balance) });
-    perAccount.set(b.accountId, list);
+  // Determine window: fromEarliest anchors to the first statement on file.
+  const now = new Date();
+  let start = startOfMonth(addMonths(now, -(months - 1)));
+  if (options.fromEarliest) {
+    const earliest = statements[0]!.month;
+    start = startOfMonth(new Date(earliest + "T00:00:00Z"));
+  }
+  const totalMonths = options.fromEarliest
+    ? Math.max(
+        1,
+        (now.getUTCFullYear() - start.getUTCFullYear()) * 12 +
+          (now.getUTCMonth() - start.getUTCMonth()) +
+          1,
+      )
+    : months;
+
+  // Group statements by account, ascending.
+  const perAccount = new Map<string, Array<{ month: string; balance: number }>>();
+  for (const s of statements) {
+    const list = perAccount.get(s.accountId) ?? [];
+    list.push({ month: s.month, balance: toNumber(s.endingBalance) });
+    perAccount.set(s.accountId, list);
   }
 
-  // Build day list.
-  const days: string[] = [];
-  const d = new Date(start);
-  while (d <= end) {
-    days.push(d.toISOString().slice(0, 10));
-    d.setDate(d.getDate() + 1);
-  }
-
-  // Two-pointer forward-fill per account.
+  const monthsList = Array.from({ length: totalMonths }, (_, i) =>
+    startOfMonth(addMonths(start, i)).toISOString().slice(0, 10),
+  );
+  const isoValuesByMonth = await isoOptionAccountValuesByMonth(householdId, monthsList);
+  const isoAccountIds = new Set(
+    accounts.filter((a) => isIsoOptionAccount(a.type, a.subtype)).map((a) => a.id),
+  );
+  const series: Array<{
+    date: string;
+    netWorth: number;
+    netWorthExcludingEquityComp: number;
+    equityComp: number;
+  }> = [];
+  // Two-pointer forward-fill per account: at month `m`, use the latest
+  // statement with month <= m.
   const cursors = new Map<string, number>();
   const current = new Map<string, number>();
 
-  const series: Array<{ date: string; netWorth: number }> = [];
-  for (const day of days) {
-    for (const id of ids) {
+  for (let i = 0; i < totalMonths; i++) {
+    const iso = monthsList[i]!;
+
+    for (const id of accountIds) {
       const list = perAccount.get(id) ?? [];
       let idx = cursors.get(id) ?? 0;
-      while (idx < list.length && list[idx]!.asOf <= day) {
+      while (idx < list.length && list[idx]!.month <= iso) {
         current.set(id, list[idx]!.balance);
         idx += 1;
       }
       cursors.set(id, idx);
     }
+    const isoValues = isoValuesByMonth.get(iso);
+    if (isoValues) {
+      for (const id of isoAccountIds) current.set(id, isoValues.get(id) ?? 0);
+    }
 
     let total = 0;
+    let equityComp = 0;
     for (const [id, bal] of current) {
       const a = byId.get(id);
       if (!a) continue;
-      // TODO: FX conversion using household base currency once rates land.
       const signed = a.type === "loan" || a.type === "credit_card" ? -Math.abs(bal) : bal;
       total += signed;
+      if (isIsoOptionAccount(a.type, a.subtype) || a.type === "equity_comp") {
+        equityComp += signed;
+      }
     }
-    // Only emit days on or after the window start.
-    if (day >= startIso) series.push({ date: day, netWorth: total });
+    series.push({
+      date: iso,
+      netWorth: total,
+      netWorthExcludingEquityComp: total - equityComp,
+      equityComp,
+    });
   }
 
   return series;
 }
 
+export async function wealthCategorySeries(
+  householdId: string,
+  months = 12,
+  options: { fromEarliest?: boolean } = {},
+): Promise<
+  Array<{ date: string; categories: Record<string, number>; accounts: Record<string, number> }>
+> {
+  const accounts = await listAccounts(householdId, { includeArchived: true });
+  if (accounts.length === 0) return [];
+
+  const accountIds = accounts.map((a) => a.id);
+  const byId = new Map(accounts.map((a) => [a.id, a] as const));
+  const statements = await db
+    .select({
+      accountId: monthlyStatements.accountId,
+      month: monthlyStatements.month,
+      endingBalance: monthlyStatements.endingBalance,
+    })
+    .from(monthlyStatements)
+    .where(eq(monthlyStatements.householdId, householdId))
+    .orderBy(monthlyStatements.accountId, monthlyStatements.month);
+
+  if (statements.length === 0) return [];
+
+  const now = new Date();
+  let start = startOfMonth(addMonths(now, -(months - 1)));
+  if (options.fromEarliest) {
+    const earliest = statements[0]!.month;
+    start = startOfMonth(new Date(earliest + "T00:00:00Z"));
+  }
+  const totalMonths = options.fromEarliest
+    ? Math.max(
+        1,
+        (now.getUTCFullYear() - start.getUTCFullYear()) * 12 +
+          (now.getUTCMonth() - start.getUTCMonth()) +
+          1,
+      )
+    : months;
+
+  const perAccount = new Map<string, Array<{ month: string; balance: number }>>();
+  for (const s of statements) {
+    const list = perAccount.get(s.accountId) ?? [];
+    list.push({ month: s.month, balance: toNumber(s.endingBalance) });
+    perAccount.set(s.accountId, list);
+  }
+
+  const monthsList = Array.from({ length: totalMonths }, (_, i) =>
+    startOfMonth(addMonths(start, i)).toISOString().slice(0, 10),
+  );
+  const isoValuesByMonth = await isoOptionAccountValuesByMonth(householdId, monthsList);
+  const isoAccountIds = new Set(
+    accounts.filter((a) => isIsoOptionAccount(a.type, a.subtype)).map((a) => a.id),
+  );
+  const cursors = new Map<string, number>();
+  const current = new Map<string, number>();
+
+  return monthsList.map((iso) => {
+    for (const id of accountIds) {
+      const list = perAccount.get(id) ?? [];
+      let idx = cursors.get(id) ?? 0;
+      while (idx < list.length && list[idx]!.month <= iso) {
+        current.set(id, list[idx]!.balance);
+        idx += 1;
+      }
+      cursors.set(id, idx);
+    }
+    const isoValues = isoValuesByMonth.get(iso);
+    if (isoValues) {
+      for (const id of isoAccountIds) current.set(id, isoValues.get(id) ?? 0);
+    }
+
+    const categories: Record<string, number> = {};
+    const accountValues: Record<string, number> = {};
+    for (const [id, balance] of current) {
+      if (balance <= 0) continue;
+      const account = byId.get(id);
+      if (!account) continue;
+      const category = wealthCategoryForAccount(account.type, account.subtype);
+      categories[category] = (categories[category] ?? 0) + balance;
+      accountValues[id] = balance;
+    }
+    return { date: iso, categories, accounts: accountValues };
+  });
+}
+
+function wealthCategoryForAccount(type: string, subtype: string | null): string {
+  if (isIsoOptionAccount(type, subtype) || type === "equity_comp") return "equity_comp";
+  return type;
+}
+
 /**
- * Asset allocation bucketed by account type. Uses the latest balance per
- * account; liabilities (loans, credit cards) are reported with a negative
- * value so the caller can render them on the debt side.
+ * Asset allocation bucketed by account type. Uses the latest statement
+ * ending balance per account; liabilities (loans, credit cards) are reported
+ * with a negative value so the caller can render them on the debt side.
  */
 export async function assetAllocation(
   householdId: string,
@@ -185,27 +333,6 @@ export async function assetAllocation(
 }
 
 /**
- * Balance history for a single account within the last `days` days. Used by
- * the Accounts tab drawer to show recent entries.
- */
-export async function listBalancesForAccount(accountId: string, days = 180) {
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
-  const cutoffIso = cutoff.toISOString().slice(0, 10);
-  return db
-    .select({
-      id: accountBalances.id,
-      asOf: accountBalances.asOf,
-      balance: accountBalances.balance,
-      source: accountBalances.source,
-      note: accountBalances.note,
-    })
-    .from(accountBalances)
-    .where(and(eq(accountBalances.accountId, accountId), gte(accountBalances.asOf, cutoffIso)))
-    .orderBy(desc(accountBalances.asOf));
-}
-
-/**
  * Month-bucketed income / expense / net / savings rate for the last
  * `months` months. Positive amounts count as income; negative as expense.
  * `month` is the 1st-of-month ISO date.
@@ -213,6 +340,7 @@ export async function listBalancesForAccount(accountId: string, days = 180) {
 export async function cashflowByMonth(
   householdId: string,
   months = 12,
+  options: { fromEarliest?: boolean } = {},
 ): Promise<
   Array<{
     month: string;
@@ -222,7 +350,26 @@ export async function cashflowByMonth(
     savingsRate: number;
   }>
 > {
-  const start = startOfMonth(addMonths(new Date(), -(months - 1)));
+  let start = startOfMonth(addMonths(new Date(), -(months - 1)));
+
+  if (options.fromEarliest) {
+    const [earliest] = await db
+      .select({ occurredOn: sql<string | null>`min(${cashflowTransactions.occurredOn})` })
+      .from(cashflowTransactions)
+      .where(eq(cashflowTransactions.householdId, householdId));
+    if (earliest?.occurredOn) {
+      // Anchor to the month of the earliest transaction, period — trim
+      // leading empty months, and extend back if data predates the default.
+      start = startOfMonth(new Date(earliest.occurredOn));
+    }
+  }
+
+  // Render every month from `start` through the current month.
+  const now = new Date();
+  const monthSpan =
+    (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth()) + 1;
+  const totalMonths = options.fromEarliest ? Math.max(1, monthSpan) : months;
+
   const startIso = start.toISOString().slice(0, 10);
 
   const rows = await db
@@ -236,6 +383,7 @@ export async function cashflowByMonth(
       and(
         eq(cashflowTransactions.householdId, householdId),
         gte(cashflowTransactions.occurredOn, startIso),
+        eq(cashflowTransactions.kind, "cashflow"),
       ),
     )
     .groupBy(sql`date_trunc('month', ${cashflowTransactions.occurredOn})`)
@@ -255,7 +403,7 @@ export async function cashflowByMonth(
     net: number;
     savingsRate: number;
   }> = [];
-  for (let i = 0; i < months; i++) {
+  for (let i = 0; i < totalMonths; i++) {
     const d = startOfMonth(addMonths(start, i));
     const iso = d.toISOString().slice(0, 10);
     const hit = byMonth.get(iso) ?? { income: 0, expense: 0 };
@@ -326,6 +474,7 @@ export async function budgetActuals(
         eq(cashflowTransactions.householdId, householdId),
         gte(cashflowTransactions.occurredOn, monthStart),
         lte(cashflowTransactions.occurredOn, monthEndIso),
+        eq(cashflowTransactions.kind, "cashflow"),
         sql`${cashflowTransactions.categoryId} is not null`,
       ),
     )
@@ -357,11 +506,130 @@ export async function listRecentTransactions(householdId: string, limit = 20) {
       categoryId: cashflowTransactions.categoryId,
       accountId: cashflowTransactions.accountId,
       source: cashflowTransactions.source,
+      kind: cashflowTransactions.kind,
+      transferGroupId: cashflowTransactions.transferGroupId,
+      transferPeerId: cashflowTransactions.transferPeerId,
     })
     .from(cashflowTransactions)
     .where(eq(cashflowTransactions.householdId, householdId))
     .orderBy(desc(cashflowTransactions.occurredOn), desc(cashflowTransactions.createdAt))
     .limit(limit);
+}
+
+export type { LedgerFilters, LedgerCursor, LedgerRow } from "./types";
+import type { LedgerCursor, LedgerFilters, LedgerRow } from "./types";
+
+/**
+ * Keyset-paginated ledger query. Orders by (occurred_on DESC, id DESC) so the
+ * cursor pair `(occurredOn, id)` is sufficient. Returns up to `limit` rows
+ * plus a `nextCursor` if more exist.
+ */
+export async function listLedger(
+  householdId: string,
+  filters: LedgerFilters,
+  cursor: LedgerCursor | null,
+  limit = 50,
+): Promise<{ rows: LedgerRow[]; nextCursor: LedgerCursor | null }> {
+  const where = [eq(cashflowTransactions.householdId, householdId)];
+
+  if (filters.q && filters.q.trim().length > 0) {
+    const pattern = `%${filters.q.trim()}%`;
+    where.push(ilike(cashflowTransactions.description, pattern));
+  }
+  if (filters.accountId) {
+    where.push(eq(cashflowTransactions.accountId, filters.accountId));
+  }
+  if (filters.categoryId) {
+    where.push(eq(cashflowTransactions.categoryId, filters.categoryId));
+  }
+  if (filters.flow === "income") {
+    where.push(eq(cashflowTransactions.kind, "cashflow"));
+    where.push(sql`${cashflowTransactions.amount} > 0`);
+  } else if (filters.flow === "expense") {
+    where.push(eq(cashflowTransactions.kind, "cashflow"));
+    where.push(sql`${cashflowTransactions.amount} < 0`);
+  } else if (filters.flow === "transfer") {
+    where.push(eq(cashflowTransactions.kind, "transfer"));
+  }
+  if (filters.from) where.push(gte(cashflowTransactions.occurredOn, filters.from));
+  if (filters.to) where.push(lte(cashflowTransactions.occurredOn, filters.to));
+
+  if (cursor) {
+    where.push(
+      or(
+        sql`${cashflowTransactions.occurredOn} < ${cursor.occurredOn}`,
+        and(
+          eq(cashflowTransactions.occurredOn, cursor.occurredOn),
+          sql`${cashflowTransactions.id} < ${cursor.id}`,
+        ),
+      )!,
+    );
+  }
+
+  const rows = await db
+    .select({
+      id: cashflowTransactions.id,
+      occurredOn: cashflowTransactions.occurredOn,
+      amount: cashflowTransactions.amount,
+      currency: cashflowTransactions.currency,
+      description: cashflowTransactions.description,
+      categoryId: cashflowTransactions.categoryId,
+      accountId: cashflowTransactions.accountId,
+      source: cashflowTransactions.source,
+      kind: cashflowTransactions.kind,
+      transferGroupId: cashflowTransactions.transferGroupId,
+      transferPeerId: cashflowTransactions.transferPeerId,
+    })
+    .from(cashflowTransactions)
+    .where(and(...where))
+    .orderBy(desc(cashflowTransactions.occurredOn), desc(cashflowTransactions.id))
+    .limit(limit + 1);
+
+  const hasMore = rows.length > limit;
+  const trimmed = hasMore ? rows.slice(0, limit) : rows;
+  const last = trimmed[trimmed.length - 1];
+  const nextCursor = hasMore && last ? { occurredOn: last.occurredOn, id: last.id } : null;
+
+  return { rows: trimmed, nextCursor };
+}
+
+/**
+ * Peer accounts for a set of transfer rows. Used by the ledger to render
+ * "Chase Checking → Vanguard Brokerage" eyebrow text without N+1 queries.
+ */
+export async function peerAccountsForTransfers(
+  householdId: string,
+  groupIds: string[],
+): Promise<
+  Map<string, Array<{ id: string; accountId: string | null; accountName: string | null }>>
+> {
+  if (groupIds.length === 0) return new Map();
+  const rows = await db
+    .select({
+      id: cashflowTransactions.id,
+      groupId: cashflowTransactions.transferGroupId,
+      accountId: cashflowTransactions.accountId,
+      accountName: financialAccounts.name,
+    })
+    .from(cashflowTransactions)
+    .leftJoin(financialAccounts, eq(financialAccounts.id, cashflowTransactions.accountId))
+    .where(
+      and(
+        eq(cashflowTransactions.householdId, householdId),
+        inArray(cashflowTransactions.transferGroupId, groupIds),
+      ),
+    );
+  const map = new Map<
+    string,
+    Array<{ id: string; accountId: string | null; accountName: string | null }>
+  >();
+  for (const r of rows) {
+    if (!r.groupId) continue;
+    const arr = map.get(r.groupId) ?? [];
+    arr.push({ id: r.id, accountId: r.accountId, accountName: r.accountName });
+    map.set(r.groupId, arr);
+  }
+  return map;
 }
 
 /**
@@ -371,27 +639,16 @@ export async function listRecentTransactions(householdId: string, limit = 20) {
  */
 export async function currentInvestedBalance(householdId: string): Promise<number> {
   const balances = await latestBalances(householdId);
-  const investedTypes = new Set(["brokerage", "retirement", "crypto"]);
+  const investedTypes = new Set([
+    "brokerage",
+    "retirement",
+    "crypto",
+    "equity_comp",
+    "iso_options",
+  ]);
   return balances
     .filter((b) => investedTypes.has(b.type as string))
     .reduce((s, b) => s + b.balance, 0);
-}
-
-/**
- * Latest reported net worth from freedom `entries` — a cheap fallback when the
- * user hasn't wired up accounts yet.
- */
-export async function latestReportedNetWorth(householdId: string): Promise<number | null> {
-  const [row] = await db
-    .select({ payload: entries.payload, occurredOn: entries.occurredOn })
-    .from(entries)
-    .where(and(eq(entries.householdId, householdId), eq(entries.freedom, "financial")))
-    .orderBy(desc(entries.occurredOn), desc(entries.createdAt))
-    .limit(1);
-  if (!row) return null;
-  const payload = row.payload as Record<string, unknown> | null;
-  const v = payload?.netWorth;
-  return typeof v === "number" && Number.isFinite(v) ? v : null;
 }
 
 /** Current-month budget plan set (for the "manage plan" panel). */

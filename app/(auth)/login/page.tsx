@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AppearanceControls } from "@/components/ui/appearance-controls";
 import { LoginForm } from "./login-form";
 
 export const metadata = {
@@ -13,19 +14,15 @@ export default async function LoginPage({
   const { next, error } = await searchParams;
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-md flex-col justify-center px-6 py-16">
-      <Link
-        href="/"
-        className="mb-16 font-mono text-xs tracking-tight text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-foreground)]"
-      >
+    <main className="daybreak-public daybreak-auth flex flex-col justify-center">
+      <AppearanceControls />
+      <Link href="/" className="brand-mark mb-16 hover:text-[color:var(--color-foreground)]">
         ← freedom-four
       </Link>
 
       <div className="flex flex-col gap-3">
-        <p className="font-mono text-xs tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
-          Sign in
-        </p>
-        <h1 className="font-serif text-4xl leading-[1.05] tracking-tight">Begin.</h1>
+        <p className="eyebrow">Sign in</p>
+        <h1 className="font-display text-4xl leading-[1.05] tracking-tight">Begin.</h1>
         <p className="text-[color:var(--color-ink-soft)]">
           We&rsquo;ll email you a single-use link. No password.
         </p>
@@ -41,9 +38,7 @@ export default async function LoginPage({
         <LoginForm next={next} />
       </div>
 
-      <p className="mt-16 font-mono text-xs tracking-tight text-[color:var(--color-ink-soft)]">
-        Private beta · v0.1
-      </p>
+      <p className="brand-mark mt-16">Private beta · v0.1</p>
     </main>
   );
 }

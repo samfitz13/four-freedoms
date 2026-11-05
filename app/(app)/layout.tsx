@@ -1,45 +1,53 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth-server";
-import { SignOutButton } from "./sign-out-button";
+import { requireUser } from "@/lib/auth-server";
+import { FREEDOMS } from "@/lib/freedoms/constants";
+import { AppNav, FreedomNav } from "./app-nav";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const session = await getSession();
-  if (!session?.user) redirect("/login");
-  const { user } = session;
+  // Carries the `?next=/` marker so the proxy's "authed user on /login →
+  // /dashboard" convenience doesn't loop when the cookie is stale.
+  await requireUser();
 
   return (
-    <div className="mx-auto flex min-h-svh max-w-5xl flex-col px-6 py-10">
-      <header className="flex items-center justify-between border-b border-[color:var(--color-border)] pb-6 text-sm">
-        <Link
-          href="/dashboard"
-          className="font-mono tracking-tight text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-foreground)]"
-        >
-          freedom-four
+    <div className="daybreak-shell">
+      <a href="#main-content" className="skip-link daybreak-button">
+        Skip to content
+      </a>
+      <header className="daybreak-shell-top">
+        <Link href="/dashboard" className="flex min-h-11 items-center gap-3">
+          <span className="grid grid-cols-2 gap-1" aria-hidden>
+            {FREEDOMS.map((freedom) => (
+              <span key={freedom.key} data-freedom={freedom.key} className="daybreak-brand-tile" />
+            ))}
+          </span>
+          <span className="brand-mark">
+            freedom<span className="mx-1">/</span>four
+          </span>
         </Link>
 
-        <nav className="flex items-center gap-6 text-[color:var(--color-ink-soft)]">
-          <Link href="/dashboard" className="hover:text-[color:var(--color-foreground)]">
-            Dashboard
-          </Link>
-          <Link href="/check-in" className="hover:text-[color:var(--color-foreground)]">
-            Check-in
-          </Link>
-          <Link href="/review" className="hover:text-[color:var(--color-foreground)]">
-            Review
-          </Link>
-          <Link href="/settings" className="hover:text-[color:var(--color-foreground)]">
-            Settings
-          </Link>
-          <SignOutButton />
-        </nav>
+        <p className="daybreak-date">
+          {new Intl.DateTimeFormat("en-US", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+          }).format(new Date())}
+        </p>
       </header>
-
-      <main className="flex-1 py-10">{children}</main>
-
-      <footer className="mt-10 border-t border-[color:var(--color-border)] pt-6 font-mono text-xs tracking-tight text-[color:var(--color-ink-soft)]">
-        <span>{user.email}</span>
-      </footer>
+      <div className="daybreak-shell-body">
+        <aside className="daybreak-sidebar">
+          <p className="daybreak-rail-label">Your world</p>
+          <FreedomNav />
+          <AppNav />
+          <p className="daybreak-rail-foot">
+            At your pace.
+            <br />
+            In your own way.
+          </p>
+        </aside>
+        <main id="main-content" tabIndex={-1} className="daybreak-workspace">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

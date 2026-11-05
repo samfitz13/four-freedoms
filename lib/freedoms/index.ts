@@ -12,10 +12,7 @@ import { healthModule } from "./health";
 import { locationModule } from "./location";
 import { timeModule } from "./time";
 
-export const freedomModules: Record<
-  FreedomKey,
-  FreedomModule<Record<string, unknown>>
-> = Object.freeze({
+export const freedomModules: Record<FreedomKey, FreedomModule> = Object.freeze({
   financial: financialModule,
   location: locationModule,
   time: timeModule,

@@ -7,9 +7,10 @@ const PROTECTED_PREFIXES = [
   "/location",
   "/time",
   "/health",
-  "/review",
   "/settings",
   "/onboarding",
+  "/relations",
+  "/review",
 ];
 
 const AUTH_ROUTES = ["/login"];
@@ -34,11 +35,18 @@ export function proxy(request: NextRequest) {
   if (isProtected && !sessionCookie) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("next", pathname);
+    url.search = "";
+    url.searchParams.set("next", pathname + request.nextUrl.search);
     return NextResponse.redirect(url);
   }
 
-  if (isAuthRoute && sessionCookie) {
+  // Authed users hitting /login get bounced to /dashboard — but ONLY when
+  // they arrived there on their own. If a `next=` is present the user was
+  // redirected here by `requireUser()`, meaning the server could not
+  // actually verify the session even though the cookie looked valid
+  // (stale / cross-db cookie / revoked session). Bouncing back would loop.
+  const hasNextParam = request.nextUrl.searchParams.has("next");
+  if (isAuthRoute && sessionCookie && !hasNextParam) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     url.search = "";

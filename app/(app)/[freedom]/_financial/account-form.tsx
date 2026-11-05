@@ -1,9 +1,16 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { NativeSelect } from "@/components/ui/native-select";
+import { Field } from "@/components/ui/field";
+
+import { useActionState, useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { SUPPORTED_CURRENCIES } from "@/lib/freedoms/currency";
 import type { FinancialAccount } from "@/lib/db/schema";
-import { archiveAccount, createAccount, recordBalance, updateAccount } from "./accounts-actions";
+import { ACCOUNT_SUBTYPES } from "@/lib/freedoms/constants";
+import { titleCaseSubtype } from "@/lib/freedoms/account-subtypes";
+import { archiveAccount, createAccount, updateAccount } from "./accounts-actions";
 import type { ActionResult } from "./types";
 
 const ACCOUNT_TYPES = [
@@ -15,112 +22,98 @@ const ACCOUNT_TYPES = [
   "real_estate",
   "loan",
   "credit_card",
+  "equity_comp",
+  "iso_options",
   "other",
 ] as const;
 
-const inputBase =
-  "h-10 w-full rounded-[var(--radius-sm)] border border-[color:var(--color-border)] bg-transparent px-3 text-sm focus:border-[color:var(--color-foreground)] focus:outline-none";
-const labelCls =
-  "font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase";
-const btnPrimary =
-  "inline-flex h-10 items-center rounded-[var(--radius-sm)] bg-[color:var(--color-foreground)] px-4 text-sm text-[color:var(--color-background)] hover:opacity-90 disabled:opacity-50";
-const btnGhost =
-  "inline-flex h-10 items-center rounded-[var(--radius-sm)] border border-[color:var(--color-border)] px-3 font-mono text-xs tracking-[0.14em] uppercase hover:bg-[color:var(--color-surface-muted,transparent)]";
+type AccountTypeKey = (typeof ACCOUNT_TYPES)[number];
 
-export function NewAccountForm({ defaultCurrency }: { defaultCurrency: string }) {
+function titleCaseType(t: string): string {
+  return t
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+export function NewAccountForm({
+  defaultCurrency,
+  onSuccess,
+}: {
+  defaultCurrency: string;
+  onSuccess?: () => void;
+}) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(
     createAccount,
     null,
   );
   const formRef = useRef<HTMLFormElement>(null);
-  const today = new Date().toISOString().slice(0, 10);
+  const [type, setType] = useState<AccountTypeKey>("checking");
+  const subtypes: readonly string[] = ACCOUNT_SUBTYPES[type] ?? [];
 
   useEffect(() => {
-    if (state?.ok) formRef.current?.reset();
-  }, [state]);
+    if (state?.ok) {
+      formRef.current?.reset();
+      onSuccess?.();
+    }
+  }, [state, onSuccess]);
 
   return (
     <form
       ref={formRef}
       action={action}
-      className="grid gap-4 border border-dashed border-[color:var(--color-border)] p-5 sm:grid-cols-6"
+      onReset={() => setType("checking")}
+      className="daybreak-panel grid gap-4 border-dashed p-6 sm:grid-cols-6"
     >
-      <div className="flex flex-col gap-1 sm:col-span-2">
-        <label className={labelCls} htmlFor="new-name">
-          Name
-        </label>
-        <input id="new-name" name="name" required maxLength={80} className={inputBase} />
-      </div>
-      <div className="flex flex-col gap-1 sm:col-span-2">
-        <label className={labelCls} htmlFor="new-type">
-          Type
-        </label>
-        <select id="new-type" name="type" required defaultValue="checking" className={inputBase}>
+      <Field label="Name" className="sm:col-span-2">
+        <Input id="new-name" name="name" required maxLength={80} />
+      </Field>
+      <Field label="Type" className="sm:col-span-2">
+        <NativeSelect
+          id="new-type"
+          name="type"
+          required
+          value={type}
+          onChange={(e) => setType(e.target.value as AccountTypeKey)}
+        >
           {ACCOUNT_TYPES.map((t) => (
             <option key={t} value={t}>
-              {t.replace(/_/g, " ")}
+              {titleCaseType(t)}
             </option>
           ))}
-        </select>
-      </div>
-      <div className="flex flex-col gap-1 sm:col-span-1">
-        <label className={labelCls} htmlFor="new-currency">
-          Currency
-        </label>
-        <select
-          id="new-currency"
-          name="currency"
-          defaultValue={defaultCurrency}
-          className={inputBase}
+        </NativeSelect>
+      </Field>
+      <Field label="Subtype" className="sm:col-span-2">
+        <NativeSelect
+          id="new-subtype"
+          name="subtype"
+          defaultValue=""
+          disabled={subtypes.length === 0}
         >
+          <option value="">{subtypes.length === 0 ? "—" : "None"}</option>
+          {subtypes.map((s) => (
+            <option key={s} value={s}>
+              {titleCaseSubtype(s)}
+            </option>
+          ))}
+        </NativeSelect>
+      </Field>
+      <Field label="Currency" className="sm:col-span-1">
+        <NativeSelect id="new-currency" name="currency" defaultValue={defaultCurrency}>
           {SUPPORTED_CURRENCIES.map((c) => (
             <option key={c} value={c}>
               {c}
             </option>
           ))}
-        </select>
-      </div>
-      <div className="flex flex-col gap-1 sm:col-span-1">
-        <label className={labelCls} htmlFor="new-institution">
-          Institution
-        </label>
-        <input
-          id="new-institution"
-          name="institution"
-          maxLength={80}
-          className={inputBase}
-          placeholder="Optional"
-        />
-      </div>
-      <div className="flex flex-col gap-1 sm:col-span-2">
-        <label className={labelCls} htmlFor="new-initial-balance">
-          Starting balance
-        </label>
-        <input
-          id="new-initial-balance"
-          name="initialBalance"
-          type="number"
-          step="0.01"
-          className={inputBase}
-          placeholder="Optional"
-        />
-      </div>
-      <div className="flex flex-col gap-1 sm:col-span-2">
-        <label className={labelCls} htmlFor="new-initial-asof">
-          As of
-        </label>
-        <input
-          id="new-initial-asof"
-          name="initialAsOf"
-          type="date"
-          defaultValue={today}
-          className={inputBase}
-        />
-      </div>
-      <div className="flex items-end justify-end gap-3 sm:col-span-2">
-        <button type="submit" disabled={pending} className={btnPrimary}>
+        </NativeSelect>
+      </Field>
+      <Field label="Institution" className="sm:col-span-1">
+        <Input id="new-institution" name="institution" maxLength={80} placeholder="Optional" />
+      </Field>
+      <div className="flex items-end justify-end gap-3 sm:col-span-6">
+        <Button type="submit" disabled={pending} variant="primary">
           {pending ? "Adding…" : "Add account"}
-        </button>
+        </Button>
       </div>
       {state ? (
         <p
@@ -137,53 +130,70 @@ export function NewAccountForm({ defaultCurrency }: { defaultCurrency: string })
   );
 }
 
-export function EditAccountForm({ account }: { account: FinancialAccount }) {
+export function EditAccountForm({
+  account,
+  onSuccess,
+  onCancel,
+}: {
+  account: FinancialAccount;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+}) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(
     updateAccount,
     null,
   );
+  const [type, setType] = useState<AccountTypeKey>(account.type as AccountTypeKey);
+  const subtypes: readonly string[] = ACCOUNT_SUBTYPES[type] ?? [];
+  useEffect(() => {
+    if (state?.ok) onSuccess?.();
+  }, [state, onSuccess]);
+
   return (
     <form action={action} className="grid gap-3 sm:grid-cols-6">
       <input type="hidden" name="id" value={account.id} />
-      <div className="flex flex-col gap-1 sm:col-span-2">
-        <label className={labelCls}>Name</label>
-        <input
-          name="name"
-          defaultValue={account.name}
-          required
-          maxLength={80}
-          className={inputBase}
-        />
-      </div>
-      <div className="flex flex-col gap-1 sm:col-span-2">
-        <label className={labelCls}>Type</label>
-        <select name="type" defaultValue={account.type} className={inputBase}>
+      <Field label="Name" className="sm:col-span-2">
+        <Input name="name" defaultValue={account.name} required maxLength={80} />
+      </Field>
+      <Field label="Type" className="sm:col-span-2">
+        <NativeSelect
+          name="type"
+          value={type}
+          onChange={(e) => setType(e.target.value as AccountTypeKey)}
+        >
           {ACCOUNT_TYPES.map((t) => (
             <option key={t} value={t}>
-              {t.replace(/_/g, " ")}
+              {titleCaseType(t)}
             </option>
           ))}
-        </select>
-      </div>
-      <div className="flex flex-col gap-1 sm:col-span-1">
-        <label className={labelCls}>Currency</label>
-        <select name="currency" defaultValue={account.currency} className={inputBase}>
+        </NativeSelect>
+      </Field>
+      <Field label="Subtype" className="sm:col-span-2">
+        <NativeSelect
+          name="subtype"
+          defaultValue={account.subtype ?? ""}
+          disabled={subtypes.length === 0}
+        >
+          <option value="">{subtypes.length === 0 ? "—" : "None"}</option>
+          {subtypes.map((s) => (
+            <option key={s} value={s}>
+              {titleCaseSubtype(s)}
+            </option>
+          ))}
+        </NativeSelect>
+      </Field>
+      <Field label="Currency" className="sm:col-span-1">
+        <NativeSelect name="currency" defaultValue={account.currency}>
           {SUPPORTED_CURRENCIES.map((c) => (
             <option key={c} value={c}>
               {c}
             </option>
           ))}
-        </select>
-      </div>
-      <div className="flex flex-col gap-1 sm:col-span-1">
-        <label className={labelCls}>Institution</label>
-        <input
-          name="institution"
-          defaultValue={account.institution ?? ""}
-          maxLength={80}
-          className={inputBase}
-        />
-      </div>
+        </NativeSelect>
+      </Field>
+      <Field label="Institution" className="sm:col-span-1">
+        <Input name="institution" defaultValue={account.institution ?? ""} maxLength={80} />
+      </Field>
       <div className="flex items-end justify-end gap-2 sm:col-span-6">
         {state ? (
           <p
@@ -196,67 +206,14 @@ export function EditAccountForm({ account }: { account: FinancialAccount }) {
             {state.ok ? (state.message ?? "Saved.") : state.error}
           </p>
         ) : null}
-        <button type="submit" formAction={archiveAccount} className={btnGhost}>
+        <Button type="submit" formAction={archiveAccount}>
           Archive
-        </button>
-        <button type="submit" disabled={pending} className={btnPrimary}>
+        </Button>
+        {onCancel ? <Button onClick={onCancel}>Cancel</Button> : null}
+        <Button type="submit" disabled={pending} variant="primary">
           {pending ? "Saving…" : "Save"}
-        </button>
+        </Button>
       </div>
-    </form>
-  );
-}
-
-export function RecordBalanceForm({
-  accountId,
-  defaultBalance,
-}: {
-  accountId: string;
-  defaultBalance?: number;
-}) {
-  const [state, action, pending] = useActionState<ActionResult | null, FormData>(
-    recordBalance,
-    null,
-  );
-  const today = new Date().toISOString().slice(0, 10);
-  return (
-    <form action={action} className="grid gap-3 sm:grid-cols-[1fr_140px_160px_auto]">
-      <input type="hidden" name="accountId" value={accountId} />
-      <div className="flex flex-col gap-1">
-        <label className={labelCls}>Note</label>
-        <input name="note" maxLength={200} className={inputBase} placeholder="Optional" />
-      </div>
-      <div className="flex flex-col gap-1">
-        <label className={labelCls}>As of</label>
-        <input type="date" name="asOf" defaultValue={today} required className={inputBase} />
-      </div>
-      <div className="flex flex-col gap-1">
-        <label className={labelCls}>Balance</label>
-        <input
-          type="number"
-          step="0.01"
-          name="balance"
-          defaultValue={defaultBalance ?? ""}
-          required
-          className={inputBase}
-        />
-      </div>
-      <div className="flex items-end">
-        <button type="submit" disabled={pending} className={btnPrimary}>
-          {pending ? "Saving…" : "Record"}
-        </button>
-      </div>
-      {state ? (
-        <p
-          className={`text-sm sm:col-span-4 ${
-            state.ok
-              ? "text-[color:var(--color-ink-soft)]"
-              : "text-[color:var(--color-accent-warning,#9a3412)]"
-          }`}
-        >
-          {state.ok ? (state.message ?? "Saved.") : state.error}
-        </p>
-      ) : null}
     </form>
   );
 }

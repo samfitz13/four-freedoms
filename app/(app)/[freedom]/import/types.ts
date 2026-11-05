@@ -21,3 +21,9 @@ export interface ImportResultErr {
 }
 
 export type ImportResult = ImportResultOk | ImportResultErr;
+
+export interface ImportAccountOption {
+  id: string;
+  name: string;
+  type: string;
+}

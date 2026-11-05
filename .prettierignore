@@ -7,3 +7,5 @@ dist
 out
 public
 next-env.d.ts
+screenshots
+.playwright-mcp

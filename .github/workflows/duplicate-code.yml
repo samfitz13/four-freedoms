@@ -1,0 +1,41 @@
+name: Duplicate code
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  duplication:
+    name: No new duplicate code
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Detect new duplicate code
+        run: pnpm check:duplicates
+      - name: Retain duplication report
+        if: ${{ always() && hashFiles('reports/duplication/jscpd-report.json') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: duplication-report
+          path: reports/duplication/jscpd-report.json
+          retention-days: 14

@@ -3,26 +3,57 @@ import {
   assetAllocation,
   latestBalances,
   listAccounts,
-  netWorthSeries,
+  netWorthBreakdownSeries,
+  wealthCategorySeries,
 } from "@/lib/db/queries/financial";
 import { Money } from "@/components/freedoms/money";
-import { AreaChart } from "@/components/freedoms/financial/area-chart";
 import { Donut } from "@/components/freedoms/financial/donut";
+import { StackedAreaChart } from "@/components/freedoms/financial/stacked-area-chart";
+import type { StackedAreaLayer } from "@/components/freedoms/financial/types";
+import { yearToDateChange } from "@/lib/freedoms/wealth";
 
 /**
- * Editorial palette for account-type buckets. Uses CSS variables when
- * available (with fallbacks) so it stays on-theme.
+ * Dedicated categorical tokens distinguish account types in both themes.
  */
 const BUCKET_COLORS: Record<string, string> = {
-  checking: "var(--color-freedom-financial, #065f46)",
-  savings: "var(--color-freedom-location, #3730a3)",
-  brokerage: "var(--color-freedom-time, #7c2d12)",
-  retirement: "var(--color-freedom-health, #155e75)",
-  crypto: "var(--color-accent, #7e22ce)",
-  real_estate: "var(--color-accent-warm, #92400e)",
-  loan: "var(--color-accent-warning, #9a3412)",
-  credit_card: "var(--color-accent-warning, #9a3412)",
-  other: "var(--color-ink-soft, #6b7280)",
+  checking: "var(--color-allocation-checking)",
+  savings: "var(--color-allocation-savings)",
+  brokerage: "var(--color-allocation-brokerage)",
+  retirement: "var(--color-allocation-retirement)",
+  crypto: "var(--color-allocation-crypto)",
+  real_estate: "var(--color-allocation-real-estate)",
+  loan: "var(--color-accent-warning)",
+  credit_card: "var(--color-accent-warning)",
+  equity_comp: "var(--color-allocation-equity)",
+  iso_options: "var(--color-allocation-options)",
+  other: "var(--color-allocation-other)",
+};
+const STACKED_CATEGORY_ORDER = [
+  "checking",
+  "savings",
+  "brokerage",
+  "retirement",
+  "crypto",
+  "real_estate",
+  "other",
+  "equity_comp",
+] as const;
+const EQUITY_COMP_COLORS = [
+  "var(--color-allocation-equity)",
+  "var(--color-allocation-options)",
+  "var(--color-allocation-crypto)",
+  "var(--color-allocation-savings)",
+] as const;
+type StackedCategory = (typeof STACKED_CATEGORY_ORDER)[number];
+const STACKED_CATEGORY_LABELS: Record<StackedCategory, string> = {
+  checking: "Checking",
+  savings: "Savings",
+  brokerage: "Brokerage",
+  retirement: "Retirement",
+  crypto: "Crypto",
+  real_estate: "Real estate",
+  other: "Other",
+  equity_comp: "Equity comp",
 };
 
 export async function FinancialWealthTab({
@@ -32,17 +63,16 @@ export async function FinancialWealthTab({
   householdId: string;
   baseCurrency: string;
 }) {
-  const [accounts, balances, series, allocation] = await Promise.all([
-    listAccounts(householdId),
+  const [accounts, balances, series, categorySeries, allocation] = await Promise.all([
+    listAccounts(householdId, { includeArchived: true }),
     latestBalances(householdId),
-    netWorthSeries(householdId, 12),
+    netWorthBreakdownSeries(householdId, 12, { fromEarliest: true }),
+    wealthCategorySeries(householdId, 12, { fromEarliest: true }),
     assetAllocation(householdId),
   ]);
 
   const currentNetWorth = series.length ? series[series.length - 1]!.netWorth : null;
-  const startNetWorth = series.length ? series[0]!.netWorth : null;
-  const delta =
-    currentNetWorth !== null && startNetWorth !== null ? currentNetWorth - startNetWorth : null;
+  const delta = yearToDateChange(series);
 
   const positive = allocation.filter((a) => a.value > 0);
   const liabilities = allocation.filter((a) => a.value < 0);
@@ -51,67 +81,101 @@ export async function FinancialWealthTab({
     value: a.value,
     color: BUCKET_COLORS[a.bucket] ?? BUCKET_COLORS.other!,
   }));
+  const visibleBalances = balances.filter((b) => b.balance !== 0 && !b.isArchived);
+  const equityAccounts = accounts.filter(
+    (account) => account.type === "equity_comp" || account.type === "iso_options",
+  );
+  const stableLayers: StackedAreaLayer[] = STACKED_CATEGORY_ORDER.filter(
+    (category) => category !== "equity_comp",
+  ).map((category) => ({
+    key: category,
+    label: STACKED_CATEGORY_LABELS[category],
+    color: BUCKET_COLORS[category] ?? BUCKET_COLORS.other!,
+    outline: "solid" as const,
+    points: categorySeries.map((point) => ({
+      date: point.date,
+      value: point.categories[category] ?? 0,
+    })),
+  }));
+  const equityLayers: StackedAreaLayer[] = equityAccounts.map((account, index) => ({
+    key: account.id,
+    label: account.name,
+    color: EQUITY_COMP_COLORS[index % EQUITY_COMP_COLORS.length]!,
+    outline: "dotted" as const,
+    points: categorySeries.map((point) => ({
+      date: point.date,
+      value: point.accounts[account.id] ?? 0,
+    })),
+  }));
+  const stackedLayers = [...stableLayers, ...equityLayers].filter((layer) =>
+    layer.points.some((point) => point.value > 0),
+  );
 
   const empty = accounts.length === 0;
 
   return (
     <div className="flex flex-col gap-10">
-      <header className="flex flex-col gap-3 border-b border-[color:var(--color-border)] pb-6">
-        <h2 className="font-serif text-2xl tracking-tight">Wealth</h2>
+      <header className="daybreak-section-head flex flex-col gap-3 border-b border-[color:var(--color-border)] pb-6">
+        <h2 className="font-display text-2xl tracking-tight">Wealth</h2>
         <p className="max-w-xl text-sm text-[color:var(--color-ink-soft)]">
-          Net worth over time, account balances, and allocation across types.
+          Net worth at month-end, allocation across types, and the latest balance per account.
         </p>
       </header>
 
       {empty ? (
-        <EmptyWealth />
+        <EmptyWealth label="account" />
+      ) : series.length === 0 ? (
+        <EmptyWealth label="statement" />
       ) : (
         <>
           <section className="flex flex-col gap-4">
             <div className="flex items-baseline justify-between gap-6">
               <div className="flex flex-col">
-                <span className="font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
+                <span className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
                   Net worth
                 </span>
-                <span className="font-serif text-4xl tabular-nums">
+                <span className="font-display text-4xl tabular-nums">
                   <Money value={currentNetWorth} currency={baseCurrency} fractionDigits={0} />
                 </span>
               </div>
-              {delta !== null ? (
-                <div className="flex flex-col items-end">
-                  <span className="font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
-                    Last 12mo
-                  </span>
-                  <span
-                    className={`font-serif text-2xl tabular-nums ${
-                      delta >= 0 ? "" : "text-[color:var(--color-accent-warning,#9a3412)]"
-                    }`}
-                  >
-                    {delta >= 0 ? "+" : ""}
-                    <Money value={delta} currency={baseCurrency} fractionDigits={0} compact />
-                  </span>
-                </div>
-              ) : null}
+              <div className="flex flex-col items-end" aria-label="Year-to-date net worth change">
+                <span className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
+                  Year to date
+                </span>
+                <span
+                  className={`font-display text-2xl tabular-nums ${
+                    delta === null || delta >= 0 ? "" : "text-[color:var(--color-accent-warning)]"
+                  }`}
+                >
+                  {delta !== null && delta >= 0 ? "+" : ""}
+                  <Money value={delta} currency={baseCurrency} fractionDigits={0} compact />
+                </span>
+              </div>
             </div>
 
-            <AreaChart
-              series={series.map((s) => ({ date: s.date, value: s.netWorth }))}
-              color="var(--color-freedom-financial, #065f46)"
-              ariaLabel="Net worth over last 12 months"
-              height={200}
-            />
+            <StackedAreaChart layers={stackedLayers} ariaLabel="Assets by category over time" />
+            <div className="flex flex-wrap gap-x-5 gap-y-2 border-t border-[color:var(--color-border)] pt-3 font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
+              {stackedLayers.map((layer) => (
+                <LegendItem
+                  key={layer.key}
+                  color={layer.color}
+                  label={layer.label}
+                  dashed={layer.outline === "dotted"}
+                />
+              ))}
+            </div>
           </section>
 
           <section className="grid gap-10 md:grid-cols-2">
             <div className="flex flex-col gap-4">
-              <h3 className="font-serif text-xl">Allocation</h3>
+              <h3 className="font-display text-xl">Allocation</h3>
               <Donut slices={slices} ariaLabel="Asset allocation by account type" />
               {liabilities.length ? (
                 <ul className="mt-2 flex flex-col gap-1 border-t border-[color:var(--color-border)] pt-3 text-sm">
                   {liabilities.map((l) => (
                     <li
                       key={l.bucket}
-                      className="flex items-center justify-between font-mono text-[11px] tracking-[0.14em] uppercase"
+                      className="flex items-center justify-between font-sans text-xs tracking-normal"
                     >
                       <span className="text-[color:var(--color-ink-soft)]">
                         {l.bucket.replace(/_/g, " ")} · debt
@@ -126,27 +190,41 @@ export async function FinancialWealthTab({
             </div>
 
             <div className="flex flex-col gap-4">
-              <h3 className="font-serif text-xl">Balances</h3>
-              <ul className="flex flex-col divide-y divide-[color:var(--color-border)]">
-                {balances.map((b) => (
-                  <li key={b.accountId} className="flex items-baseline justify-between gap-4 py-2">
-                    <div className="flex flex-col">
-                      <span className="text-sm">{b.accountName}</span>
-                      <span className="font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
-                        {b.type.replace(/_/g, " ")} · {b.currency}
-                      </span>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <span className="tabular-nums">
-                        <Money value={b.balance} currency={b.currency} fractionDigits={0} />
-                      </span>
-                      <span className="font-mono text-[10px] tracking-[0.14em] text-[color:var(--color-ink-soft)] uppercase tabular-nums">
-                        {b.asOf ?? "—"}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <h3 className="font-display text-xl">Balances</h3>
+              {visibleBalances.length > 0 ? (
+                <ul className="flex flex-col divide-y divide-[color:var(--color-border)]">
+                  {visibleBalances.map((b) => (
+                    <li
+                      key={b.accountId}
+                      className="flex items-baseline justify-between gap-4 py-2"
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-sm">{b.accountName}</span>
+                        <span className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
+                          {b.type.replace(/_/g, " ")} · {b.currency}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span className="tabular-nums">
+                          <Money value={b.balance} currency={b.currency} fractionDigits={0} />
+                        </span>
+                        <span className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)] tabular-nums">
+                          {b.asOf
+                            ? new Date(b.asOf + "T00:00:00Z").toLocaleDateString(undefined, {
+                                month: "short",
+                                year: "numeric",
+                              })
+                            : "—"}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-[color:var(--color-ink-soft)]">
+                  No non-zero balances recorded yet.
+                </p>
+              )}
             </div>
           </section>
         </>
@@ -155,20 +233,50 @@ export async function FinancialWealthTab({
   );
 }
 
-function EmptyWealth() {
+function LegendItem({
+  color,
+  label,
+  dashed = false,
+}: {
+  color: string;
+  label: string;
+  dashed?: boolean;
+}) {
   return (
-    <div className="flex flex-col gap-4 border border-dashed border-[color:var(--color-border)] p-10">
-      <h3 className="font-serif text-xl">No accounts yet.</h3>
-      <p className="max-w-lg text-sm text-[color:var(--color-ink-soft)]">
-        Add your first account and record a balance to see net worth over time and asset allocation
-        here.
-      </p>
+    <span className="inline-flex items-center gap-2">
+      <span
+        aria-hidden
+        className="inline-block h-px w-7"
+        style={{
+          backgroundImage: dashed
+            ? `repeating-linear-gradient(to right, ${color} 0 4px, transparent 4px 8px)`
+            : undefined,
+          backgroundColor: dashed ? undefined : color,
+        }}
+      />
+      {label}
+    </span>
+  );
+}
+
+function EmptyWealth({ label }: { label: "account" | "statement" }) {
+  const heading = label === "account" ? "No accounts yet." : "No statements yet.";
+  const body =
+    label === "account"
+      ? "Add your first account, then record a month-end statement to see net worth over time and asset allocation here."
+      : "Once you save a month from the Statements tab, the running net worth and allocation will appear here.";
+  const href = label === "account" ? "/financial/accounts" : "/financial/statements";
+  const cta = label === "account" ? "Add an account" : "Open Statements";
+  return (
+    <div className="daybreak-panel flex flex-col gap-4 border-dashed p-10">
+      <h3 className="font-display text-xl">{heading}</h3>
+      <p className="max-w-lg text-sm text-[color:var(--color-ink-soft)]">{body}</p>
       <div>
         <Link
-          href="/financial?tab=accounts"
-          className="inline-flex h-10 items-center rounded-[var(--radius-sm)] bg-[color:var(--color-foreground)] px-4 text-sm text-[color:var(--color-background)] hover:opacity-90"
+          href={href}
+          className="daybreak-button inline-flex min-h-11 items-center bg-[color:var(--glass-primary)] px-4 text-sm text-[color:var(--glass-primary-ink)] hover:opacity-90"
         >
-          Add an account
+          {cta}
         </Link>
       </div>
     </div>

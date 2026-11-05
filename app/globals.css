@@ -1,84 +1,1028 @@
 @import "tailwindcss";
+@import "./habits.css";
+@import "./goals.css";
 
-/* ---------------------------------------------------------------------------
-   freedom-four — editorial theme
-   Warm neutrals, ink text, muted freedom accents, serif display.
-   --------------------------------------------------------------------------- */
-
+/* Daybreak: warm glass, clear data, and a little breathing room. */
 @theme {
-  /* Typography */
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-fraunces), ui-serif, Georgia, "Times New Roman", serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
-
-  /* Radii (editorial: restrained) */
-  --radius-xs: 2px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 10px;
-
-  /* Neutrals — warm paper, ink */
-  --color-paper: oklch(98.5% 0.005 85);
-  --color-paper-soft: oklch(96% 0.008 85);
-  --color-ink: oklch(22% 0.01 260);
-  --color-ink-soft: oklch(38% 0.012 260);
-  --color-rule: oklch(88% 0.008 85);
-
-  /* Semantic tokens (light mode defaults; overridden in .dark below) */
+  --font-sans: var(--font-manrope), "Avenir Next", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-manrope), "Avenir Next", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-display);
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
+  --radius-xs: 8px;
+  --radius-sm: 14px;
+  --radius-md: 23px;
+  --radius-lg: 32px;
+  --color-paper: light-dark(oklch(97% 0.025 78), oklch(23% 0.019 58));
+  --color-paper-soft: light-dark(oklch(92% 0.032 76), oklch(27% 0.021 58));
+  --color-ink: light-dark(oklch(34% 0.032 54), oklch(95% 0.023 79));
+  --color-ink-soft: light-dark(oklch(39% 0.035 58), oklch(86% 0.032 71));
+  --color-rule: light-dark(oklch(77% 0.033 65), oklch(47% 0.03 61));
   --color-background: var(--color-paper);
   --color-foreground: var(--color-ink);
-  --color-muted: oklch(92% 0.008 85);
+  --color-muted: var(--color-paper-soft);
   --color-muted-foreground: var(--color-ink-soft);
   --color-border: var(--color-rule);
-  --color-ring: oklch(55% 0.02 260);
-
-  /* Per-freedom accents (muted, print-adjacent) */
-  --color-freedom-financial: oklch(55% 0.12 155); /* moss green */
-  --color-freedom-location: oklch(58% 0.14 255); /* indigo blue */
-  --color-freedom-time: oklch(62% 0.14 60); /* amber */
-  --color-freedom-health: oklch(58% 0.16 20); /* terracotta */
+  --color-ring: light-dark(oklch(43% 0.09 33), oklch(83% 0.075 49));
+  --color-accent: light-dark(oklch(44% 0.09 33), oklch(82% 0.09 49));
+  --color-accent-warning: light-dark(oklch(42% 0.13 29), oklch(82% 0.11 42));
+  --color-chart-base: var(--color-accent);
+  --color-chart-lower: light-dark(oklch(44% 0.085 255), oklch(78% 0.085 255));
+  --color-chart-upside: light-dark(oklch(42% 0.085 155), oklch(78% 0.085 155));
+  /* Categorical data needs wider hue separation than the warm navigation accents. */
+  --color-allocation-checking: light-dark(oklch(45% 0.1 175), oklch(77% 0.12 175));
+  --color-allocation-savings: light-dark(oklch(46% 0.13 250), oklch(75% 0.13 250));
+  --color-allocation-brokerage: light-dark(oklch(51% 0.11 85), oklch(84% 0.14 85));
+  --color-allocation-retirement: light-dark(oklch(49% 0.16 35), oklch(76% 0.15 35));
+  --color-allocation-crypto: light-dark(oklch(45% 0.14 320), oklch(73% 0.14 320));
+  --color-allocation-real-estate: light-dark(oklch(44% 0.1 125), oklch(72% 0.11 125));
+  --color-allocation-equity: light-dark(oklch(41% 0.14 285), oklch(64% 0.17 290));
+  --color-allocation-options: light-dark(oklch(43% 0.15 355), oklch(68% 0.15 355));
+  --color-allocation-other: light-dark(oklch(44% 0.025 65), oklch(73% 0.025 65));
+  --color-surface-muted: var(--color-paper-soft);
+  --color-ceramic: var(--color-paper);
+  --color-freedom-financial: light-dark(oklch(42% 0.064 60), oklch(84% 0.075 74));
+  --color-freedom-location: light-dark(oklch(40% 0.082 43), oklch(84% 0.083 53));
+  --color-freedom-time: light-dark(oklch(41% 0.073 83), oklch(86% 0.079 86));
+  --color-freedom-health: light-dark(oklch(42% 0.078 28), oklch(84% 0.07 29));
+  --color-surface-financial: light-dark(oklch(96% 0.03 77), oklch(28% 0.028 66));
+  --color-surface-location: light-dark(oklch(89% 0.06 59), oklch(31% 0.042 46));
+  --color-surface-time: light-dark(oklch(94% 0.048 91), oklch(30% 0.035 80));
+  --color-surface-health: light-dark(oklch(92% 0.035 44), oklch(30% 0.03 27));
 }
-
-.dark {
-  --color-background: oklch(16% 0.01 260);
-  --color-foreground: oklch(92% 0.01 85);
-  --color-paper: oklch(16% 0.01 260);
-  --color-paper-soft: oklch(20% 0.01 260);
-  --color-ink: oklch(92% 0.01 85);
-  --color-ink-soft: oklch(72% 0.012 85);
-  --color-muted: oklch(22% 0.012 260);
-  --color-muted-foreground: oklch(72% 0.012 85);
-  --color-rule: oklch(28% 0.012 260);
-  --color-border: var(--color-rule);
-  --color-ring: oklch(72% 0.02 85);
-
-  --color-freedom-financial: oklch(68% 0.12 155);
-  --color-freedom-location: oklch(70% 0.14 255);
-  --color-freedom-time: oklch(74% 0.14 60);
-  --color-freedom-health: oklch(70% 0.16 20);
+:root {
+  --glass-shell: light-dark(oklch(95% 0.036 77 / 0.69), oklch(22% 0.024 57 / 0.88));
+  --glass-panel: light-dark(oklch(98% 0.026 81 / 0.87), oklch(28% 0.023 57 / 0.95));
+  --glass-control: light-dark(oklch(99% 0.022 82 / 0.73), oklch(34% 0.026 58 / 0.85));
+  --glass-stroke: light-dark(oklch(100% 0 0 / 0.88), oklch(80% 0.035 65 / 0.28));
+  --glass-highlight: light-dark(oklch(100% 0 0 / 0.95), oklch(91% 0.035 71 / 0.13));
+  --glass-shadow: light-dark(oklch(30% 0.045 51 / 0.13), oklch(8% 0.015 47 / 0.38));
+  --glass-rim:
+    inset 0 1px 1px var(--glass-highlight),
+    inset 0 -1px 1px light-dark(oklch(50% 0.04 62 / 0.08), oklch(5% 0.01 50 / 0.15));
+  --scene-wash: light-dark(oklch(94% 0.03 72 / 0.12), oklch(15% 0.025 50 / 0.75));
+  --glass-active: light-dark(oklch(89% 0.067 56), oklch(39% 0.058 43));
+  --glass-primary: light-dark(oklch(44% 0.09 33), oklch(80% 0.092 50));
+  --glass-primary-ink: light-dark(oklch(98% 0.02 81), oklch(23% 0.037 38));
+  --glass-blur: 25px;
+  --control-border: light-dark(oklch(60% 0.035 58), oklch(64% 0.032 71));
 }
-
+:where(input, select, textarea, .daybreak-field) {
+  --color-border: var(--control-border);
+}
 @layer base {
   html {
     color-scheme: light dark;
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
   }
-
+  html.light {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
   body {
-    background: var(--color-background);
-    color: var(--color-foreground);
-    font-family: var(--font-sans);
-    font-feature-settings: "ss01", "cv11";
+    position: relative;
+    isolation: isolate;
     min-height: 100svh;
+    background: var(--color-paper-soft);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.6;
+    font-kerning: normal;
   }
-
-  ::selection {
-    background: var(--color-foreground);
-    color: var(--color-background);
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.045em;
+    text-wrap: pretty;
   }
-
+  h1 {
+    line-height: 1.13;
+  }
+  h2,
+  h3,
+  h4 {
+    line-height: 1.3;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+  button,
+  summary {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  a,
+  button,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+  :where(
+    input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    select,
+    textarea
+  ) {
+    min-height: 44px;
+    max-width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--glass-control);
+    color: var(--color-ink);
+    padding: 0.625rem 0.75rem;
+  }
+  :where(input[type="checkbox"], input[type="radio"], input[type="range"]) {
+    accent-color: var(--color-accent);
+  }
+  textarea {
+    resize: vertical;
+  }
+  option {
+    color: var(--color-ink);
+    background: var(--color-paper);
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-ink-soft);
+    opacity: 1;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+  }
+  th {
+    font-weight: 600;
+  }
+  th,
+  td {
+    font-variant-numeric: tabular-nums;
+  }
+  thead th {
+    color: var(--color-ink-soft);
+    font-size: 0.75rem;
+  }
   hr {
     border-color: var(--color-border);
+  }
+  ::selection {
+    background: var(--glass-active);
+    color: var(--color-ink);
+  }
+}
+/* Focus is independent of utility classes that remove native outlines. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 4px;
+}
+.daybreak-scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--scene-wash), var(--scene-wash)),
+    url("/daybreak/backdrop.webp") center / cover no-repeat;
+}
+.daybreak-shell {
+  width: calc(100% - clamp(24px, 5vw, 88px));
+  max-width: 1500px;
+  min-height: calc(100svh - 64px);
+  margin: 32px auto;
+  border: 1px solid var(--glass-stroke);
+  border-radius: 36px;
+  background: var(--glass-shell);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.12);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.12);
+  box-shadow:
+    0 25px 70px var(--glass-shadow),
+    var(--glass-rim);
+}
+.daybreak-shell-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 24px 32px;
+}
+.brand-mark {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.065em;
+  color: var(--color-ink);
+}
+.daybreak-brand-tile {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 4px 4px 1px 4px;
+  background: var(--color-accent);
+  transform: rotate(-8deg);
+}
+.daybreak-brand-tile:nth-child(2) {
+  opacity: 0.75;
+  transform: rotate(82deg);
+}
+.daybreak-brand-tile:nth-child(3) {
+  opacity: 0.85;
+  transform: rotate(-98deg);
+}
+.daybreak-brand-tile:nth-child(4) {
+  opacity: 0.65;
+  transform: rotate(172deg);
+}
+.daybreak-date {
+  font-size: 0.75rem;
+  color: var(--color-ink-soft);
+}
+.daybreak-date::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 10px;
+  border-radius: 50%;
+  background: var(--color-freedom-time);
+}
+.daybreak-appearance {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.daybreak-shell-body {
+  display: grid;
+  grid-template-columns: 202px minmax(0, 1fr);
+  gap: 30px;
+  padding: 12px 32px 36px 18px;
+}
+.daybreak-sidebar {
+  position: sticky;
+  align-self: start;
+  top: 24px;
+  min-width: 0;
+}
+.daybreak-rail-label {
+  font-size: 0.6875rem;
+  color: var(--color-ink-soft);
+  padding: 0 18px;
+  margin: 8px 0 16px;
+}
+.daybreak-blades {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.daybreak-blade {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 81px;
+  padding: 15px 15px 15px 17px;
+  border: 1px solid transparent;
+  border-radius: 23px 55px 55px 23px;
+  color: var(--color-ink-soft);
+  transition:
+    background-color 180ms,
+    transform 180ms,
+    box-shadow 180ms;
+}
+.daybreak-blade > svg {
+  flex-shrink: 0;
+}
+.daybreak-blade strong {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.daybreak-blade small {
+  display: block;
+  font-size: 0.625rem;
+  margin-top: 4px;
+}
+.daybreak-blade-chevron {
+  margin-left: auto;
+  font-size: 24px;
+  opacity: 0;
+}
+.daybreak-blade:hover {
+  background: var(--glass-control);
+  border-color: var(--glass-stroke);
+}
+.daybreak-blade[aria-current="page"] {
+  background: linear-gradient(110deg, var(--glass-active), var(--glass-control));
+  border-color: var(--glass-stroke);
+  box-shadow:
+    0 7px 16px var(--glass-shadow),
+    var(--glass-rim);
+  transform: translateX(5px);
+  color: var(--color-accent);
+}
+.daybreak-blade[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: 1px;
+  top: calc(50% - 14px);
+  height: 28px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--color-accent);
+}
+.daybreak-blade[aria-current="page"] .daybreak-blade-chevron {
+  opacity: 1;
+}
+.daybreak-utility-nav {
+  margin: 27px 7px 0 14px;
+  padding-top: 16px;
+  border-top: 1px solid color-mix(in oklch, var(--color-border) 50%, transparent);
+}
+.app-primary-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.app-nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 44px;
+  border-radius: 16px;
+  padding: 9px 12px;
+  font-size: 0.75rem;
+  color: var(--color-ink-soft);
+}
+.app-nav-link:hover,
+.app-nav-link[aria-current="page"] {
+  background: var(--glass-control);
+  color: var(--color-ink);
+}
+.app-nav-link[aria-current="page"] {
+  box-shadow: var(--glass-rim);
+  font-weight: 700;
+}
+.daybreak-rail-foot {
+  font-size: 0.75rem;
+  line-height: 1.8;
+  margin: 35px 22px 10px;
+  color: var(--color-ink);
+}
+.daybreak-workspace {
+  min-width: 0;
+  padding-top: 8px;
+}
+.daybreak-workspace > section {
+  min-width: 0;
+}
+.daybreak-workspace :where(article, header, form, dl, dd) {
+  min-width: 0;
+}
+.daybreak-workspace :where(h1, h2, h3, p, dd) {
+  overflow-wrap: break-word;
+}
+.daybreak-kpis {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+}
+.daybreak-back-link {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  font-size: 0.75rem;
+  color: var(--color-ink-soft);
+}
+.daybreak-public-controls {
+  display: flex;
+  align-self: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.eyebrow,
+.daybreak-label {
+  color: var(--color-ink-soft);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.section-nav-item {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.section-nav-item-active {
+  color: var(--color-ink);
+}
+.micro-action,
+.app-nav-text {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--color-ink-soft);
+}
+@layer components {
+  .daybreak-panel {
+    border: 1px solid var(--glass-stroke);
+    border-radius: var(--radius-md);
+    background: var(--glass-panel);
+    box-shadow:
+      0 8px 24px color-mix(in oklch, var(--glass-shadow) 45%, transparent),
+      var(--glass-rim);
+  }
+  .daybreak-inset {
+    border: 1px solid var(--glass-stroke);
+    border-radius: var(--radius-md);
+    background: var(--glass-control);
+    box-shadow: var(--glass-rim);
+  }
+  .daybreak-button {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    border: 1px solid var(--glass-stroke);
+    border-radius: 24px;
+    background: var(--glass-control);
+    color: var(--color-ink);
+    box-shadow: var(--glass-rim);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  .daybreak-button-primary {
+    background: var(--glass-primary);
+    color: var(--glass-primary-ink);
+    border-color: color-mix(in oklch, var(--glass-primary) 60%, var(--glass-stroke));
+  }
+  .daybreak-field {
+    background: var(--glass-control);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    min-height: 44px;
+    padding: 0.625rem 0.75rem;
+    color: var(--color-ink);
+  }
+  .daybreak-section-head {
+    padding: 3px 2px 20px;
+    border-bottom: 1px solid color-mix(in oklch, var(--color-border) 60%, transparent);
+  }
+  .daybreak-popover {
+    border: 1px solid var(--glass-stroke);
+    border-radius: 18px;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    box-shadow:
+      0 16px 40px var(--glass-shadow),
+      var(--glass-rim);
+    padding: 8px;
+  }
+  .daybreak-table {
+    border: 1px solid var(--glass-stroke);
+    border-radius: 20px;
+    background: var(--glass-panel);
+    padding: 8px 18px;
+    box-shadow: var(--glass-rim);
+  }
+  .daybreak-tabs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 7px;
+    border: 1px solid var(--glass-stroke);
+    border-radius: 22px;
+    background: var(--glass-control);
+    box-shadow: var(--glass-rim);
+  }
+  .daybreak-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 15px;
+    border-radius: 16px;
+    color: var(--color-ink-soft);
+    font-size: 0.8125rem;
+  }
+  .daybreak-tab[aria-current="page"],
+  .daybreak-tab-active {
+    color: var(--color-ink);
+    background: var(--glass-active);
+    box-shadow: var(--glass-rim);
+  }
+  .daybreak-public {
+    margin: 32px auto;
+    padding: clamp(24px, 5vw, 64px);
+    width: calc(100% - 32px);
+    max-width: 1080px;
+    border: 1px solid var(--glass-stroke);
+    border-radius: 32px;
+    background: var(--glass-shell);
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    backdrop-filter: blur(var(--glass-blur));
+    box-shadow:
+      0 24px 70px var(--glass-shadow),
+      var(--glass-rim);
+  }
+  .daybreak-auth {
+    max-width: 500px;
+    min-height: auto;
+    margin-block: clamp(24px, 10vh, 110px);
+    background: var(--glass-panel);
+  }
+}
+.daybreak-button,
+.daybreak-interactive {
+  transition:
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 180ms,
+    box-shadow 180ms;
+}
+.daybreak-button:hover {
+  box-shadow:
+    0 4px 12px var(--glass-shadow),
+    var(--glass-rim);
+}
+.daybreak-button:disabled {
+  opacity: 0.6;
+  transform: none;
+}
+.daybreak-icon-button {
+  width: 44px;
+  padding: 0;
+  flex-shrink: 0;
+}
+.daybreak-glass-toggle {
+  font-size: 0.75rem;
+}
+.daybreak-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  color: var(--daybreak-accent, var(--color-accent));
+}
+[data-freedom="financial"] {
+  --daybreak-surface: var(--color-surface-financial);
+  --daybreak-accent: var(--color-freedom-financial);
+}
+[data-freedom="location"] {
+  --daybreak-surface: var(--color-surface-location);
+  --daybreak-accent: var(--color-freedom-location);
+}
+[data-freedom="time"] {
+  --daybreak-surface: var(--color-surface-time);
+  --daybreak-accent: var(--color-freedom-time);
+}
+[data-freedom="health"] {
+  --daybreak-surface: var(--color-surface-health);
+  --daybreak-accent: var(--color-freedom-health);
+}
+.dashboard-title {
+  font-size: clamp(2.125rem, 3.4vw, 3.25rem);
+  line-height: 1.13;
+  letter-spacing: -0.065em;
+  text-wrap: pretty;
+}
+.daybreak-home-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 20px;
+}
+.daybreak-home-grid > li {
+  min-width: 0;
+  grid-column: span 6;
+}
+.daybreak-home-grid > li:first-child {
+  grid-column: span 7;
+}
+.daybreak-home-grid > li:nth-child(2) {
+  grid-column: span 5;
+}
+.dashboard-card {
+  display: flex;
+  height: 100%;
+  min-width: 0;
+  flex-direction: column;
+  gap: 24px;
+  padding: clamp(22px, 2.7vw, 32px);
+  background: color-mix(in oklch, var(--daybreak-surface) 88%, transparent);
+}
+.dashboard-card-question {
+  max-width: 28rem;
+  color: var(--color-ink-soft);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+.daybreak-card-metric {
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.065em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.daybreak-dialog {
+  position: fixed;
+  z-index: 51;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  width: calc(100% - 32px);
+  max-height: calc(100svh - 48px);
+  overflow: auto;
+  border: 1px solid var(--glass-stroke);
+  border-radius: 30px;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  box-shadow:
+    0 30px 80px var(--glass-shadow),
+    var(--glass-rim);
+}
+.daybreak-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: light-dark(oklch(25% 0.03 50 / 0.24), oklch(6% 0.01 50 / 0.55));
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.daybreak-dialog-content {
+  padding: clamp(20px, 4vw, 32px);
+}
+.daybreak-dialog h2 {
+  font-size: 1.75rem;
+}
+.daybreak-row-menu {
+  z-index: 52;
+  margin: 0;
+  min-width: 170px;
+  max-width: calc(100vw - 24px);
+  max-height: min(420px, 60svh, var(--radix-dropdown-menu-content-available-height));
+  overflow: auto;
+}
+.daybreak-menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  font-size: 0.8125rem;
+  text-align: left;
+}
+.daybreak-menu-item:hover,
+.daybreak-menu-item[data-highlighted],
+.daybreak-menu-item:focus-visible {
+  background: var(--color-paper-soft);
+}
+.daybreak-menu-item[data-tone="warning"] {
+  color: var(--color-accent-warning);
+}
+.daybreak-date-popover {
+  position: relative;
+  width: min(100%, 330px);
+  margin-block: 8px;
+}
+.daybreak-date-popover button {
+  min-height: 36px;
+  border-radius: 10px;
+}
+.daybreak-date-popover select {
+  min-width: 0;
+  padding: 7px;
+}
+.skip-link {
+  position: fixed;
+  z-index: 100;
+  top: 0.75rem;
+  left: 0.75rem;
+  transform: translateY(-220%);
+}
+.skip-link:focus {
+  transform: none;
+  background: var(--color-paper);
+}
+.daybreak-empty {
+  border: 1px dashed var(--color-border);
+  border-radius: 20px;
+  padding: 24px;
+  background: var(--glass-control);
+  color: var(--color-ink-soft);
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .daybreak-interactive:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      0 15px 30px var(--glass-shadow),
+      var(--glass-rim);
+  }
+  .daybreak-button:active {
+    transform: translateY(1px);
+  }
+}
+@media (max-width: 1180px) {
+  .daybreak-shell-body {
+    grid-template-columns: 175px minmax(0, 1fr);
+    gap: 22px;
+    padding-right: 24px;
+    padding-left: 10px;
+  }
+  .daybreak-blade {
+    padding-left: 12px;
+    gap: 9px;
+  }
+  .daybreak-blade strong {
+    font-size: 0.8125rem;
+  }
+  .daybreak-blade small {
+    font-size: 0.5625rem;
+  }
+  .daybreak-date {
+    display: none;
+  }
+}
+@media (max-width: 900px) {
+  .daybreak-shell {
+    margin-block: 18px;
+    min-height: calc(100svh - 36px);
+  }
+  .daybreak-shell-top {
+    padding: 18px 24px;
+  }
+  .daybreak-shell-body {
+    display: block;
+    padding: 0 24px 28px;
+  }
+  .daybreak-sidebar {
+    position: static;
+  }
+  .daybreak-blades {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .daybreak-blade {
+    min-height: 75px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 7px;
+    border-radius: 20px;
+    padding: 12px 3px;
+  }
+  .daybreak-blade small,
+  .daybreak-blade-chevron,
+  .daybreak-rail-label,
+  .daybreak-rail-foot {
+    display: none;
+  }
+  .daybreak-blade[aria-current="page"] {
+    transform: none;
+  }
+  .daybreak-blade[aria-current="page"]::before {
+    width: 20px;
+    height: 2px;
+    left: calc(50% - 10px);
+    top: auto;
+    bottom: 1px;
+  }
+  .daybreak-utility-nav {
+    margin: 12px 0 0;
+    padding: 0;
+    border: 0;
+  }
+  .app-primary-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 2px;
+  }
+  .app-nav-link {
+    font-size: 0.75rem;
+    padding-inline: 10px;
+  }
+  .app-nav-link svg {
+    display: none;
+  }
+  .daybreak-workspace {
+    padding-top: 25px;
+  }
+}
+@media (max-width: 360px) {
+  .daybreak-blades {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 580px) {
+  .daybreak-shell {
+    width: calc(100% - 16px);
+    margin-block: 8px;
+    border-radius: 25px;
+  }
+  .daybreak-shell-top {
+    padding: 16px 16px 10px;
+    gap: 10px;
+  }
+  .brand-mark {
+    font-size: 1.125rem;
+  }
+  .daybreak-appearance {
+    gap: 5px;
+  }
+  .daybreak-glass-toggle {
+    padding-inline: 9px;
+    font-size: 0.75rem;
+  }
+  .daybreak-glass-toggle svg {
+    width: 15px;
+  }
+  .daybreak-shell-body {
+    padding: 0 14px 24px;
+  }
+  .daybreak-blades {
+    gap: 3px;
+  }
+  .daybreak-blade {
+    min-height: 70px;
+    border-radius: 16px;
+  }
+  .daybreak-blade strong {
+    font-size: 0.75rem;
+  }
+  .daybreak-blade svg {
+    width: 19px;
+    height: 19px;
+  }
+  .app-nav-link {
+    font-size: 0.75rem;
+    padding-inline: 8px;
+  }
+  .daybreak-home-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .dashboard-card {
+    padding: 24px;
+  }
+  .daybreak-tabs {
+    gap: 3px;
+    padding: 5px;
+  }
+  .daybreak-tab {
+    padding: 9px 12px;
+    font-size: 0.75rem;
+  }
+  .daybreak-public {
+    margin-block: 12px;
+    padding: 25px;
+    border-radius: 25px;
+  }
+  .daybreak-auth {
+    margin-block: 24px;
+  }
+  .daybreak-dialog {
+    width: calc(100% - 20px);
+    max-height: calc(100svh - 24px);
+    border-radius: 24px;
+  }
+  .daybreak-workspace :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea),
+  .daybreak-dialog :where(input, select, textarea) {
+    font-size: 16px;
+  }
+  .daybreak-workspace h1 {
+    font-size: clamp(1.875rem, 7vw, 2.25rem);
+  }
+}
+:root[data-glass="solid"] {
+  --glass-shell: var(--color-paper-soft);
+  --glass-panel: var(--color-paper);
+  --glass-control: var(--color-paper);
+  --glass-blur: 0px;
+}
+:root[data-glass="solid"] .daybreak-shell,
+:root[data-glass="solid"] .daybreak-public,
+:root[data-glass="solid"] .daybreak-dialog-overlay {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root:not([data-glass="full"]) {
+    --glass-shell: var(--color-paper-soft);
+    --glass-panel: var(--color-paper);
+    --glass-control: var(--color-paper);
+    --glass-blur: 0px;
+  }
+  :root:not([data-glass="full"]) .daybreak-shell,
+  :root:not([data-glass="full"]) .daybreak-public,
+  :root:not([data-glass="full"]) .daybreak-dialog-overlay {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  :root {
+    --glass-shell: var(--color-paper-soft);
+    --glass-panel: var(--color-paper);
+    --glass-control: var(--color-paper);
+  }
+}
+@keyframes score-ring-draw {
+  from {
+    stroke-dashoffset: var(--ring-dash, 0);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.score-ring-arc {
+  animation: score-ring-draw 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0s !important;
+    transition-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
+  .daybreak-interactive:hover {
+    transform: none;
+  }
+}
+@media (forced-colors: active) {
+  .daybreak-scene {
+    display: none;
+  }
+  .daybreak-shell,
+  .daybreak-public,
+  .daybreak-panel,
+  .daybreak-inset,
+  .daybreak-button,
+  .daybreak-popover,
+  .daybreak-dialog {
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+  .daybreak-blade[aria-current="page"],
+  .daybreak-tab[aria-current="page"],
+  .app-nav-link[aria-current="page"] {
+    outline: 2px solid Highlight;
+    outline-offset: -3px;
+  }
+}
+@media print {
+  html {
+    color-scheme: light !important;
+  }
+  body {
+    background: none;
+  }
+  .daybreak-scene,
+  .daybreak-shell-top,
+  .daybreak-sidebar,
+  .skip-link {
+    display: none !important;
+  }
+  .daybreak-shell,
+  .daybreak-shell-body {
+    display: block;
+    width: auto;
+    max-width: none;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .daybreak-workspace {
+    padding: 0;
+  }
+  .daybreak-panel {
+    break-inside: avoid;
+    box-shadow: none;
   }
 }

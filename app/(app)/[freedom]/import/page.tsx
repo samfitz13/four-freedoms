@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth-server";
 import { scopeForUser } from "@/lib/db/scope";
 import { db } from "@/lib/db/client";
 import { csvImports } from "@/lib/db/schema";
+import { listAccounts } from "@/lib/db/queries/financial";
 import { ImportForm } from "./import-form";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,8 @@ export default async function ImportPage({ params }: { params: Promise<{ freedom
 
   const user = await requireUser();
   const scope = await scopeForUser(user.id);
+
+  const accounts = await listAccounts(scope.primaryHouseholdId);
 
   const recent = await db
     .select({
@@ -36,49 +39,37 @@ export default async function ImportPage({ params }: { params: Promise<{ freedom
   return (
     <section className="flex flex-col gap-10">
       <Link
-        href="/financial?tab=accounts"
-        className="font-mono text-xs tracking-tight text-[color:var(--color-ink-soft)] hover:text-[color:var(--color-foreground)]"
+        href="/financial/accounts"
+        className="brand-mark hover:text-[color:var(--color-foreground)]"
       >
         ← financial · accounts
       </Link>
 
       <header className="flex flex-col gap-2">
-        <p className="font-mono text-xs tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
-          Financial · Import
-        </p>
-        <h1 className="font-serif text-4xl tracking-tight">Bring your data in.</h1>
+        <p className="eyebrow">Financial · Import</p>
+        <h1 className="font-display text-4xl tracking-tight">Bring your data in.</h1>
         <p className="max-w-xl text-sm text-[color:var(--color-ink-soft)]">
           Upload CSV exports from your bank, broker, or other tools. Unknown accounts and categories
           are auto-created so you can keep iterating.
         </p>
       </header>
 
-      <ImportForm />
+      <ImportForm accounts={accounts.map((a) => ({ id: a.id, name: a.name, type: a.type }))} />
 
       <section className="flex flex-col gap-4">
-        <h2 className="font-serif text-xl">Supported formats</h2>
-        <div className="grid gap-6 md:grid-cols-3">
+        <h2 className="font-display text-xl">Supported format</h2>
+        <div className="grid gap-6 md:grid-cols-1">
           <FormatCard
             title="Transactions"
             description="Generic bank/CSV export. Positive amounts = income, negative = expense."
             columns={["date", "description", "amount", "category?", "account?", "external_id?"]}
-          />
-          <FormatCard
-            title="Accounts snapshot"
-            description="Point-in-time balances. One row per account per day."
-            columns={["account_name", "type", "balance", "as_of", "currency?", "institution?"]}
-          />
-          <FormatCard
-            title="Holdings"
-            description="Positions from a broker export. Upsert per (account, symbol)."
-            columns={["account", "symbol", "quantity", "cost_basis?", "asset_class?", "as_of?"]}
           />
         </div>
       </section>
 
       {recent.length > 0 ? (
         <section className="flex flex-col gap-4">
-          <h2 className="font-serif text-xl">Recent imports</h2>
+          <h2 className="font-display text-xl">Recent imports</h2>
           <ul className="flex flex-col divide-y divide-[color:var(--color-border)]">
             {recent.map((r) => {
               const errorCount = countErrors(r.errorJson);
@@ -86,11 +77,11 @@ export default async function ImportPage({ params }: { params: Promise<{ freedom
                 <li key={r.id} className="flex items-baseline justify-between gap-6 py-3">
                   <div className="flex flex-col">
                     <span className="text-sm">{r.filename}</span>
-                    <span className="font-mono text-[10px] tracking-[0.18em] text-[color:var(--color-ink-soft)] uppercase">
+                    <span className="font-sans text-xs tracking-normal text-[color:var(--color-ink-soft)]">
                       {r.kind} · {r.createdAt.toISOString().slice(0, 10)}
                     </span>
                   </div>
-                  <div className="flex items-baseline gap-6 font-mono text-[11px] tracking-[0.14em] uppercase tabular-nums">
+                  <div className="flex items-baseline gap-6 font-sans text-xs tracking-normal tabular-nums">
                     <span className="text-[color:var(--color-ink-soft)]">{r.rowCount} rows</span>
                     {errorCount > 0 ? (
                       <span className="text-[color:var(--color-accent-warning,#9a3412)]">
@@ -119,10 +110,10 @@ function FormatCard({
   columns: string[];
 }) {
   return (
-    <div className="flex flex-col gap-3 border border-[color:var(--color-border)] p-5">
-      <h3 className="font-serif text-lg">{title}</h3>
+    <div className="daybreak-panel flex flex-col gap-3 p-6">
+      <h3 className="font-display text-lg">{title}</h3>
       <p className="text-sm text-[color:var(--color-ink-soft)]">{description}</p>
-      <ul className="flex flex-wrap gap-x-2 gap-y-1 font-mono text-[10px] tracking-[0.14em] uppercase">
+      <ul className="flex flex-wrap gap-x-2 gap-y-1 font-sans text-xs tracking-normal">
         {columns.map((c) => (
           <li
             key={c}
