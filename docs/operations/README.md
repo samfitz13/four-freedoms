@@ -47,8 +47,8 @@ Records include timestamp, level, runtime, a bounded built-in error name and,
 when available, a numeric Next.js digest. The digest is an **error reference**,
 not a unique request ID. Search the matching deployment and UTC window for it.
 Only explicitly allowed static API route templates and router kind survive
-request-context redaction. A validated UUID request ID or HTTP status is retained
-only when a caller explicitly supplies it; the hook does not manufacture them.
+request-context redaction. Request IDs and HTTP statuses are omitted; the
+current logging boundaries do not supply them.
 Email failures use `EMAIL_NOT_CONFIGURED` or `EMAIL_DELIVERY_FAILED`.
 
 Messages, causes, stacks, arbitrary context, full request paths, headers and

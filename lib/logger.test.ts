@@ -17,18 +17,17 @@ test("logging allows only bounded operational context, never arbitrary data", ()
       url: "https://example.invalid/?token=fixture-secret",
     }),
     {
-      status: 503,
-      requestId: "00000000-0000-4000-8000-000000000001",
       route: "/api/time/calendar/sync",
       routerKind: "App Router",
     },
   );
 });
 
-test("invalid identifiers, dynamic paths, nested payloads and unbounded statuses are discarded", () => {
+test("unsupported identifiers, statuses, dynamic paths and nested payloads are discarded", () => {
   for (const context of [
     null,
     "fixture-secret",
+    { status: 200, requestId: "00000000-0000-4000-8000-000000000001" },
     { requestId: "fixture@example.invalid", routePath: "/users/private-id", routerKind: "secret" },
     { status: Infinity },
     { status: 600 },
@@ -76,8 +75,8 @@ test("error events are single-line JSON with safe correlation metadata", (t) => 
   assert.equal(entry.level, "error");
   assert.equal(entry.event, "server.request.failed");
   assert.equal(entry.runtime, "server");
-  assert.equal(entry.status, 500);
-  assert.equal(entry.requestId, "00000000-0000-4000-8000-000000000001");
+  assert.equal(entry.status, undefined);
+  assert.equal(entry.requestId, undefined);
   assert.deepEqual(entry.error, { name: "Error", digest: "456" });
   assert.ok(Number.isFinite(Date.parse(entry.timestamp)));
 });

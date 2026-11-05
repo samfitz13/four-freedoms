@@ -1,9 +1,3 @@
-const events = new Set([
-  "app.render.failed",
-  "server.request.failed",
-  "auth.operation.failed",
-  "unexpected.failure",
-]);
 type LogEvent = "app.render.failed" | "server.request.failed" | "auth.operation.failed";
 
 const errorNames = new Set([
@@ -26,15 +20,7 @@ const routes = new Set([
 // reach JSON serialization. Error messages, causes and stacks can contain PII.
 export function redactedLogContext(context: unknown) {
   if (!context || typeof context !== "object") return {};
-  const result: { status?: number; requestId?: string; route?: string; routerKind?: string } = {};
-  if ("status" in context && typeof context.status === "number") {
-    if (Number.isInteger(context.status) && context.status >= 100 && context.status <= 599)
-      result.status = context.status;
-  }
-  if ("requestId" in context && typeof context.requestId === "string") {
-    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(context.requestId))
-      result.requestId = context.requestId;
-  }
+  const result: { route?: string; routerKind?: string } = {};
   if ("routePath" in context && typeof context.routePath === "string") {
     if (routes.has(context.routePath)) result.route = context.routePath;
   }
@@ -65,7 +51,7 @@ export function logError(event: LogEvent, error: unknown, context: unknown = {})
     JSON.stringify({
       timestamp: new Date().toISOString(),
       level: "error",
-      event: events.has(event) ? event : "unexpected.failure",
+      event,
       runtime: typeof window === "undefined" ? "server" : "browser",
       ...redactedLogContext(context),
       error: errorMetadata(error),
