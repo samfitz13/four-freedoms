@@ -72,8 +72,11 @@ export function unitTestFiles(selection) {
 
 function main() {
   let files;
+  const selection = process.argv.slice(2);
+  const timings = selection[0] === "--timings";
+  if (timings) selection.shift();
   try {
-    files = unitTestFiles(process.argv.slice(2));
+    files = unitTestFiles(selection);
   } catch {
     console.error("Select a suite or existing .test.ts/.test.mjs files, not runner flags.");
     process.exitCode = 1;
@@ -81,8 +84,21 @@ function main() {
   }
   const child = spawn(
     process.execPath,
-    [fileURLToPath(new URL("./unit-test-worker.mjs", import.meta.url)), ...files],
-    { cwd: root, env: unitTestEnvironment(process.env), stdio: "inherit" },
+    [
+      fileURLToPath(new URL("./unit-test-worker.mjs", import.meta.url)),
+      ...(timings ? ["--timings"] : []),
+      ...files,
+    ],
+    {
+      cwd: root,
+      env: {
+        ...unitTestEnvironment(process.env),
+        ...(timings && process.env.GITHUB_STEP_SUMMARY
+          ? { GITHUB_STEP_SUMMARY: process.env.GITHUB_STEP_SUMMARY }
+          : {}),
+      },
+      stdio: "inherit",
+    },
   );
   const interrupt = () => child.kill("SIGINT");
   const terminate = () => child.kill("SIGTERM");
