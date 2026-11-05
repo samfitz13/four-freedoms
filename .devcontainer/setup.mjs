@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
+import { parseEnv } from "node:util";
 
 // Never replace an existing environment file or print a generated secret.
 try {
@@ -16,7 +17,15 @@ try {
   console.log("Created development auth configuration.");
 } catch (error) {
   if (error.code !== "EEXIST") throw error;
-  console.log(
-    "Preserved existing .env.local; container environment forces local database and disables providers.",
-  );
+  const secret = parseEnv(readFileSync(".env.local", "utf8")).BETTER_AUTH_SECRET;
+  if (!secret || secret.length < 32) {
+    console.error(
+      "Existing .env.local needs a BETTER_AUTH_SECRET of at least 32 characters. Set a local development secret, then rerun container setup. The file was not changed.",
+    );
+    process.exitCode = 1;
+  } else {
+    console.log(
+      "Preserved existing .env.local; container environment forces local database and disables providers.",
+    );
+  }
 }

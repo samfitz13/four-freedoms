@@ -1,3 +1,6 @@
+import { redirect } from "./route-fixture-adapters.mjs";
+export { redirect, NextResponse } from "./route-fixture-adapters.mjs";
+
 class ContractState {
   authenticated = true;
   configured = true;
@@ -8,9 +11,6 @@ class ContractState {
 }
 export const state = new ContractState();
 
-export function redirect(destination) {
-  throw Object.assign(new Error("Redirect"), { destination });
-}
 export async function requireSession(nextPath = "/") {
   if (!state.authenticated) redirect(`/login?next=${encodeURIComponent(nextPath)}`);
   return { session: { id: "synthetic-session" }, user: { id: "synthetic-user" } };
@@ -37,7 +37,11 @@ export function eq(column, value) {
   return (account) => account[column] === value;
 }
 export function desc(column) {
-  return column;
+  return (left, right) => {
+    const a = left[column];
+    const b = right[column];
+    return a < b ? 1 : a > b ? -1 : 0;
+  };
 }
 export const calendarAccounts = Object.freeze({
   id: "id",
@@ -49,6 +53,7 @@ class ContractDatabase {
   select(selection) {
     let condition = () => true;
     let limit = Infinity;
+    let ordering = () => 0;
     return {
       from() {
         return this;
@@ -57,7 +62,8 @@ class ContractDatabase {
         condition = predicate;
         return this;
       },
-      orderBy() {
+      orderBy(comparator) {
+        ordering = comparator;
         return this;
       },
       limit(value) {
@@ -68,6 +74,7 @@ class ContractDatabase {
         return Promise.resolve(
           state.accounts
             .filter(condition)
+            .sort(ordering)
             .slice(0, limit)
             .map((account) =>
               selection
@@ -82,4 +89,3 @@ class ContractDatabase {
   }
 }
 export const db = new ContractDatabase();
-export class NextResponse extends Response {}

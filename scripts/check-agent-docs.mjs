@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 export function validateAgentDocs(root) {
+  root = path.resolve(root);
   const guide = readFileSync(path.join(root, "AGENTS.md"), "utf8");
   const manifest = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
   const template = readFileSync(path.join(root, ".env.example"), "utf8");
@@ -46,7 +47,7 @@ export function validateAgentDocs(root) {
   return errors;
 }
 
-const root = fileURLToPath(new URL("../", import.meta.url)).replace(/\/$/, "");
+const root = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const errors = validateAgentDocs(root);
   if (errors.length) {

@@ -7,7 +7,10 @@ dependencies and database data live in separate named volumes.
 
 Creation installs the frozen lockfile and applies migrations. It creates a
 mode-0600 `.env.local` with a random auth secret only if that file does not
-already exist. Existing files are never overwritten. The container forces
+already exist. Existing files are never overwritten. If an existing file has
+no auth secret or a secret shorter than 32 characters, setup fails before
+installing dependencies or applying migrations. Set a fresh local development
+`BETTER_AUTH_SECRET` in that file and rerun setup. The container forces
 the local Postgres connection and localhost auth URLs, clears Keychain
 configuration and disables Resend and Google credentials, even when the mounted
 checkout contains a host environment file. Do not use production secrets here.

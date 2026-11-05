@@ -126,7 +126,11 @@ test("unauthenticated handlers redirect and callback exchanges only for the curr
     { destination: "/login?next=%2Ftime%2Fagenda" },
   );
   app.state.authenticated = true;
-  app.state.accounts = [{ id: "own", householdId: "synthetic-household" }];
+  app.state.accounts = [
+    { id: "older", householdId: "synthetic-household", createdAt: new Date("2025-01-01") },
+    { id: "own", householdId: "synthetic-household", createdAt: new Date("2025-02-01") },
+    { id: "foreign", householdId: "other-household", createdAt: new Date("2025-03-01") },
+  ];
   await assert.rejects(
     app.callback(new Request("https://app.example/api/time/calendar/callback?code=synthetic")),
     { destination: "/time/agenda" },

@@ -75,3 +75,40 @@ test("container toolchain matches the repository and isolates provider configura
   assert.equal(config.remoteUser, "node");
   assert.match(config.postCreateCommand, /pnpm install --frozen-lockfile && pnpm db:migrate$/);
 });
+
+test("setup rejects unusable existing secrets without changing files or leaking values", (t) => {
+  for (const original of [
+    "NEXT_PUBLIC_SITE_URL=http://localhost:3000\n",
+    "BETTER_AUTH_SECRET=\n",
+    "BETTER_AUTH_SECRET=synthetic-short\n",
+    'BETTER_AUTH_SECRET=""\n',
+  ]) {
+    const root = directory(t);
+    const file = path.join(root, ".env.local");
+    writeFileSync(file, original, { mode: 0o600 });
+    const result = spawnSync(process.execPath, [setup], {
+      cwd: root,
+      encoding: "utf8",
+      timeout: 5000,
+    });
+    assert.equal(result.status, 1);
+    assert.equal(readFileSync(file, "utf8"), original);
+    assert.match(result.stderr, /at least 32 characters/);
+    assert.ok(!result.stdout.includes("Preserved existing"));
+    assert.ok(!result.stderr.includes("synthetic-short"));
+  }
+});
+
+test("setup accepts a quoted valid secret without altering it", (t) => {
+  const root = directory(t);
+  const file = path.join(root, ".env.local");
+  const original = 'BETTER_AUTH_SECRET="synthetic-valid-local-development-secret"\n';
+  writeFileSync(file, original, { mode: 0o600 });
+  const result = spawnSync(process.execPath, [setup], {
+    cwd: root,
+    encoding: "utf8",
+    timeout: 5000,
+  });
+  assert.equal(result.status, 0);
+  assert.equal(readFileSync(file, "utf8"), original);
+});

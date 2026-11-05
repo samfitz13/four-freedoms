@@ -41,6 +41,9 @@ function fixture(t, extra = "") {
 test("accepts registered commands, matching versions, known env names and local links", (t) => {
   assert.deepEqual(validateAgentDocs(fixture(t)), []);
 });
+test("normalizes a root with trailing native path separators", (t) => {
+  assert.deepEqual(validateAgentDocs(fixture(t) + path.sep), []);
+});
 test("detects stale commands without executing their shell content", (t) => {
   const errors = validateAgentDocs(fixture(t, "| `pnpm retired:command` | Old command |"));
   assert.ok(errors.some((error) => error.includes("retired:command")));

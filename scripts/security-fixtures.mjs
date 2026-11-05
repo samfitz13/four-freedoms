@@ -1,4 +1,6 @@
 // Disconnected query adapters for the security regression suite.
+export { redirect, NextResponse } from "./route-fixture-adapters.mjs";
+
 class FixtureState {
   tables = {};
   writes = [];
@@ -220,10 +222,6 @@ export async function derivedHabitHit() {
 export function toNumber(input) {
   return Number(input ?? 0);
 }
-export function redirect(destination) {
-  throw Object.assign(new Error("Redirect"), { destination });
-}
-export class NextResponse extends Response {}
 export async function exchangeGoogleCalendarCode(householdId, code) {
   state.exchanges.push({ householdId, code });
 }
