@@ -1,0 +1,45 @@
+.github/workflows/maintainability.yml
+  s_cca7490b0db3e9::t_9d6ed7a725ad64 1-46
+.gitignore
+  s_cca7490b0db3e9::t_170c996dd43910 36-39
+AGENTS.md
+  s_cca7490b0db3e9::t_027e3f0e73e2d0 44-70,84-92
+README.md
+  s_cca7490b0db3e9::t_0dc44cbcb0015f 43-70,75-78
+docs/maintenance/README.md
+  s_cca7490b0db3e9::t_adfec0926b8bef 1-79
+docs/maintenance/debt.json
+  s_cca7490b0db3e9::t_d60f55feb8b276 1-437
+package.json
+  s_cca7490b0db3e9::t_a43317401692d0 19,22
+scripts/check-maintainability.mjs
+  s_cca7490b0db3e9::t_78aa1f7cde5ca4 1-194
+scripts/ci-reporting.mjs
+  s_cca7490b0db3e9::t_f62a78dc7ee1b3 1-60
+scripts/ci-reporting.test.mjs
+  s_cca7490b0db3e9::t_e1335a220b1676 1-62
+scripts/maintainability-policy.mjs
+  s_cca7490b0db3e9::t_6ac100c862a7e1 1-150
+scripts/maintainability.test.mjs
+  s_cca7490b0db3e9::t_828a33f8d75664 1-210
+scripts/run-unit-tests.mjs
+  s_cca7490b0db3e9::t_20b2d7d1b1cb32 75-77,79,87-101
+scripts/unit-test-worker.mjs
+  s_cca7490b0db3e9::t_c1bdb24c68b898 3-12,16,29-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3ed2c460b62b45db98a232d381a72feaa5209fbe",
+  "prompts": {},
+  "sessions": {
+    "s_cca7490b0db3e9": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "48cb2f0a-27cc-404b-85f9-9e690fad3dd6",
+        "model": "unknown"
+      },
+      "human_author": "Sam Fitzgerald <sam@factory.ai>"
+    }
+  }
+}
