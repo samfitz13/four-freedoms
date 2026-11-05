@@ -24,7 +24,7 @@ single-tenant-per-household data model.
 | Framework        | Next.js 16 (App Router, Turbopack), React 19                             |
 | Language         | TypeScript (strict)                                                      |
 | UI               | Tailwind CSS v4 + Daybreak (Manrope), locally owned components + Radix   |
-| Database (prod)  | **PostgreSQL 18.3 on PlanetScale Postgres**                              |
+| Database (prod)  | **PostgreSQL 17 on Supabase** (PlanetScale Postgres also supported)      |
 | Database (local) | Postgres 17 via `docker/compose.dev.yml`                                 |
 | ORM              | Drizzle ORM `^0.45` + drizzle-kit `^0.31` (dialect: `postgresql`)        |
 | DB driver        | `postgres.js` (`postgres` package), cached on `globalThis`, `max: 1`     |
@@ -56,6 +56,7 @@ All commands use `pnpm`. Never substitute `npm` or `yarn` (see §8).
 | `pnpm check:maintainability` | Enforce complexity/file budgets and owned debt markers               |
 | `pnpm test:paystub`          | Focused unit tests for paystub taxes and take-home pay               |
 | `pnpm test:unit`             | All unit files, or supplied paths, in isolated workers               |
+| `pnpm test:list`             | List unit file paths only; never import tests or start workers       |
 | `pnpm test:timings`          | Same isolated unit tests with retained per-test durations            |
 | `pnpm test:coverage`         | Financial calculation tests and per-file coverage gates              |
 | `pnpm test:isolation`        | Verify parallel worker and environment isolation                     |
@@ -78,8 +79,14 @@ workflow validates this guide and runs its typecheck, lint and build commands
 with synthetic environment values, without connecting to a database.
 The checker validates command registration, not every command's runtime behavior.
 
+For change-aware verification, use the repository
+[apply-repo-verification skill](.factory/skills/apply-repo-verification/SKILL.md).
+It selects focused checks and a disconnected build without authorizing deployment.
+
 See [API contracts](docs/api/README.md) for HTTP integration behavior and
 [container setup](.devcontainer/README.md) for the isolated local development path.
+See [operations and recovery](docs/operations/README.md) before incident response,
+database restoration, credential changes or deployment rollback.
 
 Run `pnpm check:maintainability` for source changes. New functions must stay at
 classic cyclomatic complexity 20 or below; authored source files must stay at
@@ -285,15 +292,17 @@ Only the `NEXT_PUBLIC_*` variables are safe to surface to the client.
 
 ---
 
-## 9. PlanetScale-specific notes
+## 9. Hosted database notes
 
-- Prod database is **PostgreSQL 18.3 on PlanetScale Postgres** (a managed
-  Postgres offering — not PlanetScale's legacy MySQL product).
+- Production currently uses **PostgreSQL 17 on Supabase**. Use its IPv4 session
+  pooler with TLS; the app uses better-auth, not Supabase Auth.
+- PlanetScale Postgres is an alternative, not the current production provider.
+  It is distinct from PlanetScale's legacy MySQL product.
 - PlanetScale gives you a Postgres connection string per branch (grab it
   from the branch's **Connect** tab in the dashboard). `sslmode=require`
   is mandatory — don't strip it.
-- Local Docker is Postgres 17; production is 18.3. Avoid features that don't
-  exist in 17 if you want dev/prod parity, or bump the Docker image.
+- Local Docker and current Supabase production both use Postgres 17.
+  Recheck version compatibility before switching hosted providers.
 - Apply migrations from your machine with:
 
   ```bash

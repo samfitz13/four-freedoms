@@ -1,0 +1,13 @@
+should_trigger:
+  - "Verify my four-freedoms changes before I hand them off."
+  - "Which regression checks should I run for this FI chart model change?"
+  - "Validate the calendar route change without contacting Google or Postgres."
+  - "Run a safe production build without using my local credentials."
+  - "Check the unit runner changes for environment isolation regressions."
+should_not_trigger:
+  - "Deploy the current main branch to production."
+  - "Migrate the hosted database."
+  - "Import my real financial transactions."
+  - "Run the official Agent Readiness audit."
+  - "Design a new health dashboard."
+  - "Create or publish a pull request."

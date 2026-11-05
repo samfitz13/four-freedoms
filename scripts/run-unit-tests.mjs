@@ -73,13 +73,20 @@ export function unitTestFiles(selection) {
 function main() {
   let files;
   const selection = process.argv.slice(2);
+  const listOnly = selection[0] === "--list";
+  if (listOnly) selection.shift();
   const timings = selection[0] === "--timings";
   if (timings) selection.shift();
   try {
+    if (listOnly && timings) throw new Error("Listing does not execute or time tests.");
     files = unitTestFiles(selection);
   } catch {
     console.error("Select a suite or existing .test.ts/.test.mjs files, not runner flags.");
     process.exitCode = 1;
+    return;
+  }
+  if (listOnly) {
+    console.log(files.map((file) => path.relative(root, file)).join("\n"));
     return;
   }
   const child = spawn(

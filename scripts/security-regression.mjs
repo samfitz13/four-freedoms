@@ -84,6 +84,7 @@ beforeEach(() => {
   state.exchanges = [];
   state.transactions = 0;
   state.authenticated = true;
+  state.emailFailure = null;
   env.NODE_ENV = "development";
   delete env.RESEND_API_KEY;
 });
@@ -341,11 +342,18 @@ for (const mode of ["production", "test"]) {
   test(`email fails without logging sign-in links in ${mode}`, async (t) => {
     env.NODE_ENV = mode;
     const log = t.mock.method(console, "log", () => {});
+    const errors = [];
+    t.mock.method(console, "error", (line) => errors.push(line));
     await assert.rejects(
       app.sendEmail({ to: "test@example.invalid", subject: "Sign in", html: "synthetic-token" }),
-      /Email delivery is not configured/,
+      { message: "Email delivery is not configured.", code: "EMAIL_NOT_CONFIGURED" },
     );
     assert.equal(log.mock.callCount(), 0);
+    assert.equal(
+      errors.length,
+      0,
+      "logging belongs to the error boundary, not the throwing transport",
+    );
   });
 }
 test("email retains the development fallback and configured delivery", async (t) => {
@@ -359,3 +367,18 @@ test("email retains the development fallback and configured delivery", async (t)
   assert.deepEqual(await app.sendEmail(message), { id: "sent" });
   assert.equal(log.mock.callCount(), 0);
 });
+
+for (const mode of ["return", "throw"]) {
+  test(`email ${mode} failures expose only a safe code and leave logging to the boundary`, async (t) => {
+    env.NODE_ENV = "production";
+    env.RESEND_API_KEY = "synthetic-mail-key";
+    state.emailFailure = mode;
+    const lines = [];
+    t.mock.method(console, "error", (line) => lines.push(line));
+    await assert.rejects(
+      app.sendEmail({ to: "fixture@example.invalid", subject: "Sign in", html: "fixture-secret" }),
+      { message: "Email send failed.", code: "EMAIL_DELIVERY_FAILED" },
+    );
+    assert.equal(lines.length, 0, "the auth/request boundary reports the sanitized error once");
+  });
+}

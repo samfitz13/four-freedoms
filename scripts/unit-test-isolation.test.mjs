@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { unitTestEnvironment, unitTestFiles } from "./run-unit-tests.mjs";
 
 const launcher = fileURLToPath(new URL("./run-unit-tests.mjs", import.meta.url));
+const root = fileURLToPath(new URL("../", import.meta.url));
 
 function workspace(t) {
   const directory = mkdtempSync(path.join(tmpdir(), "four-freedoms-isolation-"));
@@ -55,6 +56,84 @@ test("test selection discovers actual unit files and refuses isolation-bypass fl
   assert.throws(() => unitTestFiles(["--experimental-test-isolation=none"]), /not runner flags/);
   assert.throws(() => unitTestFiles(["package.json"]), /not runner flags/);
   assert.throws(() => unitTestFiles(["missing-unit.test.ts"]));
+});
+
+function listTests(selection) {
+  return spawnSync(process.execPath, [launcher, "--list", ...selection], {
+    env: unitTestEnvironment(process.env),
+    encoding: "utf8",
+    timeout: 10000,
+  });
+}
+
+test("list-only discovery prints the actual default, suite and deduplicated file selections", () => {
+  for (const selection of [[], ["paystub"], ["financial", "paystub"]]) {
+    const result = listTests(selection);
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, "");
+    assert.deepEqual(
+      result.stdout.trim().split("\n"),
+      unitTestFiles(selection).map((file) => path.relative(root, file)),
+    );
+    assert.doesNotMatch(result.stdout, /TAP version|# pass|# fail/);
+  }
+});
+
+test("list-only mode never imports test files or runs their side effects", (t) => {
+  const directory = workspace(t);
+  const marker = path.join(directory, "must-not-exist");
+  const file = path.join(directory, "side-effect.test.mjs");
+  writeFileSync(
+    file,
+    `import { writeFileSync } from "node:fs";
+writeFileSync(${JSON.stringify(marker)}, "test code executed");
+throw new Error("Listing must not import this module");
+`,
+  );
+  const result = listTests([file, file]);
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout.trim(), path.relative(root, file));
+  assert.equal(existsSync(marker), false);
+});
+
+test("list-only discovery rejects missing files and execution flags", () => {
+  for (const selection of [
+    ["missing-unit.test.ts"],
+    ["package.json"],
+    ["--experimental-test-isolation=none"],
+    ["--timings"],
+  ]) {
+    const result = listTests(selection);
+    assert.ifError(result.error);
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, "");
+    assert.match(result.stderr, /Select a suite/);
+  }
+});
+
+test("local environment variants are ignored while the example stays trackable", () => {
+  const ignored = [
+    ".env",
+    ".env.local",
+    ".env.production",
+    ".env.preview",
+    ".env.development",
+    ".env.test",
+    ".env.production.local",
+    ".env.example.backup",
+    "lib/.env.preview",
+  ];
+  const result = spawnSync("git", ["check-ignore", "--no-index", "--stdin"], {
+    cwd: root,
+    input: [...ignored, ".env.example"].join("\n") + "\n",
+    encoding: "utf8",
+    timeout: 10000,
+  });
+  assert.ifError(result.error);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(result.stdout.trim().split("\n"), ignored);
 });
 
 test("parallel files isolate globals, module caches and environment while using disposable fixtures", (t) => {
