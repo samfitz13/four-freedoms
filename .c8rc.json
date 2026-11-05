@@ -1,0 +1,23 @@
+{
+  "all": true,
+  "check-coverage": true,
+  "per-file": true,
+  "lines": 90,
+  "statements": 90,
+  "functions": 90,
+  "branches": 80,
+  "extension": [".ts"],
+  "include": [
+    "lib/freedoms/fi-*.ts",
+    "lib/freedoms/paystub-math.ts",
+    "lib/freedoms/wealth.ts",
+    "lib/financial/portfolio/atlas.ts",
+    "lib/financial/portfolio/schema.ts",
+    "components/freedoms/financial/fi-chart-model.ts"
+  ],
+  "exclude": ["**/*.test.ts", "lib/freedoms/fi-plan-server.ts"],
+  "exclude-after-remap": true,
+  "report-dir": "reports/coverage",
+  "temp-directory": "reports/coverage/tmp",
+  "reporter": ["text", "json-summary", "lcov", "html"]
+}

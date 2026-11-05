@@ -30,6 +30,9 @@ yarn-error.log*
 # generated duplicate-code reports
 reports/duplication/
 
+# generated coverage reports and V8 instrumentation
+reports/coverage/
+
 # vercel
 .vercel
 

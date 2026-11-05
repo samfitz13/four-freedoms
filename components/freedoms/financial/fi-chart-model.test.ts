@@ -5,6 +5,8 @@ import {
   buildFiChartModel,
   fiMonthIndex,
   fiMonthString,
+  fiScenarioMarkerPath,
+  formatFiMonth,
   nearestFiSample,
   smoothFiPath,
 } from "./fi-chart-model";
@@ -17,6 +19,20 @@ const assumptions = {
   withdrawalRate: 0.04,
   targetAnnualSpend: 60000,
 };
+
+test("scenario markers distinguish every return scenario by shape and preserve marker sizing", () => {
+  assert.equal(fiScenarioMarkerPath("downside", 10, 20), "M6 16h8v8h-8Z");
+  assert.equal(fiScenarioMarkerPath("upside", 10, 20), "M10 16l4 8h-8Z");
+  assert.equal(fiScenarioMarkerPath("base", 10, 20), "M6 20a4 4 0 1 0 8 0a4 4 0 1 0 -8 0");
+  assert.equal(fiScenarioMarkerPath("downside", 10, 20, 2), "M8 18h4v4h-4Z");
+});
+
+test("chart month labels use completed ages only when a valid birth date is available", () => {
+  assert.equal(formatFiMonth("2056-02-01", "1991-02-15"), "Age 64y 11m");
+  assert.equal(formatFiMonth("2056-03-01", "1991-02-15"), "Age 65");
+  assert.equal(formatFiMonth("2056-03-01"), "Mar 2056");
+  assert.equal(formatFiMonth("2056-03-01", "invalid"), "Mar 2056");
+});
 
 test("scenario lines share dates and scale; higher returns rise faster and reach FI earlier", () => {
   const base = planMonthlySeries(assumptions);

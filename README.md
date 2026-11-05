@@ -47,6 +47,9 @@ email delivery fails without the key and never logs sign-in links.
 | `pnpm check:boundaries` | Verify module-boundary lint rules against allowed/forbidden imports |
 | `pnpm check:duplicates` | Detect copied blocks and reject new duplication                     |
 | `pnpm test:paystub`     | Unit tests for paystub tax totals and take-home pay                 |
+| `pnpm test:unit`        | Discover and run unit files in isolated parallel processes          |
+| `pnpm test:coverage`    | Financial calculation tests with enforced per-file coverage gates   |
+| `pnpm test:isolation`   | Verify worker isolation, clean environments and failure propagation |
 | `pnpm test:security`    | Isolated authorization, OAuth and email regression tests            |
 | `pnpm format`           | Prettier write                                                      |
 | `pnpm format:check`     | Prettier check                                                      |
@@ -74,8 +77,63 @@ database, environment secrets or external services.
 
 The **Paystub unit tests** workflow runs the same focused command on pull
 requests and pushes to main. To run another existing unit file directly, use
-`pnpm exec tsx --test <path-to-file.test.ts>`. This does not run the browser QA
+`pnpm test:unit <path-to-file.test.ts>`. Quote paths containing shell metacharacters.
+This does not run the browser QA
 or security regression harnesses.
+
+### Unit test isolation
+
+`pnpm test:unit` discovers `*.test.ts` under `app/`, `components/` and `lib/`.
+Pass file paths to run a focused subset. `test:unit`, `test:paystub` and
+`test:coverage` share `scripts/run-unit-tests.mjs`, which explicitly uses Node's
+process-per-file isolation, two concurrent files and a 30-second test timeout.
+Tests within a file remain sequential by default; create fresh fixtures for each
+test rather than relying on another test's changes.
+
+Workers receive only OS/tooling environment settings, `NODE_ENV=test` and
+`TZ=UTC`. Application/provider/CI credentials, Keychain configuration,
+`SKIP_ENV_VALIDATION`, `NODE_OPTIONS` and `NODE_PATH` are not forwarded.
+`NODE_V8_COVERAGE` is retained so the existing coverage gate still works.
+The launcher does not load `.env` files. Do not import live database/provider
+clients or load local environment files in unit tests; use disconnected adapters
+in the separate security harness for server-action checks.
+
+Process isolation is not a filesystem or network security sandbox. Filesystem
+fixtures must use `mkdtemp` and `t.after` cleanup, never a shared checkout path or
+real user's records. `pnpm test:isolation` verifies overlapping execution in
+different PIDs, isolation of globals/module state/environment, disposable
+fixtures, secret-free child environments and propagation of assertion failures.
+The **Unit test isolation** PR/main workflow runs these regression checks.
+
+### Financial coverage gate
+
+`pnpm test:coverage` runs the existing financial `node:test` files through pinned
+c8 instrumentation, with TypeScript source-map support. It requires Node 22.12+
+on the project's Node 22 line. `.c8rc.json` enforces these minimums **for every
+included source file**, not just the combined average:
+
+| Metric               | Minimum |
+| -------------------- | ------- |
+| Lines and statements | 90%     |
+| Functions            | 90%     |
+| Branches             | 80%     |
+
+The scope is the financial calculation layer: `lib/freedoms/fi-*.ts`, paystub
+math, wealth YTD calculations, portfolio import/schema validation, and the FI
+chart model. Test files and the database adapter `fi-plan-server.ts` are outside
+this scope. This is not whole-application, route, database or UI coverage.
+`all: true` counts unimported files as uncovered, including new FI calculation
+modules, so omitting their tests cannot hide them from the gate.
+
+Add assertions for missing behavior rather than lowering thresholds or adding
+coverage-ignore markers. Reports are generated under `reports/coverage/`:
+`index.html` for local inspection, `lcov.info` for tooling, and
+`coverage-summary.json` for machine-readable percentages.
+
+The **Financial coverage** workflow enforces the same command on PRs and pushes
+to main. It fails on test or threshold failures and retains reports for 14 days,
+including reports from below-threshold runs. Generated reports and raw V8 data
+are ignored by Git; raw instrumentation is not uploaded with the CI artifact.
 
 ### Module boundaries
 
@@ -133,6 +191,23 @@ pnpm check:duplicates
 
 Review the baseline diff alongside the refactor. Do not regenerate it merely to
 accept newly copied code; additions require an explicit rationale in the PR.
+
+## Code ownership
+
+`.github/CODEOWNERS` assigns every path to repository owner `@samfitz13`,
+including application code, authentication, database migrations, tests,
+documentation and GitHub workflows. There are no unowned path exceptions.
+
+GitHub uses the CODEOWNERS file on a pull request's base branch to request
+owner review on ready-for-review PRs by other authors. This file must reach
+that branch before review requests take effect. CODEOWNERS does not itself
+require approval or block merging; requiring code-owner approval is a separate
+branch-protection or ruleset setting.
+
+When delegating a directory, add its rule below the default with a real GitHub
+user or visible team that has explicit write access to this repository. The
+last matching rule wins, so keep a valid owner on every override and retain
+ownership of `.github/CODEOWNERS` itself.
 
 ## Environment variables
 
