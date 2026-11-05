@@ -4,13 +4,14 @@ import { qualitySummary, timingReport, timingSummary } from "./ci-reporting.mjs"
 
 test("quality summary counts measured hotspots, open debt and failures separately", () => {
   const summary = qualitySummary({
+    limits: { complexity: 17, lines: 450 },
     sourceFiles: 42,
     metrics: [{ kind: "complexity" }, { kind: "lines" }, { kind: "complexity" }],
     debts: [{ status: "open" }, { status: "closed" }],
     errors: ["synthetic failure"],
   });
-  assert.match(summary, /Functions above complexity 20 \| 2/);
-  assert.match(summary, /Source files above 500 lines \| 1/);
+  assert.match(summary, /Functions above complexity 17 \| 2/);
+  assert.match(summary, /Source files above 450 lines \| 1/);
   assert.match(summary, /Open debt entries \| 1/);
   assert.match(summary, /Gate errors \| 1/);
   assert.match(summary, /not compliance/);
@@ -59,4 +60,24 @@ test("timing summary sorts slow tests and limits display without dropping artifa
   assert.equal(report.tests.length, 12);
   assert.match(summary, /2.00s/);
   assert.match(summary, /do not sum/);
+});
+
+test("timing summary renders Markdown links, images, emphasis and entities as literal data", () => {
+  const summary = timingSummary({
+    durationMs: 1,
+    tests: [
+      {
+        name: "[failure](https://example.invalid) ![image](url) *bold* _text_ &#91;link",
+        file: "lib/[probe]_(name).test.ts",
+        status: "fail",
+        durationMs: 1,
+      },
+    ],
+  });
+  assert.ok(!summary.includes("[failure]("));
+  assert.ok(!summary.includes("![image]"));
+  assert.ok(!summary.includes("*bold*"));
+  assert.ok(!summary.includes("&#91;link"));
+  assert.match(summary, /&#91;failure&#93;&#40;/);
+  assert.match(summary, /&amp;#91;link/);
 });

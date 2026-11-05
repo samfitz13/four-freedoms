@@ -41,19 +41,15 @@ export function createMaintainabilityLinter(entries, cwd = root) {
   });
 }
 
-export function sourceSizeMetrics(file, bytes) {
-  const source = isSourcePath(file);
-  const ceiling = source ? maintainabilityLimits().sourceBytes : maintainabilityLimits().assetBytes;
-  const errors = [];
+export function sourceLineMetrics(file, bytes) {
   const metrics = [];
-  if (bytes.length > ceiling) errors.push(`${file}: ${bytes.length} bytes exceeds ${ceiling}.`);
-  if (source) {
+  if (isSourcePath(file)) {
     const text = bytes.toString("utf8");
     const lines = text ? text.replace(/\r?\n$/, "").split(/\r?\n/).length : 0;
     if (lines > maintainabilityLimits().lines)
       metrics.push({ kind: "lines", path: file, value: lines });
   }
-  return { errors, metrics };
+  return metrics;
 }
 
 export function lintMetrics(results, cwd = root) {
@@ -84,12 +80,17 @@ export function lintMetrics(results, cwd = root) {
   return { errors, metrics };
 }
 
+export function baselineRef(environment) {
+  if (environment.GITHUB_BASE_REF) return `origin/${environment.GITHUB_BASE_REF}`;
+  if (environment.GITHUB_EVENT_NAME !== "push") return "origin/main";
+  const event = JSON.parse(readFileSync(environment.GITHUB_EVENT_PATH, "utf8"));
+  if (!/^[a-f0-9]{40}$/.test(event.before ?? "")) throw new Error("Missing pre-push SHA.");
+  return /^0{40}$/.test(event.before) ? null : event.before;
+}
+
 function baseRegister(cwd) {
-  const ref = process.env.GITHUB_BASE_REF
-    ? `origin/${process.env.GITHUB_BASE_REF}`
-    : process.env.GITHUB_EVENT_NAME === "push"
-      ? "HEAD^"
-      : "origin/main";
+  const ref = baselineRef(process.env);
+  if (!ref) return null;
   const file = "docs/maintenance/debt.json";
   const listed = execFileSync("git", ["ls-tree", "--name-only", ref, "--", file], {
     cwd,
@@ -102,7 +103,7 @@ function baseRegister(cwd) {
 export async function checkMaintainability(cwd = root, readPrevious = baseRegister) {
   const register = JSON.parse(readFileSync(path.join(cwd, "docs/maintenance/debt.json"), "utf8"));
   const errors = validateDebtRegister(register);
-  if (errors.length) return { errors, metrics: [], files: 0, debts: register.entries ?? [] };
+  if (errors.length) return { errors, metrics: [], files: 0, sourceFiles: 0, debts: [] };
   const previous = readPrevious(cwd);
   if (previous) {
     const priorErrors = validateDebtRegister(previous);
@@ -134,14 +135,12 @@ export async function checkMaintainability(cwd = root, readPrevious = baseRegist
         errors.push(`${file}: file exceeds the 5 MiB asset limit.`);
       continue;
     }
-    sources.push(file);
     if (stat.size > maintainabilityLimits().sourceBytes) {
       errors.push(`${file}: source exceeds the 128 KiB limit.`);
       continue;
     }
-    const size = sourceSizeMetrics(file, readFileSync(absolute));
-    errors.push(...size.errors);
-    metrics.push(...size.metrics);
+    sources.push(file);
+    metrics.push(...sourceLineMetrics(file, readFileSync(absolute)));
   }
   for (const entry of register.entries) {
     if (entry.status === "open" && !files.includes(entry.path))
@@ -168,13 +167,10 @@ export async function checkMaintainability(cwd = root, readPrevious = baseRegist
 }
 
 async function main() {
-  const report = await checkMaintainability();
+  const report = { limits: maintainabilityLimits(), ...(await checkMaintainability()) };
   const destination = path.join(root, "reports/maintainability/report.json");
   mkdirSync(path.dirname(destination), { recursive: true });
-  writeFileSync(
-    destination,
-    JSON.stringify({ limits: maintainabilityLimits(), ...report }, null, 2) + "\n",
-  );
+  writeFileSync(destination, JSON.stringify(report, null, 2) + "\n");
   if (process.env.GITHUB_STEP_SUMMARY)
     appendFileSync(process.env.GITHUB_STEP_SUMMARY, qualitySummary(report));
   console.log(

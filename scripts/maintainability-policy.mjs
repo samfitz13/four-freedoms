@@ -11,7 +11,7 @@ export function maintainabilityLimits() {
 
 export function isSourcePath(file) {
   return (
-    /\.(?:[cm]?js|jsx|tsx?)$/.test(file) &&
+    /\.(?:[cm]?js|jsx|[cm]?ts|tsx)$/.test(file) &&
     (!file.includes("/") || /^(?:app|components|lib|scripts|\.devcontainer)\//.test(file))
   );
 }

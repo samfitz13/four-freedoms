@@ -34,7 +34,7 @@ the entry `closed`. Stale entries fail CI, preventing debt records from silently
 turning into permanent allowances. Renaming a function requires reviewing its
 register identity; repeated anonymous labels in one file fail rather than sharing
 a budget. The gate compares the register with the PR's base branch (or the
-previous commit on main pushes), rejecting increased budgets and new/reopened
+pre-push branch tip from the push event), rejecting increased budgets and new/reopened
 legacy allowances. Locally it compares with `origin/main`, so fetch that branch
 before running it. Rename legacy functions after bringing them within the limit.
 There is deliberately no baseline-regeneration command.

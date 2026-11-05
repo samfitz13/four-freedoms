@@ -1,7 +1,10 @@
 import path from "node:path";
 
 function cell(value) {
-  return String(value).replace(/[|\r\n`<>]/g, " ");
+  return String(value)
+    .replace(/[|\r\n`<>]/g, " ")
+    .replace(/&/g, "&amp;")
+    .replace(/[[\]()*_!\\]/g, (character) => `&#${character.codePointAt(0)};`);
 }
 
 export function qualitySummary(report) {
@@ -14,8 +17,8 @@ export function qualitySummary(report) {
     "| Metric | Current |",
     "| --- | ---: |",
     `| Authored source files analyzed | ${report.sourceFiles ?? 0} |`,
-    `| Functions above complexity 20 | ${complex.length} |`,
-    `| Source files above 500 lines | ${large.length} |`,
+    `| Functions above complexity ${report.limits.complexity} | ${complex.length} |`,
+    `| Source files above ${report.limits.lines} lines | ${large.length} |`,
     `| Open debt entries | ${open.length} |`,
     `| Gate errors | ${report.errors.length} |`,
     "",

@@ -12,11 +12,13 @@ import {
   validateDebtRegister,
 } from "./maintainability-policy.mjs";
 import {
+  baselineRef,
   createMaintainabilityLinter,
   checkMaintainability,
   lintMetrics,
-  sourceSizeMetrics,
+  sourceLineMetrics,
 } from "./check-maintainability.mjs";
+import { qualitySummary } from "./ci-reporting.mjs";
 
 const root = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
 const entry = {
@@ -99,27 +101,54 @@ test("base comparison prevents budget inflation and new or reopened legacy excep
 test("physical line limits include blanks/comments and handle CRLF/final newlines", () => {
   for (const newline of ["\n", "\r\n"]) {
     const atLimit = Array(500).fill("// synthetic").join(newline) + newline;
-    assert.deepEqual(sourceSizeMetrics("lib/probe.ts", Buffer.from(atLimit)).metrics, []);
+    assert.deepEqual(sourceLineMetrics("lib/probe.ts", Buffer.from(atLimit)), []);
     const aboveLimit = atLimit + "// last line";
-    assert.equal(sourceSizeMetrics("lib/probe.ts", Buffer.from(aboveLimit)).metrics[0].value, 501);
+    assert.equal(sourceLineMetrics("lib/probe.ts", Buffer.from(aboveLimit))[0].value, 501);
   }
-  assert.deepEqual(sourceSizeMetrics("lib/empty.ts", Buffer.from("")).metrics, []);
+  assert.deepEqual(sourceLineMetrics("lib/empty.ts", Buffer.from("")), []);
 });
 
-test("byte gates catch giant single-line source and oversized non-source assets", () => {
-  assert.ok(
-    sourceSizeMetrics("lib/probe.ts", Buffer.alloc(maintainabilityLimits().sourceBytes + 1)).errors
-      .length,
-  );
-  assert.ok(
-    sourceSizeMetrics("public/large.bin", Buffer.alloc(maintainabilityLimits().assetBytes + 1))
-      .errors.length,
-  );
-  assert.deepEqual(sourceSizeMetrics("public/small.bin", Buffer.alloc(10)).errors, []);
+test("line metrics cover development-container source but not assets", () => {
+  assert.deepEqual(sourceLineMetrics("public/small.bin", Buffer.alloc(10)), []);
   assert.equal(
-    sourceSizeMetrics(".devcontainer/setup.mjs", Buffer.from("\n".repeat(501))).metrics.length,
+    sourceLineMetrics(".devcontainer/setup.mjs", Buffer.from("\n".repeat(501))).length,
     1,
   );
+});
+
+test("push baseline uses the pre-push SHA, with explicit bootstrap and missing-event handling", (t) => {
+  const directory = mkdtempSync(path.join(tmpdir(), "maintainability-event-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const event = path.join(directory, "event.json");
+  const environment = { GITHUB_EVENT_NAME: "push", GITHUB_EVENT_PATH: event };
+  const before = "a".repeat(40);
+  writeFileSync(event, JSON.stringify({ before }));
+  assert.equal(baselineRef(environment), before);
+  assert.equal(baselineRef({ ...environment, GITHUB_BASE_REF: "main" }), "origin/main");
+  assert.equal(baselineRef({}), "origin/main");
+  writeFileSync(event, JSON.stringify({ before: "0".repeat(40) }));
+  assert.equal(baselineRef(environment), null);
+  writeFileSync(event, "{}");
+  assert.throws(() => baselineRef(environment), /pre-push/);
+});
+
+test("invalid registers still yield serializable reports and a quality summary", async (t) => {
+  const directory = mkdtempSync(path.join(tmpdir(), "maintainability-invalid-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  mkdirSync(path.join(directory, "docs/maintenance"), { recursive: true });
+  for (const register of [null, { version: 1, entries: {} }]) {
+    writeFileSync(path.join(directory, "docs/maintenance/debt.json"), JSON.stringify(register));
+    const report = await checkMaintainability(directory, () =>
+      assert.fail("must stop at validation"),
+    );
+    assert.match(report.errors.join("\n"), /entries array/);
+    assert.deepEqual(report.debts, []);
+    assert.match(
+      qualitySummary({ limits: maintainabilityLimits(), ...report }),
+      /Gate errors \| 1/,
+    );
+    assert.doesNotThrow(() => JSON.stringify(report));
+  }
 });
 
 test("real ESLint classic complexity accounts for branches and optional chaining", async () => {
@@ -205,6 +234,25 @@ test("repository scan includes new source and fails actual violations without ex
   const oversized = await checkMaintainability(directory, () => null);
   assert.match(oversized.errors.join("\n"), /new lines violation/);
   rmSync(file);
+  for (const extension of ["cts", "mts"]) {
+    const moduleFile = path.join(directory, `lib/probe.${extension}`);
+    writeFileSync(moduleFile, `export function probe(n: number) { ${branches} return -1; }`);
+    const complex = await checkMaintainability(directory, () => null);
+    assert.match(complex.errors.join("\n"), /new complexity violation/);
+    writeFileSync(moduleFile, "// synthetic\n".repeat(501));
+    const long = await checkMaintainability(directory, () => null);
+    assert.match(long.errors.join("\n"), /new lines violation/);
+    writeFileSync(moduleFile, "//" + "x".repeat(maintainabilityLimits().sourceBytes));
+    const giant = await checkMaintainability(directory, () => null);
+    assert.match(giant.errors.join("\n"), /128 KiB/);
+    rmSync(moduleFile);
+  }
+  mkdirSync(path.join(directory, "public"));
+  const asset = path.join(directory, "public/large.bin");
+  writeFileSync(asset, Buffer.alloc(maintainabilityLimits().assetBytes + 1));
+  const largeAsset = await checkMaintainability(directory, () => null);
+  assert.match(largeAsset.errors.join("\n"), /5 MiB/);
+  rmSync(asset);
   const empty = await checkMaintainability(directory, () => null);
   assert.match(empty.errors.join("\n"), /refusing an empty check/);
 });
