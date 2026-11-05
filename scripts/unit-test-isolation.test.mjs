@@ -68,7 +68,7 @@ test("parallel files isolate globals, module caches and environment while using 
       file,
       `
 import assert from "node:assert/strict";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { setTimeout } from "node:timers/promises";
 import { test } from "node:test";
 import { state } from "./shared.mjs";
@@ -85,12 +85,15 @@ test("isolated ${owner} worker", async () => {
   globalThis.isolationOwner = "${owner}";
   process.env.ISOLATION_OWNER = "${owner}";
   const own = new URL("./${owner}.json", import.meta.url);
+  const pending = new URL("./${owner}.json.tmp", import.meta.url);
   const peer = new URL("./${peer}.json", import.meta.url);
-  writeFileSync(own, JSON.stringify({ owner: "${owner}", pid: process.pid }));
+  writeFileSync(pending, JSON.stringify({ owner: "${owner}", pid: process.pid }));
+  renameSync(pending, own);
   const deadline = Date.now() + 10000;
   while (!existsSync(peer) && Date.now() < deadline) await setTimeout(20);
   assert.ok(existsSync(peer), "the other file must execute concurrently");
   const other = JSON.parse(readFileSync(peer, "utf8"));
+  assert.equal(other.owner, "${peer}");
   assert.notEqual(other.pid, process.pid, "each file must have its own process");
   assert.equal(state.owner, "${owner}");
   assert.equal(globalThis.isolationOwner, "${owner}");
