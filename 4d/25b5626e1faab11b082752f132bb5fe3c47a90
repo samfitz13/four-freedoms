@@ -1,0 +1,23 @@
+docs/operations/README.md
+  s_cca7490b0db3e9::t_ef9464cec9fcfe 50-51
+lib/logger.test.ts
+  s_cca7490b0db3e9::t_de1fdcaabd9867 26,30,78-79
+lib/logger.ts
+  s_cca7490b0db3e9::t_df1c285407d761 23,54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4d25b5626e1faab11b082752f132bb5fe3c47a90",
+  "prompts": {},
+  "sessions": {
+    "s_cca7490b0db3e9": {
+      "agent_id": {
+        "tool": "droid",
+        "id": "48cb2f0a-27cc-404b-85f9-9e690fad3dd6",
+        "model": "unknown"
+      },
+      "human_author": "Sam Fitzgerald <sam@factory.ai>"
+    }
+  }
+}
