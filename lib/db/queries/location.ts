@@ -57,7 +57,7 @@ export async function listStays(householdId: string, limit = 30) {
       note: stays.note,
     })
     .from(stays)
-    .innerJoin(places, eq(stays.placeId, places.id))
+    .innerJoin(places, and(eq(stays.placeId, places.id), eq(places.householdId, householdId)))
     .where(eq(stays.householdId, householdId))
     .orderBy(desc(stays.startedOn))
     .limit(limit);
@@ -74,7 +74,7 @@ export async function currentStay(householdId: string) {
       isPreferred: places.isPreferred,
     })
     .from(stays)
-    .innerJoin(places, eq(stays.placeId, places.id))
+    .innerJoin(places, and(eq(stays.placeId, places.id), eq(places.householdId, householdId)))
     .where(and(eq(stays.householdId, householdId), isNull(stays.endedOn)))
     .orderBy(desc(stays.startedOn))
     .limit(1);
@@ -95,7 +95,10 @@ export async function listRecentSatisfactions(householdId: string, days = 30) {
       withConnectionIds: locationSatisfactions.withConnectionIds,
     })
     .from(locationSatisfactions)
-    .leftJoin(places, eq(locationSatisfactions.placeId, places.id))
+    .leftJoin(
+      places,
+      and(eq(locationSatisfactions.placeId, places.id), eq(places.householdId, householdId)),
+    )
     .where(
       and(
         eq(locationSatisfactions.householdId, householdId),
@@ -123,7 +126,7 @@ export async function listResidences(householdId: string) {
       notes: residences.notes,
     })
     .from(residences)
-    .innerJoin(places, eq(residences.placeId, places.id))
+    .innerJoin(places, and(eq(residences.placeId, places.id), eq(places.householdId, householdId)))
     .where(eq(residences.householdId, householdId))
     .orderBy(desc(residences.startedOn));
 }
@@ -145,7 +148,7 @@ export async function listProperties(householdId: string) {
       notes: properties.notes,
     })
     .from(properties)
-    .innerJoin(places, eq(properties.placeId, places.id))
+    .innerJoin(places, and(eq(properties.placeId, places.id), eq(places.householdId, householdId)))
     .innerJoin(financialAccounts, eq(properties.accountId, financialAccounts.id))
     .where(eq(properties.householdId, householdId))
     .orderBy(asc(places.name));
@@ -227,7 +230,7 @@ export async function listTripStays(householdId: string) {
       note: stays.note,
     })
     .from(stays)
-    .innerJoin(places, eq(stays.placeId, places.id))
+    .innerJoin(places, and(eq(stays.placeId, places.id), eq(places.householdId, householdId)))
     .where(and(eq(stays.householdId, householdId), eq(stays.kind, "trip")))
     .orderBy(asc(stays.startedOn));
 }
@@ -245,7 +248,7 @@ export async function listConnections(householdId: string) {
       note: connections.note,
     })
     .from(connections)
-    .leftJoin(places, eq(connections.placeId, places.id))
+    .leftJoin(places, and(eq(connections.placeId, places.id), eq(places.householdId, householdId)))
     .where(and(eq(connections.householdId, householdId), isNull(connections.archivedAt)))
     .orderBy(asc(connections.name));
 }
@@ -261,8 +264,17 @@ export async function listConnectionVisits(householdId: string, limit = 50) {
       note: connectionVisits.note,
     })
     .from(connectionVisits)
-    .innerJoin(connections, eq(connectionVisits.connectionId, connections.id))
-    .leftJoin(places, eq(connectionVisits.placeId, places.id))
+    .innerJoin(
+      connections,
+      and(
+        eq(connectionVisits.connectionId, connections.id),
+        eq(connections.householdId, householdId),
+      ),
+    )
+    .leftJoin(
+      places,
+      and(eq(connectionVisits.placeId, places.id), eq(places.householdId, householdId)),
+    )
     .where(eq(connectionVisits.householdId, householdId))
     .orderBy(desc(connectionVisits.occurredOn))
     .limit(limit);

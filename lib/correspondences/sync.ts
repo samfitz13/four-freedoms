@@ -43,8 +43,8 @@ export async function syncTripToEvent(client: Client, householdId: string, tripI
       placeName: places.name,
     })
     .from(trips)
-    .leftJoin(stays, eq(stays.tripId, trips.id))
-    .leftJoin(places, eq(stays.placeId, places.id))
+    .leftJoin(stays, and(eq(stays.tripId, trips.id), eq(stays.householdId, householdId)))
+    .leftJoin(places, and(eq(stays.placeId, places.id), eq(places.householdId, householdId)))
     .where(and(eq(trips.id, tripId), eq(trips.householdId, householdId)))
     .limit(1);
   const externalId = `trip:${tripId}`;
@@ -156,8 +156,17 @@ export async function syncConnectionVisitToEvent(
       connectionName: connections.name,
     })
     .from(connectionVisits)
-    .innerJoin(connections, eq(connectionVisits.connectionId, connections.id))
-    .leftJoin(places, eq(connectionVisits.placeId, places.id))
+    .innerJoin(
+      connections,
+      and(
+        eq(connectionVisits.connectionId, connections.id),
+        eq(connections.householdId, householdId),
+      ),
+    )
+    .leftJoin(
+      places,
+      and(eq(connectionVisits.placeId, places.id), eq(places.householdId, householdId)),
+    )
     .where(and(eq(connectionVisits.id, visitId), eq(connectionVisits.householdId, householdId)))
     .limit(1);
   if (!visit) return;

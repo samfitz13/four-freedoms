@@ -3,20 +3,29 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
-import { requireUser } from "@/lib/auth-server";
+import { requireSession, requireUser } from "@/lib/auth-server";
 import {
   buildGoogleCalendarAuthUrl,
   googleCalendarConfigured,
   syncGoogleCalendarAccount,
 } from "@/lib/calendar/google";
+import { createCalendarOAuthState } from "@/lib/calendar/oauth-state";
 import { db } from "@/lib/db/client";
 import { scopeForUser } from "@/lib/db/scope";
 import { calendarAccounts, timeEvents } from "@/lib/db/schema";
 import { str } from "./schemas";
 
 export async function connectGoogle(formData: FormData) {
+  const session = await requireSession("/time/agenda");
+  if (!googleCalendarConfigured()) return;
+  const scope = await scopeForUser(session.user.id);
   const redirectUrl = str(formData, "redirectUrl") || "/time/agenda";
-  const url = buildGoogleCalendarAuthUrl(redirectUrl);
+  const state = await createCalendarOAuthState(
+    session.session.id,
+    scope.primaryHouseholdId,
+    redirectUrl,
+  );
+  const url = buildGoogleCalendarAuthUrl(state);
   if (url) redirect(url);
 }
 

@@ -19,7 +19,10 @@ export async function computeTimeAllocation(householdId: string) {
       hours: timeLogEntries.hours,
     })
     .from(timeLogEntries)
-    .innerJoin(timePursuits, eq(timeLogEntries.pursuitId, timePursuits.id))
+    .innerJoin(
+      timePursuits,
+      and(eq(timeLogEntries.pursuitId, timePursuits.id), eq(timePursuits.householdId, householdId)),
+    )
     .where(
       and(eq(timeLogEntries.householdId, householdId), gte(timeLogEntries.recordedOn, cutoff30)),
     );

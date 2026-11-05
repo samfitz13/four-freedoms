@@ -18,7 +18,7 @@ export async function getSession() {
  * pointer back to the current path. Do NOT wrap in try/catch — `redirect()`
  * throws a framework-internal sentinel that Next.js must see escape.
  */
-export async function requireUser(nextPath?: string) {
+export async function requireSession(nextPath?: string) {
   const session = await getSession();
   if (!session?.user) {
     // Always carry a `next=` marker so the proxy can distinguish this
@@ -28,5 +28,10 @@ export async function requireUser(nextPath?: string) {
     const next = encodeURIComponent(nextPath ?? "/");
     redirect(`/login?next=${next}`);
   }
+  return session;
+}
+
+export async function requireUser(nextPath?: string) {
+  const session = await requireSession(nextPath);
   return session.user;
 }

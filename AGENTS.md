@@ -52,6 +52,7 @@ All commands use `pnpm`. Never substitute `npm` or `yarn` (see §8).
 | `pnpm format`       | Prettier write                                           |
 | `pnpm format:check` | Prettier check (CI-style)                                |
 | `pnpm typecheck`    | `tsc --noEmit` — **must pass before finishing any task** |
+| `pnpm test:paystub` | Focused unit tests for paystub taxes and take-home pay   |
 | `pnpm db:up`        | Start local Postgres (Docker)                            |
 | `pnpm db:down`      | Stop local Postgres                                      |
 | `pnpm db:logs`      | Follow Postgres logs                                     |
@@ -64,6 +65,10 @@ All commands use `pnpm`. Never substitute `npm` or `yarn` (see §8).
 
 **Always-run before handing work back:** `pnpm typecheck && pnpm lint`. For
 anything touching routes, components, or config, also run `pnpm build`.
+
+For paystub calculation changes, also run `pnpm test:paystub`. Pure TypeScript
+unit tests use `node:test` in colocated `*.test.ts` files; keep fixtures synthetic
+and tests independent of live databases, environment secrets and providers.
 
 ---
 
@@ -113,6 +118,12 @@ Key rules:
   Never import the Drizzle client into a `"use client"` module.
 - The Drizzle client is a singleton cached on `globalThis` — do not `new` one
   per request.
+- ESLint enforces `app/` → `components/` → `lib/` dependency direction:
+  libraries cannot import routes/components, and components cannot import routes.
+  `components/ui/` may import other primitives and `lib/utils.ts`, not domain
+  widgets or other libraries. Pass domain data/actions through props.
+  `pnpm check:boundaries` verifies alias, relative, type-only and deferred import
+  restrictions without running application code.
 
 ---
 

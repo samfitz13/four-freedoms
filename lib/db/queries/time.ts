@@ -55,7 +55,10 @@ export async function listTimeLogEntries(householdId: string, days = 30) {
       pursuitMatters: timePursuits.matters,
     })
     .from(timeLogEntries)
-    .innerJoin(timePursuits, eq(timeLogEntries.pursuitId, timePursuits.id))
+    .innerJoin(
+      timePursuits,
+      and(eq(timeLogEntries.pursuitId, timePursuits.id), eq(timePursuits.householdId, householdId)),
+    )
     .where(and(eq(timeLogEntries.householdId, householdId), gte(timeLogEntries.recordedOn, cutoff)))
     .orderBy(desc(timeLogEntries.recordedOn), asc(timePursuits.sortOrder), asc(timePursuits.name));
 }
@@ -135,7 +138,10 @@ export async function listTimeEvents(householdId: string, from: Date, to: Date) 
       pursuitColorVar: timePursuits.colorVar,
     })
     .from(timeEvents)
-    .leftJoin(timePursuits, eq(timeEvents.pursuitId, timePursuits.id))
+    .leftJoin(
+      timePursuits,
+      and(eq(timeEvents.pursuitId, timePursuits.id), eq(timePursuits.householdId, householdId)),
+    )
     .where(
       and(
         eq(timeEvents.householdId, householdId),

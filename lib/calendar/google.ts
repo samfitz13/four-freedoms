@@ -19,7 +19,7 @@ export function googleCalendarConfigured(): boolean {
   return Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REDIRECT_URI);
 }
 
-export function buildGoogleCalendarAuthUrl(redirectUrl = "/time/agenda"): string | null {
+export function buildGoogleCalendarAuthUrl(state: string): string | null {
   if (!googleCalendarConfigured()) return null;
   const url = new URL(AUTH_URL);
   url.searchParams.set("client_id", env.GOOGLE_CLIENT_ID!);
@@ -28,7 +28,7 @@ export function buildGoogleCalendarAuthUrl(redirectUrl = "/time/agenda"): string
   url.searchParams.set("scope", SCOPES.join(" "));
   url.searchParams.set("access_type", "offline");
   url.searchParams.set("prompt", "consent");
-  url.searchParams.set("state", redirectUrl);
+  url.searchParams.set("state", state);
   return url.toString();
 }
 

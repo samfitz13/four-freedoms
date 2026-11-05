@@ -77,6 +77,9 @@ export async function logVisit(formData: FormData) {
     .limit(1);
   if (!connection) throw new Error("Connection not found.");
 
+  const placeId = str(formData, "placeId", 80) || null;
+  if (placeId) await assertPlace(householdId, placeId);
+
   await db.transaction(async (tx) => {
     const visitId = randomUUID();
     await tx.insert(connectionVisits).values({
@@ -84,7 +87,7 @@ export async function logVisit(formData: FormData) {
       householdId,
       connectionId,
       occurredOn,
-      placeId: str(formData, "placeId", 80) || null,
+      placeId,
       note: str(formData, "note", 500) || null,
     });
     await tx

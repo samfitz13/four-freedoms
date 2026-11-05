@@ -79,6 +79,12 @@ export async function startStay(formData: FormData) {
   const householdId = await getPrimaryHouseholdId(user.id);
   const placeId = str(formData.get("placeId"), 64);
   if (!placeId) throw new Error("Place is required.");
+  const [place] = await db
+    .select({ id: places.id })
+    .from(places)
+    .where(and(eq(places.id, placeId), eq(places.householdId, householdId)))
+    .limit(1);
+  if (!place) throw new Error("Place not found.");
   const startedOn = str(formData.get("startedOn"), 10) ?? new Date().toISOString().slice(0, 10);
 
   // Close any currently-open stay for this household.

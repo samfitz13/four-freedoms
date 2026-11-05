@@ -1,0 +1,9 @@
+{
+  "path": ["app", "components", "lib", "scripts"],
+  "pattern": "**/*.{ts,tsx,js,jsx,mjs,cjs,css}",
+  "minLines": 10,
+  "minTokens": 100,
+  "mode": "mild",
+  "reporters": ["console", "json"],
+  "output": "reports/duplication"
+}

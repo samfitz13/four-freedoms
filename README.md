@@ -29,31 +29,110 @@ pnpm db:migrate                     # apply Drizzle migrations
 pnpm dev                            # http://localhost:3000
 ```
 
-No `RESEND_API_KEY`? Magic-link emails are logged to the server console —
-click the printed URL to sign in.
+In development, magic-link emails are logged to the server console when
+`RESEND_API_KEY` is unset. Click the printed URL to sign in. Outside development,
+email delivery fails without the key and never logs sign-in links.
 
 ## Scripts
 
-| Command             | Description                                                      |
-| ------------------- | ---------------------------------------------------------------- |
-| `pnpm dev`          | Next.js in development (Turbopack)                               |
-| `pnpm dev:host`     | Next.js bound to 0.0.0.0 (LAN)                                   |
-| `pnpm build`        | Production build                                                 |
-| `pnpm start`        | Serve production build                                           |
-| `pnpm lint`         | ESLint                                                           |
-| `pnpm lint:fix`     | ESLint --fix                                                     |
-| `pnpm typecheck`    | TypeScript, no emit                                              |
-| `pnpm format`       | Prettier write                                                   |
-| `pnpm format:check` | Prettier check                                                   |
-| `pnpm db:up`        | Start local Postgres (docker compose)                            |
-| `pnpm db:down`      | Stop local Postgres                                              |
-| `pnpm db:logs`      | Follow Postgres logs                                             |
-| `pnpm db:generate`  | Generate migration SQL from schema diff                          |
-| `pnpm db:migrate`   | Apply pending migrations                                         |
-| `pnpm db:push`      | Push schema without writing a migration (dev iteration)          |
-| `pnpm db:studio`    | Open Drizzle Studio                                              |
-| `pnpm tunnel`       | Expose localhost:3000 via Cloudflare quick tunnel                |
-| `pnpm share`        | Run `dev` + `tunnel` together (public `*.trycloudflare.com` URL) |
+| Command                 | Description                                                         |
+| ----------------------- | ------------------------------------------------------------------- |
+| `pnpm dev`              | Next.js in development (Turbopack)                                  |
+| `pnpm dev:host`         | Next.js bound to 0.0.0.0 (LAN)                                      |
+| `pnpm build`            | Production build                                                    |
+| `pnpm start`            | Serve production build                                              |
+| `pnpm lint`             | ESLint                                                              |
+| `pnpm lint:fix`         | ESLint --fix                                                        |
+| `pnpm typecheck`        | TypeScript, no emit                                                 |
+| `pnpm check:boundaries` | Verify module-boundary lint rules against allowed/forbidden imports |
+| `pnpm check:duplicates` | Detect copied blocks and reject new duplication                     |
+| `pnpm test:paystub`     | Unit tests for paystub tax totals and take-home pay                 |
+| `pnpm test:security`    | Isolated authorization, OAuth and email regression tests            |
+| `pnpm format`           | Prettier write                                                      |
+| `pnpm format:check`     | Prettier check                                                      |
+| `pnpm db:up`            | Start local Postgres (docker compose)                               |
+| `pnpm db:down`          | Stop local Postgres                                                 |
+| `pnpm db:logs`          | Follow Postgres logs                                                |
+| `pnpm db:generate`      | Generate migration SQL from schema diff                             |
+| `pnpm db:migrate`       | Apply pending migrations                                            |
+| `pnpm db:push`          | Push schema without writing a migration (dev iteration)             |
+| `pnpm db:studio`        | Open Drizzle Studio                                                 |
+| `pnpm tunnel`           | Expose localhost:3000 via Cloudflare quick tunnel                   |
+| `pnpm share`            | Run `dev` + `tunnel` together (public `*.trycloudflare.com` URL)    |
+
+Security regression tests execute the actual server actions and readers against
+disconnected adapters. They do not access a live database, email provider or Google account.
+
+### Unit tests
+
+TypeScript unit tests use `node:test` with `tsx` and live beside the code as
+`*.test.ts`. `pnpm test:paystub` runs only `lib/freedoms/paystub-math.test.ts`,
+covering federal and multi-state withholding, optional leave/disability/local
+taxes, individual employee deductions, other income, fractional amounts and
+input preservation. It exercises the actual calculation functions without a
+database, environment secrets or external services.
+
+The **Paystub unit tests** workflow runs the same focused command on pull
+requests and pushes to main. To run another existing unit file directly, use
+`pnpm exec tsx --test <path-to-file.test.ts>`. This does not run the browser QA
+or security regression harnesses.
+
+### Module boundaries
+
+`pnpm lint` enforces the dependency direction with `import/no-restricted-paths`
+from the existing Next.js ESLint preset:
+
+| Layer                  | Allowed local dependencies                                  |
+| ---------------------- | ----------------------------------------------------------- |
+| `app/`                 | Components and libraries                                    |
+| `components/freedoms/` | Shared UI primitives, other domain components and libraries |
+| `components/ui/`       | Other UI primitives and `lib/utils.ts`                      |
+| `lib/`                 | Other libraries, never routes or components                 |
+
+UI primitives receive domain data and callbacks through props. Keep domain
+formatting, authentication and database access in callers rather than pulling
+them into a reusable control. External packages remain available to each layer;
+these rules do not replace Next.js server/client checks.
+
+Rules resolve actual paths through `tsconfig.json`, so `@/` aliases and relative
+imports have the same restrictions. Type-only imports, re-exports and literal
+`import()`/`require()` calls are checked too; computed module paths are not
+statically resolved.
+
+Run `pnpm check:boundaries` to verify the rules themselves against in-memory
+positive and negative cases. It does not execute application modules or need
+database credentials. The **Module boundaries** workflow runs this regression
+check and repository-wide lint on PRs and pushes to main.
+
+### Duplicate-code checks
+
+Run `pnpm check:duplicates` before submitting changes. The pinned jscpd detector
+scans TypeScript, JavaScript and CSS throughout `app/`, `components/`, `lib/`
+and `scripts/`, including tests. Blocks must span at least 10 lines and
+100 tokens, so small framework conventions do not dominate the findings.
+No source directories or clone pairs are excluded.
+
+`.jscpd-baseline.json` records existing duplicate blocks as technical debt.
+The check still reports those blocks, but exits nonzero for **any new clone**
+or an empty scan. This is a fingerprint baseline, not a percentage budget that
+allows duplication to grow with the codebase. Prefer extracting shared behavior
+when a new clone is reported; do not add ignore markers or relax the thresholds.
+
+The **Duplicate code** GitHub Actions workflow runs the same command on pull
+requests and pushes to main. Its `duplication-report` artifact retains the JSON
+report for 14 days. Locally, findings are printed with file locations and saved to
+`reports/duplication/jscpd-report.json`; generated reports are not committed.
+
+When a deliberate refactor changes or removes existing clones, review the report
+and regenerate the baseline with:
+
+```bash
+pnpm exec jscpd --config .jscpd.json --baseline .jscpd-baseline.json --update-baseline
+pnpm check:duplicates
+```
+
+Review the baseline diff alongside the refactor. Do not regenerate it merely to
+accept newly copied code; additions require an explicit rationale in the PR.
 
 ## Environment variables
 
@@ -64,7 +143,7 @@ See `.env.example` for the full list. Minimum for local dev:
 | `DATABASE_URL`         | Postgres connection (defaults to local docker)     |
 | `BETTER_AUTH_SECRET`   | 32+ byte random secret — `openssl rand -base64 48` |
 | `NEXT_PUBLIC_SITE_URL` | Used for auth callback construction                |
-| `RESEND_API_KEY`       | Optional. Dev falls back to console log if unset.  |
+| `RESEND_API_KEY`       | Required for delivery outside development.         |
 | `EMAIL_FROM`           | `"freedom-four <noreply@…>"` format                |
 
 ## Sharing the dev server with another machine
@@ -109,8 +188,28 @@ matching path and retain filters such as `month`, `year`, and `view`.
 
 ## Deploy
 
-Target: **Vercel** for the app, **PlanetScale Postgres** for the database,
+Target: **Vercel** for the app, **Supabase or PlanetScale Postgres** for the database,
 and **Resend** for magic-link email.
+
+### Supabase Postgres
+
+Use the project's **Connect → Session pooler** connection string on port 5432,
+with database `postgres`, user `postgres.<project-ref>`, and `sslmode=require`.
+The IPv4-compatible session pooler works for both migrations and the app.
+Keep prepared statements disabled and the production pool at one connection,
+as configured in `lib/db/client.ts`. This app uses better-auth, not Supabase Auth.
+
+On macOS, store the full connection string in Keychain and set only its service
+name as `DATABASE_URL_KEYCHAIN_SERVICE` in `.env.local`. The `pnpm` app and
+database commands resolve it at launch; an explicitly exported `DATABASE_URL`
+takes precedence. On Vercel, set `DATABASE_URL` as a sensitive production
+environment variable. Do not share the production database with preview
+deployments; provision a separate database before configuring Preview.
+
+Run `pnpm db:migrate` to initialize the database. `pnpm db:push` refuses remote
+databases. Supabase's Data API must not expose the app's public-schema tables:
+disable that API or revoke its roles' table access, since household isolation
+is enforced by the server-side query layer rather than Supabase RLS.
 
 ### 1. Database — PlanetScale Postgres
 
@@ -147,7 +246,7 @@ Import the repo. Set environment variables in the project settings:
 
 | Var                    | Value                                     |
 | ---------------------- | ----------------------------------------- |
-| `DATABASE_URL`         | PlanetScale connection string from step 1 |
+| `DATABASE_URL`         | Supabase or PlanetScale connection string |
 | `BETTER_AUTH_SECRET`   | `openssl rand -base64 48`                 |
 | `NEXT_PUBLIC_SITE_URL` | `https://<your-domain>`                   |
 | `RESEND_API_KEY`       | From step 2                               |

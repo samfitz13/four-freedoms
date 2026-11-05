@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth-server";
 import { db } from "@/lib/db/client";
@@ -114,6 +114,19 @@ export async function mergePursuits(
   const toId = str(formData, "toId");
   if (!fromId || !toId || fromId === toId) {
     return { ok: false, error: "Choose two different pursuits." };
+  }
+
+  const pursuits = await db
+    .select({ id: timePursuits.id })
+    .from(timePursuits)
+    .where(
+      and(
+        eq(timePursuits.householdId, scope.primaryHouseholdId),
+        inArray(timePursuits.id, [fromId, toId]),
+      ),
+    );
+  if (pursuits.length !== 2) {
+    return { ok: false, error: "Pursuit not found." };
   }
 
   await db.transaction(async (tx) => {
