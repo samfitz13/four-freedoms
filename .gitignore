@@ -33,6 +33,10 @@ reports/duplication/
 # generated coverage reports and V8 instrumentation
 reports/coverage/
 
+# generated maintainability metrics
+reports/maintainability/
+reports/tests/
+
 # vercel
 .vercel
 

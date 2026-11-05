@@ -1,0 +1,48 @@
+name: Maintainability
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  maintainability:
+    name: Complexity, file sizes and tracked debt
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        id: install
+      - run: pnpm test:timings financial scripts/maintainability.test.mjs scripts/ci-reporting.test.mjs
+      - run: pnpm check:maintainability
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+      - name: Retain metrics and debt report
+        if: ${{ always() && hashFiles('reports/maintainability/report.json') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: maintainability-report
+          path: reports/maintainability/report.json
+          retention-days: 14
+      - name: Retain per-test timings, including failures
+        if: ${{ always() && hashFiles('reports/tests/timings.json') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-timings
+          path: reports/tests/timings.json
+          retention-days: 30

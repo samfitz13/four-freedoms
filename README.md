@@ -40,36 +40,41 @@ See [API contracts](docs/api/README.md) for calendar HTTP endpoints and the
 scope of the OpenAPI specification. For a containerized development environment,
 see [devcontainer setup](.devcontainer/README.md).
 
-| Command                 | Description                                                         |
-| ----------------------- | ------------------------------------------------------------------- |
-| `pnpm dev`              | Next.js in development (Turbopack)                                  |
-| `pnpm dev:host`         | Next.js bound to 0.0.0.0 (LAN)                                      |
-| `pnpm build`            | Production build                                                    |
-| `pnpm start`            | Serve production build                                              |
-| `pnpm lint`             | ESLint                                                              |
-| `pnpm lint:fix`         | ESLint --fix                                                        |
-| `pnpm typecheck`        | TypeScript, no emit                                                 |
-| `pnpm check:boundaries` | Verify module-boundary lint rules against allowed/forbidden imports |
-| `pnpm check:duplicates` | Detect copied blocks and reject new duplication                     |
-| `pnpm test:paystub`     | Unit tests for paystub tax totals and take-home pay                 |
-| `pnpm test:unit`        | Discover and run unit files in isolated parallel processes          |
-| `pnpm test:coverage`    | Financial calculation tests with enforced per-file coverage gates   |
-| `pnpm test:isolation`   | Verify worker isolation, clean environments and failure propagation |
-| `pnpm test:security`    | Isolated authorization, OAuth and email regression tests            |
-| `pnpm format`           | Prettier write                                                      |
-| `pnpm format:check`     | Prettier check                                                      |
-| `pnpm db:up`            | Start local Postgres (docker compose)                               |
-| `pnpm db:down`          | Stop local Postgres                                                 |
-| `pnpm db:logs`          | Follow Postgres logs                                                |
-| `pnpm db:generate`      | Generate migration SQL from schema diff                             |
-| `pnpm db:migrate`       | Apply pending migrations                                            |
-| `pnpm db:push`          | Push schema without writing a migration (dev iteration)             |
-| `pnpm db:studio`        | Open Drizzle Studio                                                 |
-| `pnpm tunnel`           | Expose localhost:3000 via Cloudflare quick tunnel                   |
-| `pnpm share`            | Run `dev` + `tunnel` together (public `*.trycloudflare.com` URL)    |
+| Command                      | Description                                                         |
+| ---------------------------- | ------------------------------------------------------------------- |
+| `pnpm dev`                   | Next.js in development (Turbopack)                                  |
+| `pnpm dev:host`              | Next.js bound to 0.0.0.0 (LAN)                                      |
+| `pnpm build`                 | Production build                                                    |
+| `pnpm start`                 | Serve production build                                              |
+| `pnpm lint`                  | ESLint                                                              |
+| `pnpm lint:fix`              | ESLint --fix                                                        |
+| `pnpm typecheck`             | TypeScript, no emit                                                 |
+| `pnpm check:boundaries`      | Verify module-boundary lint rules against allowed/forbidden imports |
+| `pnpm check:duplicates`      | Detect copied blocks and reject new duplication                     |
+| `pnpm check:maintainability` | Enforce function/file budgets and validate owned technical debt     |
+| `pnpm test:paystub`          | Unit tests for paystub tax totals and take-home pay                 |
+| `pnpm test:unit`             | Discover and run unit files in isolated parallel processes          |
+| `pnpm test:coverage`         | Financial calculation tests with enforced per-file coverage gates   |
+| `pnpm test:isolation`        | Verify worker isolation, clean environments and failure propagation |
+| `pnpm test:security`         | Isolated authorization, OAuth and email regression tests            |
+| `pnpm format`                | Prettier write                                                      |
+| `pnpm format:check`          | Prettier check                                                      |
+| `pnpm db:up`                 | Start local Postgres (docker compose)                               |
+| `pnpm db:down`               | Stop local Postgres                                                 |
+| `pnpm db:logs`               | Follow Postgres logs                                                |
+| `pnpm db:generate`           | Generate migration SQL from schema diff                             |
+| `pnpm db:migrate`            | Apply pending migrations                                            |
+| `pnpm db:push`               | Push schema without writing a migration (dev iteration)             |
+| `pnpm db:studio`             | Open Drizzle Studio                                                 |
+| `pnpm tunnel`                | Expose localhost:3000 via Cloudflare quick tunnel                   |
+| `pnpm share`                 | Run `dev` + `tunnel` together (public `*.trycloudflare.com` URL)    |
 
 Security regression tests execute the actual server actions and readers against
 disconnected adapters. They do not access a live database, email provider or Google account.
+
+See [maintainability and technical debt](docs/maintenance/README.md) for the
+complexity, file-size and debt-marker policies. CI rejects new/worsening hotspots
+and retains measured reports; existing debt stays visible with owners and plans.
 
 ### Unit tests
 
