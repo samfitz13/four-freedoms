@@ -1,0 +1,34 @@
+name: Agent documentation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  documentation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: postgres://fixture:fixture@127.0.0.1:5432/freedom_four_test
+      BETTER_AUTH_SECRET: documentation-ci-synthetic-secret-not-for-deployment
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check:docs
+      - run: pnpm test:unit scripts/check-agent-docs.test.mjs
+      - run: pnpm test:unit scripts/api-contract.test.mjs
+      - run: pnpm test:unit scripts/devcontainer-setup.test.mjs
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm build

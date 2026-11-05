@@ -35,6 +35,11 @@ email delivery fails without the key and never logs sign-in links.
 
 ## Scripts
 
+Agent instructions are checked with `pnpm check:docs` locally and in CI.
+See [API contracts](docs/api/README.md) for calendar HTTP endpoints and the
+scope of the OpenAPI specification. For a containerized development environment,
+see [devcontainer setup](.devcontainer/README.md).
+
 | Command                 | Description                                                         |
 | ----------------------- | ------------------------------------------------------------------- |
 | `pnpm dev`              | Next.js in development (Turbopack)                                  |

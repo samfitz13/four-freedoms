@@ -15,6 +15,7 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "check:boundaries": "node scripts/check-module-boundaries.mjs",
+    "check:docs": "node scripts/check-agent-docs.mjs",
     "check:duplicates": "jscpd --config .jscpd.json --baseline .jscpd-baseline.json --fail-on-new-clones 0 --fail-on-empty",
     "test:unit": "node scripts/run-unit-tests.mjs",
     "test:paystub": "node scripts/run-unit-tests.mjs paystub",

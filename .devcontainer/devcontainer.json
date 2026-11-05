@@ -1,0 +1,29 @@
+{
+  "name": "Freedom-four",
+  "dockerComposeFile": "compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/four-freedoms",
+  "remoteUser": "node",
+  "shutdownAction": "stopCompose",
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": { "label": "Freedom-four", "onAutoForward": "notify" }
+  },
+  "remoteEnv": {
+    "DATABASE_URL": "postgres://freedom:freedom@127.0.0.1:5432/freedom_four",
+    "DATABASE_URL_KEYCHAIN_SERVICE": "",
+    "RESEND_API_KEY": "",
+    "GOOGLE_CLIENT_ID": "",
+    "GOOGLE_CLIENT_SECRET": "",
+    "GOOGLE_REDIRECT_URI": "",
+    "NEXT_PUBLIC_SITE_URL": "http://localhost:3000",
+    "BETTER_AUTH_URL": "http://localhost:3000"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"],
+      "settings": { "editor.formatOnSave": true }
+    }
+  },
+  "postCreateCommand": "node .devcontainer/setup.mjs && pnpm install --frozen-lockfile && pnpm db:migrate"
+}

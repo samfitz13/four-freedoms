@@ -41,33 +41,43 @@ single-tenant-per-household data model.
 
 All commands use `pnpm`. Never substitute `npm` or `yarn` (see §8).
 
-| Command               | When to use                                              |
-| --------------------- | -------------------------------------------------------- |
-| `pnpm dev`            | Start Next.js dev server (Turbopack)                     |
-| `pnpm dev:host`       | Dev server bound to `0.0.0.0` for LAN testing            |
-| `pnpm build`          | Production build — run before declaring a feature done   |
-| `pnpm start`          | Serve the production build                               |
-| `pnpm lint`           | ESLint — **must pass before finishing any task**         |
-| `pnpm lint:fix`       | ESLint with autofix                                      |
-| `pnpm format`         | Prettier write                                           |
-| `pnpm format:check`   | Prettier check (CI-style)                                |
-| `pnpm typecheck`      | `tsc --noEmit` — **must pass before finishing any task** |
-| `pnpm test:paystub`   | Focused unit tests for paystub taxes and take-home pay   |
-| `pnpm test:unit`      | All unit files, or supplied paths, in isolated workers   |
-| `pnpm test:coverage`  | Financial calculation tests and per-file coverage gates  |
-| `pnpm test:isolation` | Verify parallel worker and environment isolation         |
-| `pnpm db:up`          | Start local Postgres (Docker)                            |
-| `pnpm db:down`        | Stop local Postgres                                      |
-| `pnpm db:logs`        | Follow Postgres logs                                     |
-| `pnpm db:generate`    | Generate migration SQL from the schema diff              |
-| `pnpm db:migrate`     | Apply pending migrations (use for PlanetScale and CI)    |
-| `pnpm db:push`        | **Local dev only.** Never run against PlanetScale.       |
-| `pnpm db:studio`      | Open Drizzle Studio                                      |
-| `pnpm tunnel`         | Public Cloudflare quick tunnel to `localhost:3000`       |
-| `pnpm share`          | Run `dev` + `tunnel` concurrently                        |
+| Command               | When to use                                                          |
+| --------------------- | -------------------------------------------------------------------- |
+| `pnpm dev`            | Start Next.js dev server (Turbopack)                                 |
+| `pnpm dev:host`       | Dev server bound to `0.0.0.0` for LAN testing                        |
+| `pnpm build`          | Production build — run before declaring a feature done               |
+| `pnpm start`          | Serve the production build                                           |
+| `pnpm lint`           | ESLint — **must pass before finishing any task**                     |
+| `pnpm lint:fix`       | ESLint with autofix                                                  |
+| `pnpm format`         | Prettier write                                                       |
+| `pnpm format:check`   | Prettier check (CI-style)                                            |
+| `pnpm typecheck`      | `tsc --noEmit` — **must pass before finishing any task**             |
+| `pnpm check:docs`     | Validate agent commands, versions, environment names and local links |
+| `pnpm test:paystub`   | Focused unit tests for paystub taxes and take-home pay               |
+| `pnpm test:unit`      | All unit files, or supplied paths, in isolated workers               |
+| `pnpm test:coverage`  | Financial calculation tests and per-file coverage gates              |
+| `pnpm test:isolation` | Verify parallel worker and environment isolation                     |
+| `pnpm db:up`          | Start local Postgres (Docker)                                        |
+| `pnpm db:down`        | Stop local Postgres                                                  |
+| `pnpm db:logs`        | Follow Postgres logs                                                 |
+| `pnpm db:generate`    | Generate migration SQL from the schema diff                          |
+| `pnpm db:migrate`     | Apply pending migrations (use for PlanetScale and CI)                |
+| `pnpm db:push`        | **Local dev only.** Never run against PlanetScale.                   |
+| `pnpm db:studio`      | Open Drizzle Studio                                                  |
+| `pnpm tunnel`         | Public Cloudflare quick tunnel to `localhost:3000`                   |
+| `pnpm share`          | Run `dev` + `tunnel` concurrently                                    |
 
 **Always-run before handing work back:** `pnpm typecheck && pnpm lint`. For
 anything touching routes, components, or config, also run `pnpm build`.
+
+When changing this guide or its referenced configuration, run `pnpm check:docs`
+and `pnpm test:unit scripts/check-agent-docs.test.mjs`. The documentation CI
+workflow validates this guide and runs its typecheck, lint and build commands
+with synthetic environment values, without connecting to a database.
+The checker validates command registration, not every command's runtime behavior.
+
+See [API contracts](docs/api/README.md) for HTTP integration behavior and
+[container setup](.devcontainer/README.md) for the isolated local development path.
 
 For paystub calculation changes, also run `pnpm test:paystub`. Pure TypeScript
 unit tests use `node:test` in colocated `*.test.ts` files; keep fixtures synthetic
